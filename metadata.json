@@ -1,0 +1,6 @@
+{
+  "name": "مكتبتي",
+  "description": "منصة ومكتبة رقمية فاخرة وعالية الأداء لاستيراد وإدارة وتشغيل الكتب التفاعلية المصممة بصيغة HTML و CSS و JS",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
