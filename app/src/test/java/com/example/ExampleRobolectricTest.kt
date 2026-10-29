@@ -124,35 +124,32 @@ class ExampleRobolectricTest {
         assertTrue(injected.contains("maktabati-perf-booster"))
         assertTrue(injected.contains("will-change: transform, opacity"))
         assertTrue(injected.contains("translateZ(0)"))
+        assertTrue(injected.contains("healBlankPageIfNeeded"))
+        assertTrue(injected.contains("triggerUniversalPageTurn"))
     }
 
     @Test
-    fun testSampleBooksInclude100PageBookAndBilingualBooks() {
+    fun testSampleBooksGeneratesSingleIslamicMasterpieceBook() {
         val sampleBooks = SampleBooksProvider.generateSampleBooks(context)
-        assertEquals(6, sampleBooks.size)
+        assertEquals(1, sampleBooks.size)
 
-        val hundredPageBook = sampleBooks.find { it.id == "sample_encyclopedia_100" }
-        assertNotNull(hundredPageBook)
-        assertEquals(100, hundredPageBook!!.pageCount)
+        val islamicBook = sampleBooks.first()
+        assertEquals("islamic_sakina_masterpiece", islamicBook.id)
+        assertEquals("أنوارُ السكينة | إشراقاتٌ قرآنيةٌ وهديٌ نبويٌّ لقلبٍ مطمئن", islamicBook.title)
+        assertEquals(10, islamicBook.pageCount)
+        assertEquals("ar", islamicBook.language)
+        assertTrue(islamicBook.isRtl)
 
-        val englishBook = sampleBooks.find { it.id == "sample_english_typography" }
-        assertNotNull(englishBook)
-        assertEquals("en", englishBook!!.language)
-        assertFalse(englishBook.isRtl)
-        assertEquals(10, englishBook.pageCount)
-
-        val whisperBook = sampleBooks.find { it.id == "sample_hams_almaraya" }
-        assertNotNull(whisperBook)
-        assertEquals(6, whisperBook!!.pageCount)
-        val whisperHtml = File(File(File(context.filesDir, "books"), whisperBook.folderPath), whisperBook.entryHtmlPath)
-        assertTrue(whisperHtml.isFile)
-        val whisperSource = whisperHtml.readText(Charsets.UTF_8)
-        assertTrue(whisperSource.contains("--bg-primary"))
-        assertTrue(whisperSource.contains("--accent-rose"))
-        assertTrue(whisperSource.contains("--accent-gold"))
-        assertTrue(whisperSource.contains("top-bar"))
-        assertTrue(whisperSource.contains("page-canvas"))
-        assertTrue(whisperSource.contains("bottom-nav-dock"))
+        val islamicHtml = File(File(File(context.filesDir, "books"), islamicBook.folderPath), islamicBook.entryHtmlPath)
+        assertTrue(islamicHtml.isFile)
+        val islamicSource = islamicHtml.readText(Charsets.UTF_8)
+        assertTrue(islamicSource.contains("--bg-primary"))
+        assertTrue(islamicSource.contains("--accent-rose"))
+        assertTrue(islamicSource.contains("--accent-gold"))
+        assertTrue(islamicSource.contains("top-bar"))
+        assertTrue(islamicSource.contains("page-canvas"))
+        assertTrue(islamicSource.contains("bottom-nav-dock"))
+        assertTrue(islamicSource.contains("pageInnerContent"))
     }
 
     @Test
@@ -204,6 +201,7 @@ class ExampleRobolectricTest {
         assertEquals(15, updated.currentPage)
         assertEquals(0.60f, updated.readingProgress, 0.001f)
     }
+
     @Test
     fun testParserRecognizesLuxuryTemplateTocAliases() {
         val file = File.createTempFile("section_title_book", ".html")
@@ -217,24 +215,21 @@ class ExampleRobolectricTest {
 
     @Test
     fun testReaderArchitectureFilesAreSeparated() {
-        val root = File(context.applicationInfo.sourceDir).parentFile
-        // This test is intentionally structural only in local source-based test runs.
         assertNotNull(SandboxHtmlInjector::class.java)
         assertTrue(SandboxHtmlInjector.buildInjectedSnippet("book_test", 4).contains("page-canvas"))
         assertTrue(SandboxHtmlInjector.buildInjectedSnippet("book_test", 4).contains("typeof BOOK_DATA"))
     }
 
     @Test
-    fun testInitializeCleansSampleBooksAndDefaultShelves() = runBlocking {
+    fun testInitializeCleansSampleBooksAndDefaultShelvesAndInsertsIslamicMasterpiece() = runBlocking {
         val dao = database.bookDao()
         val repository = com.example.data.repository.BookRepository(dao, context)
-
 
         // Insert a default shelf and a user shelf
         dao.insertShelf(Shelf(id = "shelf_literature", name = "الأدب والبلاغة", iconName = "auto_stories", colorHex = "#92400E"))
         dao.insertShelf(Shelf(id = "shelf_user_custom", name = "كتبي الخاصة", iconName = "bookmark", colorHex = "#0284C7"))
 
-        // Insert a sample book and a user book
+        // Insert a legacy sample book and a user book
         dao.insertBook(
             Book(
                 id = "sample_test_1",
@@ -260,12 +255,15 @@ class ExampleRobolectricTest {
         val allBooks = dao.getAllBooks().first()
         val allShelves = dao.getAllShelves().first()
 
-        assertEquals(1, allBooks.size)
-        assertEquals("book_user_1", allBooks.first().id)
+        assertEquals(2, allBooks.size)
+        assertTrue(allBooks.any { it.id == "book_user_1" })
+        assertTrue(allBooks.any { it.id == "islamic_sakina_masterpiece" })
+        assertFalse(allBooks.any { it.id.startsWith("sample_") })
 
         assertEquals(1, allShelves.size)
         assertEquals("shelf_user_custom", allShelves.first().id)
     }
 
 }
+
 

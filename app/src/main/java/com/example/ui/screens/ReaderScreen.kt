@@ -114,8 +114,7 @@ fun ReaderScreen(
         context.getSharedPreferences("maktabati_preferences", android.content.Context.MODE_PRIVATE)
     }
     var showExtendedControls by remember { mutableStateOf(false) }
-    var pillCollapsed by remember { mutableStateOf(false) }
-    var pillOffset by remember { mutableStateOf(Offset(0f, 110f)) }
+    var pillCollapsed by remember { mutableStateOf(true) }
     var currentProgress by remember { mutableFloatStateOf(book.readingProgress) }
     var currentScrollY by remember { mutableIntStateOf(book.scrollY) }
     var currentPage by remember { mutableIntStateOf(book.currentPage.coerceAtLeast(1)) }
@@ -199,6 +198,8 @@ fun ReaderScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         // Full-Screen Sandboxed HTML Book Engine
         AndroidView(
@@ -213,7 +214,7 @@ fun ReaderScreen(
                         domStorageEnabled = true
                         allowFileAccess = true
                         allowContentAccess = false
-                        builtInZoomControls = true
+                        builtInZoomControls = false
                         displayZoomControls = false
                         useWideViewPort = true
                         loadWithOverviewMode = true
@@ -222,6 +223,17 @@ fun ReaderScreen(
                     }
                     isVerticalScrollBarEnabled = true
                     isHorizontalScrollBarEnabled = false
+
+                    // Automatically fold the edge handle / extended controls when user touches the book
+                    setOnTouchListener { _, event ->
+                        if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                            if (!pillCollapsed || showExtendedControls) {
+                                pillCollapsed = true
+                                showExtendedControls = false
+                            }
+                        }
+                        false
+                    }
 
                     addJavascriptInterface(
                         MaktabatiJsBridge(book.pageCount) { page, prog ->
@@ -299,22 +311,11 @@ fun ReaderScreen(
             }
         )
 
-        // Draggable floating pill: back, tools toggle, and collapse handle.
+        // Smart Auto-Hiding Edge Handle (collapsed by default on the middle side edge, non-intrusive 18.dp x 56.dp)
         Row(
             modifier = Modifier
-                .align(if (pillCollapsed) Alignment.CenterStart else Alignment.TopStart)
-                .offset { IntOffset(pillOffset.x.roundToInt(), pillOffset.y.roundToInt()) }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, drag ->
-                        change.consume()
-                        pillOffset = Offset(
-                            (pillOffset.x + drag.x).coerceAtLeast(0f),
-                            (pillOffset.y + drag.y).coerceAtLeast(0f)
-                        )
-                    }
-                }
-                .statusBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .align(Alignment.CenterStart)
+                .padding(start = if (pillCollapsed) 0.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -325,14 +326,22 @@ fun ReaderScreen(
                         onBack()
                     },
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
                     contentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.shadow(5.dp, RoundedCornerShape(50))
+                    modifier = Modifier
+                        .shadow(6.dp, RoundedCornerShape(50))
                         .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(50))
                         .testTag("reader_back_button")
                 ) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "العودة إلى مكتبتي", modifier = Modifier.size(18.dp))
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "العودة إلى مكتبتي",
+                            modifier = Modifier.size(18.dp)
+                        )
                         Spacer(Modifier.width(5.dp))
                         Text("مكتبتي", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     }
@@ -340,38 +349,65 @@ fun ReaderScreen(
                 Surface(
                     onClick = { showExtendedControls = !showExtendedControls },
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
                     contentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(38.dp).shadow(5.dp, CircleShape)
+                    modifier = Modifier
+                        .size(38.dp)
+                        .shadow(6.dp, CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), CircleShape)
                         .testTag("reader_tools_toggle_button")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Tune, contentDescription = "فتح أو إغلاق أدوات القراءة", modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Default.Tune,
+                            contentDescription = "فتح أو إغلاق أدوات القراءة",
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
                 Surface(
-                    onClick = { pillCollapsed = !pillCollapsed; if (pillCollapsed) showExtendedControls = false },
+                    onClick = {
+                        pillCollapsed = true
+                        showExtendedControls = false
+                    },
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.80f),
                     contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(28.dp).testTag("reader_pill_collapse_button")
+                    modifier = Modifier
+                        .size(28.dp)
+                        .testTag("reader_pill_collapse_button")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Close, contentDescription = "طي الكبسولة", modifier = Modifier.size(14.dp))
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "طي الكبسولة",
+                            modifier = Modifier.size(14.dp)
+                        )
                     }
                 }
             } else {
                 Surface(
                     onClick = { pillCollapsed = false },
-                    shape = RoundedCornerShape(topEnd = 18.dp, bottomEnd = 18.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.58f),
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(width = 32.dp, height = 54.dp)
+                    shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp, topEnd = 10.dp, bottomEnd = 10.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.45f),
+                    contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .size(width = 18.dp, height = 56.dp)
+                        .border(
+                            0.5.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                            RoundedCornerShape(10.dp)
+                        )
                         .testTag("reader_pill_expand_button")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "توسيع الكبسولة", modifier = Modifier.size(18.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(3.dp)
+                                .height(22.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
+                        )
                     }
                 }
             }

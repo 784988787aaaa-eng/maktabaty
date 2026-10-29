@@ -61,6 +61,15 @@ class BookRepository(
                 }
             }
         }
+
+        // Ensure the single Islamic masterpiece book is generated and inserted if not present
+        val islamicSamples = SampleBooksProvider.generateSampleBooks(context)
+        val existingIslamic = bookDao.getBookByIdOnce(SampleBooksProvider.ISLAMIC_MASTERPIECE_ID)
+        if (existingIslamic == null) {
+            for (sample in islamicSamples) {
+                bookDao.insertBook(sample)
+            }
+        }
     }
 
     suspend fun importBook(uri: Uri, customTitle: String? = null): Result<Book> = withContext(Dispatchers.IO) {
