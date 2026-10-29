@@ -50,6 +50,10 @@ interface BookDao {
     @Query("UPDATE books SET isFavorite = :isFavorite WHERE id = :id")
     suspend fun updateBookFavorite(id: String, isFavorite: Boolean)
 
+    @Query("UPDATE books SET pageCount = :pageCount, tableOfContentsJson = :tocJson WHERE id = :id")
+    suspend fun updateBookPageCountAndToc(id: String, pageCount: Int, tocJson: String)
+
+
     @Query("""
         UPDATE books 
         SET title = :title, 

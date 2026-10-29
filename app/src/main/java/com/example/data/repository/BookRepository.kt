@@ -45,7 +45,7 @@ class BookRepository(
         val booksRoot = File(context.filesDir, "books")
         val currentBooks = bookDao.getAllBooks().first()
         for (book in currentBooks) {
-            if (book.id.startsWith("sample_")) {
+            if (book.id.startsWith("sample_") || book.id == SampleBooksProvider.LEGACY_ISLAMIC_ID) {
                 bookDao.deleteBook(book)
                 val bookDir = File(booksRoot, book.folderPath)
                 if (bookDir.exists()) {
@@ -56,18 +56,61 @@ class BookRepository(
 
         if (booksRoot.exists()) {
             booksRoot.listFiles()?.forEach { dir ->
-                if (dir.name.startsWith("sample_")) {
+                if (dir.name.startsWith("sample_") || dir.name == SampleBooksProvider.LEGACY_ISLAMIC_ID) {
                     dir.deleteRecursively()
                 }
             }
         }
 
-        // Ensure the single Islamic masterpiece book is generated and inserted if not present
-        val islamicSamples = SampleBooksProvider.generateSampleBooks(context)
-        val existingIslamic = bookDao.getBookByIdOnce(SampleBooksProvider.ISLAMIC_MASTERPIECE_ID)
-        if (existingIslamic == null) {
-            for (sample in islamicSamples) {
+        // Ensure the sole default luxury book («خَيْمَةٌ فِي القَلْب») is generated and inserted/updated
+        val defaultSamples = SampleBooksProvider.generateSampleBooks(context)
+        val existingDefault = bookDao.getBookByIdOnce(SampleBooksProvider.DEFAULT_MASTERPIECE_ID)
+        if (existingDefault == null) {
+            for (sample in defaultSamples) {
                 bookDao.insertBook(sample)
+            }
+        } else {
+            val freshSample = defaultSamples.firstOrNull()
+            if (freshSample != null) {
+                bookDao.updateBookMetadataAndStyle(
+                    id = existingDefault.id,
+                    title = freshSample.title,
+                    subtitle = freshSample.subtitle,
+                    author = freshSample.author,
+                    coverGradientStart = freshSample.coverGradientStart,
+                    coverGradientEnd = freshSample.coverGradientEnd,
+                    bgPrimaryHex = freshSample.bgPrimaryHex,
+                    accentGoldHex = freshSample.accentGoldHex,
+                    accentRoseHex = freshSample.accentRoseHex
+                )
+                bookDao.updateBookPageCountAndToc(
+                    id = existingDefault.id,
+                    pageCount = freshSample.pageCount,
+                    tocJson = freshSample.tableOfContentsJson
+                )
+            }
+        }
+
+        // Auto-heal any existing user-imported books on disk (strip old CSS containment & refresh page count)
+        val remainingBooks = bookDao.getAllBooks().first()
+        for (userBook in remainingBooks) {
+            if (userBook.id != SampleBooksProvider.DEFAULT_MASTERPIECE_ID && !userBook.id.startsWith("sample_")) {
+                val entryFile = File(File(booksRoot, userBook.folderPath), userBook.entryHtmlPath)
+                if (entryFile.isFile) {
+                    runCatching {
+                        val raw = entryFile.readText(Charsets.UTF_8)
+                        val meta = HtmlBookParser.parse(entryFile, userBook.title)
+                        val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, meta.pageCount)
+                        entryFile.writeText(healedHtml, Charsets.UTF_8)
+                        if (meta.pageCount != userBook.pageCount || meta.tableOfContents.isNotEmpty()) {
+                            bookDao.updateBookPageCountAndToc(
+                                id = userBook.id,
+                                pageCount = maxOf(meta.pageCount, userBook.pageCount),
+                                tocJson = HtmlBookParser.tocToJson(meta.tableOfContents)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

@@ -83,6 +83,20 @@ fun parseSafeColor(hex: String, fallback: Color): Color {
     }
 }
 
+fun ensureRichCoverBase(bg: Color, rose: Color): Color {
+    val lum = 0.299f * bg.red + 0.587f * bg.green + 0.114f * bg.blue
+    return if (lum > 0.52f) {
+        Color(
+            red = (rose.red * 0.46f).coerceIn(0f, 1f),
+            green = (rose.green * 0.42f).coerceIn(0f, 1f),
+            blue = (rose.blue * 0.48f).coerceIn(0f, 1f),
+            alpha = 1f
+        )
+    } else {
+        bg
+    }
+}
+
 @Composable
 fun BookGridItem(
     book: Book,
@@ -95,7 +109,9 @@ fun BookGridItem(
     var menuExpanded by remember { mutableStateOf(false) }
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
     val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFFE11D48))
-    val bgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
+    val rawBgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
+    val bgColor = ensureRichCoverBase(rawBgColor, roseColor)
+    val endGradientColor = ensureRichCoverBase(Color(book.coverGradientEnd), roseColor)
     val bookDirection = if (book.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     val langLabel = if (book.language == "en" || !book.isRtl) "EN" else "عربي"
     val pagesLabel = if (book.isRtl) "${book.pageCount} صفحة" else "${book.pageCount} Pages"
@@ -125,7 +141,7 @@ fun BookGridItem(
                                     colors = listOf(
                                         bgColor,
                                         roseColor.copy(alpha = 0.88f),
-                                        Color(book.coverGradientEnd)
+                                        endGradientColor
                                     )
                                 )
                             )

@@ -40,11 +40,11 @@ object HtmlBookParser {
     private val HEADING_PATTERN = Pattern.compile("<(h[1-3])(?:\\s+[^>]*id=[\"']([^\"']+)[\"'][^>]*)?>(.*?)</\\1>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
     private val ARABIC_UNICODE_PATTERN = Pattern.compile("[\\u0600-\\u06FF]")
 
-    // BOOK_DATA JavaScript Object Patterns
+    // BOOK_DATA JavaScript Object / JSON Patterns
     private val BOOK_DATA_BLOCK_PATTERN = Pattern.compile("(?:const|let|var|window\\.)\\s*BOOK_DATA\\s*=\\s*\\{(.*?)\\};", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
-    private val BOOK_DATA_TITLE_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,800}?\\btitle\\s*:\\s*[\"']([^\"']+)[\"']")
-    private val BOOK_DATA_SUBTITLE_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,1200}?\\bsubtitle\\s*:\\s*[\"']([^\"']+)[\"']")
-    private val BOOK_DATA_AUTHOR_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,1500}?\\bauthor\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val BOOK_DATA_TITLE_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,800}?[\"']?\\btitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val BOOK_DATA_SUBTITLE_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,1200}?[\"']?\\bsubtitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val BOOK_DATA_AUTHOR_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,1500}?[\"']?\\bauthor[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
 
     // CSS :root Variable Patterns
     private val ACCENT_ROSE_PATTERN = Pattern.compile("--(?:accent-rose|accent-peach)\\s*:\\s*(#[0-9a-fA-F]{3,8})")
@@ -171,14 +171,14 @@ object HtmlBookParser {
             author = if (language == "ar") "مؤلف غير محدد" else "Unknown Author"
         }
 
-        // 4. Extract Page Count & TOC from BOOK_DATA.pages or HTML structure
+        // 4. Extract Page Count & TOC from BOOK_DATA.pages or HTML structure (unlimited pages)
         val tocList = mutableListOf<TocEntry>()
         var pageCount = extractBookDataPagesCountAndToc(content, tocList)
 
         if (tocList.isEmpty()) {
             val headingMatcher = HEADING_PATTERN.matcher(content)
             var count = 0
-            while (headingMatcher.find() && count < 50) {
+            while (headingMatcher.find() && count < 1000) {
                 val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
                 val id = headingMatcher.group(2)
                 val headingText = headingMatcher.group(3)?.replace(Regex("<.*?>"), "")?.trim() ?: ""
@@ -188,19 +188,20 @@ object HtmlBookParser {
                         "h2" -> 2
                         else -> 3
                     }
-                    val href = if (!id.isNullOrBlank()) "#$id" else ""
+                    val href = if (!id.isNullOrBlank()) "#$id" else "#page-${count + 1}"
                     tocList.add(TocEntry(title = headingText, href = href, level = level))
                     count++
                 }
             }
         }
 
-        if (pageCount <= 0) {
-            // Fallback: count .page / <section / <article elements or estimate by length
-            val pageClassCount = Regex("class\\s*=\\s*[\"'][^\"']*\\bpage\\b[^\"']*[\"']", RegexOption.IGNORE_CASE).findAll(content).count()
-            val sectionCount = Regex("<section\\b", RegexOption.IGNORE_CASE).findAll(content).count()
+        val pageClassCount = Regex("class\\s*=\\s*[\"'][^\"']*\\b(?:page|book-page)\\b[^\"']*[\"']", RegexOption.IGNORE_CASE).findAll(content).count()
+        val sectionCount = Regex("<(?:section|article)\\b", RegexOption.IGNORE_CASE).findAll(content).count()
+
+        if (pageCount <= 0 || pageClassCount > pageCount) {
             pageCount = when {
-                pageClassCount > 0 -> pageClassCount
+                pageClassCount > pageCount -> pageClassCount
+                pageCount > 0 -> pageCount
                 sectionCount > 1 -> sectionCount
                 tocList.size > 1 -> tocList.size
                 else -> maxOf(1, (content.length / 1800))
@@ -238,38 +239,79 @@ object HtmlBookParser {
     }
 
     private fun extractBookDataPagesCountAndToc(content: String, tocOut: MutableList<TocEntry>): Int {
-        // Locate `pages: [` inside BOOK_DATA
-        val pagesStartMatch = Regex("pages\\s*:\\s*\\[").find(content) ?: return 0
-        val arrayStartIndex = pagesStartMatch.range.last // index of '['
+        // Locate `pages: [` or `"pages": [` (or `chapters` / `slides`) inside BOOK_DATA
+        val bdIdx = content.indexOf("BOOK_DATA").takeIf { it >= 0 } ?: 0
+        val searchRegion = content.substring(bdIdx)
+        val arrayRegex = Regex("[\"']?(?:pages|chapters|slides)[\"']?\\s*:\\s*\\[")
+        val pagesStartMatch = arrayRegex.find(searchRegion)
+            ?: arrayRegex.find(content)
+            ?: return 0
+
+        val baseOffset = if (arrayRegex.find(searchRegion) != null) bdIdx else 0
+        val arrayStartIndex = baseOffset + pagesStartMatch.range.last // index of '['
         var bracketDepth = 0
         var inString = false
         var stringChar = ' '
+        var inLineComment = false
+        var inBlockComment = false
         var escaped = false
         var topLevelObjectCount = 0
         var objectDepth = 0
         var currentObjectStart = -1
 
-        for (i in arrayStartIndex until content.length) {
+        val keyTitleRegex = Regex("[\"']?(?:title|sectionTitle|chapterTag|chapterNumber|heading|subtitle)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+
+        var i = arrayStartIndex
+        while (i < content.length) {
             val c = content[i]
-            if (escaped) {
-                escaped = false
+            val nextC = if (i + 1 < content.length) content[i + 1] else ' '
+
+            if (inLineComment) {
+                if (c == '\n' || c == '\r') inLineComment = false
+                i++
                 continue
             }
-            if (c == '\\') {
-                escaped = true
+            if (inBlockComment) {
+                if (c == '*' && nextC == '/') {
+                    inBlockComment = false
+                    i += 2
+                    continue
+                }
+                i++
+                continue
+            }
+            if (escaped) {
+                escaped = false
+                i++
                 continue
             }
             if (inString) {
-                if (c == stringChar) {
+                if (c == '\\') {
+                    escaped = true
+                } else if (c == stringChar) {
                     inString = false
                 }
+                i++
+                continue
+            }
+
+            if (c == '/' && nextC == '/') {
+                inLineComment = true
+                i += 2
+                continue
+            }
+            if (c == '/' && nextC == '*') {
+                inBlockComment = true
+                i += 2
                 continue
             }
             if (c == '"' || c == '\'' || c == '`') {
                 inString = true
                 stringChar = c
+                i++
                 continue
             }
+
             when (c) {
                 '[' -> bracketDepth++
                 ']' -> {
@@ -289,9 +331,9 @@ object HtmlBookParser {
                     if (bracketDepth == 1 && objectDepth == 0 && currentObjectStart != -1) {
                         topLevelObjectCount++
                         val objSlice = content.substring(currentObjectStart, i + 1)
-                        val pageTitleMatch = Regex("(?:title|sectionTitle|chapterTag|chapterNumber|heading)\\s*:\\s*[\"']([^\"']+)[\"']").find(objSlice)
-                        val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim()
-                        if (!pageTitle.isNullOrBlank() && tocOut.size < 100) {
+                        val pageTitleMatch = keyTitleRegex.find(objSlice)
+                        val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim() ?: "صفحة $topLevelObjectCount"
+                        if (pageTitle.isNotBlank() && tocOut.size < 1000) {
                             tocOut.add(
                                 TocEntry(
                                     title = pageTitle,
@@ -304,6 +346,7 @@ object HtmlBookParser {
                     }
                 }
             }
+            i++
         }
         return topLevelObjectCount
     }

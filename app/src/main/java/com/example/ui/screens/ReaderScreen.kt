@@ -116,8 +116,9 @@ fun ReaderScreen(
     var showExtendedControls by remember { mutableStateOf(false) }
     var pillCollapsed by remember { mutableStateOf(true) }
     var currentProgress by remember { mutableFloatStateOf(book.readingProgress) }
-    var currentScrollY by remember { mutableIntStateOf(book.scrollY) }
+    val scrollYHolder = remember { IntArray(1) { book.scrollY } }
     var currentPage by remember { mutableIntStateOf(book.currentPage.coerceAtLeast(1)) }
+    var livePageCount by remember(book.id, book.pageCount) { mutableIntStateOf(book.pageCount.coerceAtLeast(1)) }
     var textZoomPercent by remember(book.id) { mutableIntStateOf(prefs.getInt("textZoomPercent", 100)) }
     var readerTheme by remember(book.id) {
         mutableStateOf(
@@ -132,20 +133,23 @@ fun ReaderScreen(
     var showThemeDialog by remember { mutableStateOf(false) }
 
     var webViewRef by remember { mutableStateOf<ObservableWebView?>(null) }
+    val lastAppliedZoom = remember { IntArray(1) { -1 } }
+    val lastAppliedTheme = remember { arrayOf<ReaderThemeMode?>(null) }
+
     val tocEntries = remember(book.tableOfContentsJson) {
         HtmlBookParser.jsonToToc(book.tableOfContentsJson)
     }
 
     // Handle system back button cleanly
     BackHandler {
-        onSaveProgress(currentProgress, currentScrollY, currentPage)
+        onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
         onBack()
     }
 
     // Memory Cleanup & Progress Persistence when Reader closes
     DisposableEffect(book.id) {
         onDispose {
-            onSaveProgress(currentProgress, currentScrollY, currentPage)
+            onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
             webViewRef?.let { wv ->
                 try {
                     wv.stopLoading()
@@ -208,19 +212,21 @@ fun ReaderScreen(
                 .testTag("sandboxed_reader_webview"),
             factory = { ctx ->
                 ObservableWebView(ctx).apply {
-                    setLayerType(View.LAYER_TYPE_HARDWARE, null)
                     settings.apply {
                         javaScriptEnabled = true
                         domStorageEnabled = true
                         allowFileAccess = true
-                        allowContentAccess = false
+                        allowContentAccess = true
                         builtInZoomControls = false
                         displayZoomControls = false
                         useWideViewPort = true
-                        loadWithOverviewMode = true
+                        loadWithOverviewMode = false
                         defaultTextEncodingName = "UTF-8"
                         textZoom = textZoomPercent
                     }
+                    lastAppliedZoom[0] = textZoomPercent
+                    lastAppliedTheme[0] = readerTheme
+
                     isVerticalScrollBarEnabled = true
                     isHorizontalScrollBarEnabled = false
 
@@ -236,37 +242,33 @@ fun ReaderScreen(
                     }
 
                     addJavascriptInterface(
-                        MaktabatiJsBridge(book.pageCount) { page, prog ->
+                        MaktabatiJsBridge(livePageCount) { page, total, prog ->
                             currentPage = page
+                            if (total > 0 && total != livePageCount) {
+                                livePageCount = total
+                            }
                             currentProgress = prog
-                            onSaveProgress(prog, currentScrollY, page)
+                            onSaveProgress(prog, scrollYHolder[0], page)
                         },
                         "MaktabatiBridge"
                     )
 
                     webViewClient = object : WebViewClient() {
-                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                            super.onPageStarted(view, url, favicon)
-                            // Ensure storage isolation is active even on multi-file navigations
-                            view?.evaluateJavascript(
-                                SandboxHtmlInjector.buildInjectedSnippet(book.id, book.pageCount)
-                                    .substringAfter("<script id=\"maktabati-storage-isolation\">")
-                                    .substringBefore("</script>"),
-                                null
-                            )
-                        }
-
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             view?.let { wv ->
                                 if (book.scrollY > 0) {
                                     wv.postDelayed({
                                         wv.scrollTo(0, book.scrollY)
-                                    }, 80)
+                                    }, 50)
                                 }
-                                applyThemeToWebView(wv, readerTheme)
+                                if (readerTheme != ReaderThemeMode.ORIGINAL) {
+                                    applyThemeToWebView(wv, readerTheme)
+                                }
                                 val savedPage = book.currentPage.coerceAtLeast(1)
-                                if (savedPage > 1) wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${savedPage - 1});", null)
+                                if (savedPage > 1) {
+                                    wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${savedPage - 1});", null)
+                                }
                             }
                         }
 
@@ -278,8 +280,8 @@ fun ReaderScreen(
                     webChromeClient = WebChromeClient()
 
                     onScrollListener = { scrollY, maxScroll ->
-                        currentScrollY = scrollY
-                        if (maxScroll > 20 && book.pageCount <= 1) {
+                        scrollYHolder[0] = scrollY
+                        if (maxScroll > 20 && livePageCount <= 1) {
                             val prog = (scrollY.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f)
                             currentProgress = prog
                         }
@@ -289,8 +291,15 @@ fun ReaderScreen(
                     val bookDir = File(booksRoot, book.folderPath)
                     val entryFile = File(bookDir, book.entryHtmlPath)
                     if (entryFile.exists()) {
-                        settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) settings.offscreenPreRaster = true
+                        // Heal any legacy CSS containment on the fly before loading
+                        runCatching {
+                            val raw = entryFile.readText(Charsets.UTF_8)
+                            if (raw.contains("contain: layout style") || raw.contains("backdrop-filter:blur(4px)!important") || !raw.contains("__maktabatiV3Initialized")) {
+                                val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
+                                entryFile.writeText(upgraded, Charsets.UTF_8)
+                            }
+                        }
+                        settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
                         loadUrl(android.net.Uri.fromFile(entryFile).toString())
                     } else {
                         loadDataWithBaseURL(
@@ -306,8 +315,14 @@ fun ReaderScreen(
                 }
             },
             update = { wv ->
-                wv.settings.textZoom = textZoomPercent
-                applyThemeToWebView(wv, readerTheme)
+                if (lastAppliedZoom[0] != textZoomPercent) {
+                    lastAppliedZoom[0] = textZoomPercent
+                    wv.settings.textZoom = textZoomPercent
+                }
+                if (lastAppliedTheme[0] != readerTheme) {
+                    lastAppliedTheme[0] = readerTheme
+                    applyThemeToWebView(wv, readerTheme)
+                }
             }
         )
 
@@ -322,7 +337,7 @@ fun ReaderScreen(
             if (!pillCollapsed) {
                 Surface(
                     onClick = {
-                        onSaveProgress(currentProgress, currentScrollY, currentPage)
+                        onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
                         onBack()
                     },
                     shape = RoundedCornerShape(50),
@@ -444,7 +459,7 @@ fun ReaderScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${book.author} • صفحة $currentPage من ${book.pageCount} (${(currentProgress * 100).toInt()}%)",
+                                text = "${book.author} • صفحة $currentPage من $livePageCount (${(currentProgress * 100).toInt()}%)",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -518,17 +533,21 @@ fun ReaderScreen(
                             value = currentProgress,
                             onValueChange = { newProg ->
                                 currentProgress = newProg
-                                val targetPage = ((newProg * book.pageCount).toInt()).coerceIn(1, book.pageCount.coerceAtLeast(1))
+                                val targetPage = ((newProg * livePageCount).toInt()).coerceIn(1, livePageCount.coerceAtLeast(1))
+                                val delta = targetPage - currentPage
                                 currentPage = targetPage
                                 webViewRef?.let { wv ->
-                                    if (book.pageCount > 1) {
-                                        wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${targetPage - 1});", null)
+                                    if (livePageCount > 1) {
+                                        wv.evaluateJavascript(
+                                            "if (typeof goToPage === 'function') goToPage(${targetPage - 1}); else if (typeof window.__maktabatiTurn === 'function') window.__maktabatiTurn($delta);",
+                                            null
+                                        )
                                     } else {
                                         val total = wv.getMaxScroll()
                                         if (total > 0) {
                                             val targetY = (newProg * total).toInt()
                                             wv.scrollTo(0, targetY)
-                                            currentScrollY = targetY
+                                            scrollYHolder[0] = targetY
                                         }
                                     }
                                 }
@@ -620,7 +639,7 @@ fun ReaderScreen(
                 Button(
                     onClick = {
                         if (bmTitle.isNotBlank()) {
-                            onAddBookmark(bmTitle.trim(), currentScrollY, currentProgress, bmNote.trim())
+                            onAddBookmark(bmTitle.trim(), scrollYHolder[0], currentProgress, bmNote.trim())
                             showAddBookmarkDialog = false
                         }
                     }
@@ -680,7 +699,7 @@ fun ReaderScreen(
                                             if (entry.href.startsWith("#page-")) {
                                                 val pageNum = entry.href.removePrefix("#page-").toIntOrNull() ?: 1
                                                 currentPage = pageNum
-                                                currentProgress = (pageNum.toFloat() / book.pageCount.coerceAtLeast(1)).coerceIn(0f, 1f)
+                                                currentProgress = (pageNum.toFloat() / livePageCount.coerceAtLeast(1)).coerceIn(0f, 1f)
                                                 wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${pageNum - 1}); else window.location.hash = '${entry.href}';", null)
                                             } else if (entry.href.isNotBlank()) {
                                                 wv.evaluateJavascript("window.location.hash = '${entry.href}';", null)
@@ -767,7 +786,7 @@ fun ReaderScreen(
                                     .clickable {
                                         showBookmarksSheet = false
                                         webViewRef?.scrollTo(0, bm.scrollY)
-                                        currentScrollY = bm.scrollY
+                                        scrollYHolder[0] = bm.scrollY
                                         currentProgress = bm.progress
                                     },
                                 shape = RoundedCornerShape(8.dp)

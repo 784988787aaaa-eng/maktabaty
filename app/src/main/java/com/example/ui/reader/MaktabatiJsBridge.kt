@@ -6,7 +6,7 @@ import android.webkit.JavascriptInterface
 
 class MaktabatiJsBridge(
     private val totalBookPages: Int,
-    private val onPageProgressChanged: (page: Int, progress: Float) -> Unit
+    private val onPageProgressChanged: (page: Int, totalPages: Int, progress: Float) -> Unit
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -16,8 +16,7 @@ class MaktabatiJsBridge(
         val clampedPage = currentPage.coerceIn(1, total)
         val prog = if (total <= 1) 1f else (clampedPage.toFloat() / total.toFloat()).coerceIn(0f, 1f)
         mainHandler.post {
-            onPageProgressChanged(clampedPage, prog)
+            onPageProgressChanged(clampedPage, total, prog)
         }
     }
 }
-
