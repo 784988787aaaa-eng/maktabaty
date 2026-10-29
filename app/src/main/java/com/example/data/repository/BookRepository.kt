@@ -33,31 +33,33 @@ class BookRepository(
     fun getBookmarks(bookId: String): Flow<List<Bookmark>> = bookDao.getBookmarksForBook(bookId)
 
     suspend fun initializeDefaultDataIfNeeded() = withContext(Dispatchers.IO) {
+        val defaultShelfIds = setOf("shelf_literature", "shelf_science", "shelf_tech")
         val currentShelves = bookDao.getAllShelves().first()
-        if (currentShelves.isEmpty()) {
-            val defaultShelves = listOf(
-                Shelf(id = "shelf_literature", name = "أدب وتراث", iconName = "history_edu", colorHex = "#92400E", sortOrder = 1),
-                Shelf(id = "shelf_science", name = "علوم وموسوعات", iconName = "science", colorHex = "#0284C7", sortOrder = 2),
-                Shelf(id = "shelf_tech", name = "تقنية وتصميم", iconName = "code", colorHex = "#059669", sortOrder = 3)
-            )
-            for (shelf in defaultShelves) {
-                bookDao.insertShelf(shelf)
+        for (shelf in currentShelves) {
+            if (shelf.id in defaultShelfIds) {
+                bookDao.clearShelfFromBooks(shelf.id)
+                bookDao.deleteShelf(shelf)
             }
         }
 
+        val booksRoot = File(context.filesDir, "books")
         val currentBooks = bookDao.getAllBooks().first()
-        if (currentBooks.isEmpty()) {
-            val sampleBooks = SampleBooksProvider.generateSampleBooks(context)
-            for (book in sampleBooks) {
-                bookDao.insertBook(book)
+        for (book in currentBooks) {
+            if (book.id.startsWith("sample_")) {
+                bookDao.deleteBook(book)
+                val bookDir = File(booksRoot, book.folderPath)
+                if (bookDir.exists()) {
+                    bookDir.deleteRecursively()
+                }
             }
         }
-    }
 
-    suspend fun reloadSampleBooks() = withContext(Dispatchers.IO) {
-        val sampleBooks = SampleBooksProvider.generateSampleBooks(context)
-        for (book in sampleBooks) {
-            bookDao.insertBook(book)
+        if (booksRoot.exists()) {
+            booksRoot.listFiles()?.forEach { dir ->
+                if (dir.name.startsWith("sample_")) {
+                    dir.deleteRecursively()
+                }
+            }
         }
     }
 

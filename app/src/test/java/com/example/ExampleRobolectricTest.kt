@@ -224,5 +224,48 @@ class ExampleRobolectricTest {
         assertTrue(SandboxHtmlInjector.buildInjectedSnippet("book_test", 4).contains("typeof BOOK_DATA"))
     }
 
+    @Test
+    fun testInitializeCleansSampleBooksAndDefaultShelves() = runBlocking {
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+
+
+        // Insert a default shelf and a user shelf
+        dao.insertShelf(Shelf(id = "shelf_literature", name = "الأدب والبلاغة", iconName = "auto_stories", colorHex = "#92400E"))
+        dao.insertShelf(Shelf(id = "shelf_user_custom", name = "كتبي الخاصة", iconName = "bookmark", colorHex = "#0284C7"))
+
+        // Insert a sample book and a user book
+        dao.insertBook(
+            Book(
+                id = "sample_test_1",
+                title = "كتاب نموذجي",
+                author = "مؤلف",
+                folderPath = "sample_test_1",
+                entryHtmlPath = "index.html"
+            )
+        )
+        dao.insertBook(
+            Book(
+                id = "book_user_1",
+                title = "كتابي الشخصي",
+                author = "منصور",
+                folderPath = "book_user_1",
+                entryHtmlPath = "index.html",
+                shelfId = "shelf_user_custom"
+            )
+        )
+
+        repository.initializeDefaultDataIfNeeded()
+
+        val allBooks = dao.getAllBooks().first()
+        val allShelves = dao.getAllShelves().first()
+
+        assertEquals(1, allBooks.size)
+        assertEquals("book_user_1", allBooks.first().id)
+
+        assertEquals(1, allShelves.size)
+        assertEquals("shelf_user_custom", allShelves.first().id)
+    }
 
 }
+

@@ -96,7 +96,8 @@ fun ShelfSelector(
         )
 
         // User Defined Shelves
-        for (shelf in shelves) {
+        val defaultShelfIds = setOf("shelf_literature", "shelf_science", "shelf_tech")
+        for (shelf in shelves.filter { it.id !in defaultShelfIds }) {
             FilterChip(
                 selected = selectedShelfId == shelf.id,
                 onClick = { onSelectShelf(shelf.id) },
@@ -122,12 +123,7 @@ fun ShelfSelector(
             onClick = onAddShelfClick,
             modifier = Modifier.testTag("add_shelf_button")
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "إضافة رف",
-                modifier = Modifier.size(16.dp)
-            )
-            Text(text = " رف جديد", modifier = Modifier.padding(start = 4.dp))
+            Text(text = "+ رف جديد")
         }
     }
 }

@@ -1,8 +1,17 @@
 package com.example.ui.screens
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +28,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
@@ -30,22 +42,18 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -55,15 +63,22 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.Book
 import com.example.ui.components.BookDetailDialog
@@ -83,6 +98,7 @@ fun LibraryScreen(
     onOpenBook: (Book) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val books by viewModel.filteredBooks.collectAsStateWithLifecycle()
     val allRawBooks by viewModel.rawBooks.collectAsStateWithLifecycle()
     val shelves by viewModel.shelves.collectAsStateWithLifecycle()
@@ -96,8 +112,20 @@ fun LibraryScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var showCreateShelfDialog by remember { mutableStateOf(false) }
     var selectedBookForDetails by remember { mutableStateOf<Book?>(null) }
-    var showTopMenu by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+
+    val gridState = rememberLazyGridState()
+    val listState = rememberLazyListState()
+
+    val isScrollingDown by remember {
+        derivedStateOf {
+            if (viewMode == ViewMode.GRID) {
+                gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 15
+            } else {
+                listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 15
+            }
+        }
+    }
 
     // Multi-file HTML & ZIP Document Picker
     val multiFilePickerLauncher = rememberLauncherForActivityResult(
@@ -140,26 +168,14 @@ fun LibraryScreen(
                                 imageVector = Icons.Default.LibraryBooks,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "مكتبتي",
-                                style = MaterialTheme.typography.displayMedium,
-                                fontWeight = FontWeight.Bold
+                                modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = "${allRawBooks.size} كتب",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
+                            Text(
+                                text = "مكتبتي",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 },
@@ -194,31 +210,14 @@ fun LibraryScreen(
                         )
                     }
 
-                    Box {
-                        IconButton(onClick = { showTopMenu = true }) {
-                            Icon(imageVector = Icons.Default.MoreVert, contentDescription = "المزيد")
-                        }
-                        DropdownMenu(
-                            expanded = showTopMenu,
-                            onDismissRequest = { showTopMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("استعادة الكتب التفاعلية النموذجية") },
-                                leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null) },
-                                onClick = {
-                                    showTopMenu = false
-                                    viewModel.reloadSamples()
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("عن منصة مكتبتي") },
-                                leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
-                                onClick = {
-                                    showTopMenu = false
-                                    showAboutDialog = true
-                                }
-                            )
-                        }
+                    IconButton(
+                        onClick = { showAboutDialog = true },
+                        modifier = Modifier.testTag("about_icon_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "عن منصة مكتبتي"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -253,34 +252,73 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Compact reading statistics card, aligned with the youthful visual identity.
+            // Compact single-row reading statistics card that auto-collapses on scroll or when library is empty
             val readingBooksCount = allRawBooks.count { it.readingProgress > 0f && it.readingProgress < 0.95f }
             val averageProgress = if (allRawBooks.isEmpty()) 0f else allRawBooks.map { it.readingProgress.coerceIn(0f, 1f) }.average().toFloat()
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+
+            AnimatedVisibility(
+                visible = allRawBooks.isNotEmpty() && !isScrollingDown,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    Text("رحلتك مع القراءة", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column {
-                            Text("إجمالي الكتب", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Text("${allRawBooks.size}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                        Column {
-                            Text("قيد القراءة", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Text("$readingBooksCount", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("متوسط الإنجاز", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Text("${(averageProgress * 100).toInt()}%", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "رحلتك مع القراءة",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "الكتب: ${allRawBooks.size}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "تقرأ: $readingBooksCount",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                LinearProgressIndicator(
+                                    progress = { averageProgress },
+                                    modifier = Modifier
+                                        .width(42.dp)
+                                        .height(5.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "${(averageProgress * 100).toInt()}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    LinearProgressIndicator(progress = { averageProgress }, modifier = Modifier.fillMaxWidth().height(6.dp), color = MaterialTheme.colorScheme.secondary, trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f))
                 }
             }
 
@@ -325,7 +363,7 @@ fun LibraryScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             // 3D Bookshelf Grid or List View
             if (books.isEmpty()) {
@@ -354,15 +392,16 @@ fun LibraryScreen(
                             text = "اضغط على «إضافة كتاب HTML» لاستيراد كتاب واحد أو عدة كتب تفاعلية دفعة واحدة",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
             } else {
                 if (viewMode == ViewMode.GRID) {
                     LazyVerticalGrid(
+                        state = gridState,
                         columns = GridCells.Adaptive(minSize = 156.dp),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 88.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                         modifier = Modifier
@@ -382,7 +421,8 @@ fun LibraryScreen(
                     }
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 88.dp),
+                        state = listState,
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier
                             .fillMaxSize()
@@ -488,25 +528,118 @@ fun LibraryScreen(
         else -> Unit
     }
 
-    // About Dialog
+    // About Dialog with Designer Card & WhatsApp Contact Pill
     if (showAboutDialog) {
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
-            title = { Text("عن منصة مكتبتي", style = MaterialTheme.typography.titleLarge) },
+            title = {
+                Text(
+                    text = "عن منصة مكتبتي",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
             text = {
-                Column {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "«مكتبتي» هي منصة ومكتبة رقمية فاخرة عالية الأداء لاستيراد وإدارة وتشغيل الكتب التفاعلية المصممة بصيغة HTML/CSS/JS المستقلة.",
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "«مكتبتي» هي منصة ومكتبة رقمية فاخرة لاستيراد وإدارة وتشغيل الكتب التفاعلية المصممة بصيغة HTML بجمال وسلاسة فائقة.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "• تخزين غير متزامن للملفات الخام في نظام الملفات الأصلي مع فهرس Room سريع.\n" +
-                            "• محلل ذكي يستخرج تلقائياً BOOK_DATA (العنوان، العنوان الفرعي، المؤلف، عدد الصفحات) ومتغيرات :root لتلوين الأغلفة.\n" +
-                            "• بيئة تشغيل معزولة (Sandboxed Reader) مع عزل مفاتيح localStorage لكل كتاب على حدة وتسريع رسومي 60fps وتنظيف فوري للذاكرة.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Luxury Designer & WhatsApp Card
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                                    )
+                                )
+                            )
+                            .border(
+                                width = 1.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFFF59E0B).copy(alpha = 0.7f),
+                                        Color(0xFFE11D48).copy(alpha = 0.5f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "فكرة وتصميم:",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "م/منصور قطينه",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // WhatsApp Emerald Capsule Button
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color(0xFF10B981),
+                                contentColor = Color.White,
+                                shadowElevation = 3.dp,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .clickable {
+                                        runCatching {
+                                            val whatsappIntent = Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse("https://wa.me/967774004399")
+                                            )
+                                            context.startActivity(whatsappIntent)
+                                        }
+                                    }
+                                    .testTag("whatsapp_contact_button")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                                        contentDescription = "تواصل عبر واتساب",
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "774004399",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {

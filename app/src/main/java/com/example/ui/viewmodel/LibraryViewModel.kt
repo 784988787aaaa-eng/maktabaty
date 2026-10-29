@@ -263,12 +263,6 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun reloadSamples() {
-        viewModelScope.launch {
-            repository.reloadSampleBooks()
-        }
-    }
-
     fun getBookFile(book: Book): File {
         return repository.getBookAbsoluteFile(book)
     }
