@@ -171,6 +171,7 @@ object BookImporter {
 
                     val fallbackTitle = userCustomTitle ?: cleanZipBaseName
                     val book = processAndBuildBookInDirectory(
+                        context = context,
                         bookId = bookId,
                         bookDir = targetDir,
                         entryFile = targetEntryFile,
@@ -190,6 +191,7 @@ object BookImporter {
                 val preparedRootDir = File(context.cacheDir, "zip_prepared_$stagingId").apply { mkdirs() }
                 val stagedEntries = try {
                     stageMultiBooksFromArchiveRoot(
+                        context = context,
                         effectiveRoot = effectiveRoot,
                         preparedRootDir = preparedRootDir
                     )
@@ -262,6 +264,7 @@ object BookImporter {
     }
 
     private fun stageMultiBooksFromArchiveRoot(
+        context: Context,
         effectiveRoot: File,
         preparedRootDir: File
     ): List<StagedBookEntry> {
@@ -295,6 +298,7 @@ object BookImporter {
 
                 runCatching {
                     val book = processAndBuildBookInDirectory(
+                        context = context,
                         bookId = bookId,
                         bookDir = stagedBookDir,
                         entryFile = destHtml,
@@ -329,6 +333,7 @@ object BookImporter {
 
                     runCatching {
                         val book = processAndBuildBookInDirectory(
+                            context = context,
                             bookId = bookId,
                             bookDir = stagedBookDir,
                             entryFile = stagedEntryFile,
@@ -343,7 +348,7 @@ object BookImporter {
                     }
                 } else {
                     // Subdirectory itself contains multiple books
-                    results.addAll(stageMultiBooksFromArchiveRoot(child, preparedRootDir))
+                    results.addAll(stageMultiBooksFromArchiveRoot(context, child, preparedRootDir))
                 }
             }
         }
@@ -352,6 +357,7 @@ object BookImporter {
     }
 
     private fun processAndBuildBookInDirectory(
+        context: Context,
         bookId: String,
         bookDir: File,
         entryFile: File,
@@ -416,6 +422,11 @@ object BookImporter {
                     htmlContent = rawHtml,
                     metadata = metadata.copy(title = finalTitle),
                     targetFile = snapshotFile
+                )
+                HtmlCoverSnapshotGenerator.scheduleOffscreenWebViewCapture(
+                    context = context.applicationContext,
+                    bookDir = bookDir,
+                    entryHtmlFile = entryFile
                 )
             }
         }

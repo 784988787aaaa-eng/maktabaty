@@ -22,6 +22,55 @@ object SandboxHtmlInjector {
         val safePrefix = "book_${bookId.replace(Regex("[^a-zA-Z0-9_]"), "_")}_"
         return """
         <style id="maktabati-perf-booster">
+          @font-face {
+            font-family: "Amiri";
+            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: "Noto Naskh Arabic";
+            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: "Scheherazade New";
+            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: "Traditional Arabic";
+            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: "Cairo";
+            src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: "Tajawal";
+            src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
+          @font-face {
+            font-family: "Readex Pro";
+            src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+          }
           :root {
             --reader-font: 1;
             --reader-font-size: 100%;
@@ -137,7 +186,8 @@ object SandboxHtmlInjector {
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV7Initialized) return;
+          if (window.__maktabatiV8Initialized) return;
+          window.__maktabatiV8Initialized = true;
           window.__maktabatiV7Initialized = true;
           window.__maktabatiV6Initialized = true;
           window.__maktabatiV5Initialized = true;

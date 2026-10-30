@@ -338,6 +338,28 @@ fun ReaderScreen(
                                 request: WebResourceRequest?
                             ): WebResourceResponse? {
                                 val reqUri = request?.url ?: return null
+                                if (reqUri.host == VIRTUAL_BOOK_HOST && reqUri.path?.startsWith("/fonts/") == true) {
+                                    val fontResId = when (reqUri.path) {
+                                        "/fonts/amiri.ttf" -> com.example.R.font.amiri
+                                        "/fonts/cairo.ttf" -> com.example.R.font.cairo
+                                        else -> null
+                                    }
+                                    if (fontResId != null) {
+                                        try {
+                                            return WebResourceResponse(
+                                                "font/ttf",
+                                                null,
+                                                200,
+                                                "OK",
+                                                mapOf(
+                                                    "Access-Control-Allow-Origin" to "*",
+                                                    "Cache-Control" to "public, max-age=31536000"
+                                                ),
+                                                ctx.resources.openRawResource(fontResId)
+                                            )
+                                        } catch (_: Exception) {}
+                                    }
+                                }
                                 if (reqUri.host == VIRTUAL_BOOK_HOST && reqUri.path?.startsWith("/books/") == true) {
                                     val rawRelPath = reqUri.path!!.removePrefix("/books/")
                                     val decodedRelPath = Uri.decode(rawRelPath)
@@ -350,7 +372,7 @@ fun ReaderScreen(
                                             // Upgrade legacy book files on background I/O thread if needed
                                             if (mime == "text/html") {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV7Initialized")) {
+                                                if (!raw.contains("__maktabatiV8Initialized")) {
                                                     val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
                                                     targetFile.writeText(upgraded, Charsets.UTF_8)
                                                     return WebResourceResponse(

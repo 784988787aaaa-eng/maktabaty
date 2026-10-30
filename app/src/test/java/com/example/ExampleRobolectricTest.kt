@@ -520,6 +520,32 @@ class ExampleRobolectricTest {
     }
 
     @Test
+    fun testOfflineArabicFontsInjectedInSandboxHtmlInjector() {
+        val rawHtml = """<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>اختبار الخطوط</title></head><body><div class="page">متن عربي فاخر</div></body></html>"""
+        val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fonts_v8", 12)
+
+        assertTrue(injected.contains("__maktabatiV8Initialized"))
+        assertTrue(injected.contains("@font-face"))
+        assertTrue(injected.contains("https://maktabati.app/fonts/amiri.ttf"))
+        assertTrue(injected.contains("https://maktabati.app/fonts/cairo.ttf"))
+        assertTrue(injected.contains("font-family: \"Amiri\""))
+        assertTrue(injected.contains("font-family: \"Noto Naskh Arabic\""))
+        assertTrue(injected.contains("font-family: \"Scheherazade New\""))
+        assertTrue(injected.contains("font-family: \"Traditional Arabic\""))
+        assertTrue(injected.contains("font-family: \"Cairo\""))
+        assertTrue(injected.contains("font-family: \"Tajawal\""))
+        assertTrue(injected.contains("font-family: \"Readex Pro\""))
+
+        // Verify raw font resources exist and can be opened
+        context.resources.openRawResource(R.font.amiri).use { stream ->
+            assertTrue("R.font.amiri must be non-empty", stream.available() > 1000)
+        }
+        context.resources.openRawResource(R.font.cairo).use { stream ->
+            assertTrue("R.font.cairo must be non-empty", stream.available() > 1000)
+        }
+    }
+
+    @Test
     fun testBookProductionMasterGuideExistsAndContainsAllPrompts() {
         val rootGuide = File("../BOOK_PRODUCTION_MASTER_GUIDE.md").let {
             if (it.exists()) it else File("BOOK_PRODUCTION_MASTER_GUIDE.md")
@@ -530,6 +556,11 @@ class ExampleRobolectricTest {
         assertTrue(content.contains("Fluid Reflow Zoom"))
         assertTrue(content.contains("4-Corner Page-Curl"))
         assertTrue(content.contains("--reader-font"))
+        assertTrue(content.contains("The 3-Zone Locked Page Architecture"))
+        assertTrue(content.contains("https://maktabati.app/fonts/amiri.ttf"))
+        assertTrue(content.contains("https://maktabati.app/fonts/cairo.ttf"))
+        assertTrue(content.contains("chapter-opener"))
+        assertTrue(content.contains("wisdom-pearl"))
         assertTrue(content.contains("الشباب"))
         assertTrue(content.contains("الفتيات"))
         assertTrue(content.contains("النساء"))

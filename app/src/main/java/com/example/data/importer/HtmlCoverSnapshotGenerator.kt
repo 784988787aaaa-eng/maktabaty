@@ -381,6 +381,28 @@ object HtmlCoverSnapshotGenerator {
                         request: WebResourceRequest?
                     ): WebResourceResponse? {
                         val reqUri = request?.url ?: return null
+                        if (reqUri.host == "maktabati.app" && reqUri.path?.startsWith("/fonts/") == true) {
+                            val fontResId = when (reqUri.path) {
+                                "/fonts/amiri.ttf" -> com.example.R.font.amiri
+                                "/fonts/cairo.ttf" -> com.example.R.font.cairo
+                                else -> null
+                            }
+                            if (fontResId != null) {
+                                try {
+                                    return WebResourceResponse(
+                                        "font/ttf",
+                                        null,
+                                        200,
+                                        "OK",
+                                        mapOf(
+                                            "Access-Control-Allow-Origin" to "*",
+                                            "Cache-Control" to "public, max-age=31536000"
+                                        ),
+                                        context.resources.openRawResource(fontResId)
+                                    )
+                                } catch (_: Exception) {}
+                            }
+                        }
                         if (reqUri.host == "maktabati.app" && reqUri.path?.startsWith("/books/") == true) {
                             val rawRelPath = reqUri.path!!.removePrefix("/books/")
                             val decodedRelPath = Uri.decode(rawRelPath)
