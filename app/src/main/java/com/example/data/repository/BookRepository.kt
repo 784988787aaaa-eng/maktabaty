@@ -176,7 +176,7 @@ class BookRepository(
         }
     }
 
-    suspend fun createShelf(name: String, colorHex: String, iconName: String) = withContext(Dispatchers.IO) {
+    suspend fun createShelf(name: String, colorHex: String, iconName: String): Shelf = withContext(Dispatchers.IO) {
         val shelf = Shelf(
             id = "shelf_" + UUID.randomUUID().toString().take(8),
             name = name,
@@ -185,6 +185,7 @@ class BookRepository(
             sortOrder = 99
         )
         bookDao.insertShelf(shelf)
+        shelf
     }
 
     suspend fun deleteShelf(shelf: Shelf) = withContext(Dispatchers.IO) {

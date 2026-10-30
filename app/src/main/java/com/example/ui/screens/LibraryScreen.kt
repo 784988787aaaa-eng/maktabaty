@@ -331,14 +331,15 @@ fun LibraryScreen(
                 }
             }
 
-            // Unified single-row status filters + user shelves
+            // 3-Button Dropdown Control Bar (Status Dropdown | Shelves Dropdown | + رف جديد)
             UnifiedShelfAndFilterRow(
                 shelves = shelves,
                 selectedShelfId = selectedShelfId,
                 filterType = filterType,
                 onSelectFilter = { viewModel.setFilterType(it) },
                 onSelectShelf = { viewModel.selectShelf(it) },
-                onAddShelfClick = { showCreateShelfDialog = true }
+                onAddShelfClick = { showCreateShelfDialog = true },
+                onDeleteShelf = { viewModel.deleteShelf(it) }
             )
 
             // 3D Bookshelf Grid or List View

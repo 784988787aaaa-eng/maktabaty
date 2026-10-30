@@ -286,7 +286,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun createShelf(name: String, colorHex: String, iconName: String) {
         viewModelScope.launch {
-            repository.createShelf(name, colorHex, iconName)
+            val createdShelf = repository.createShelf(name, colorHex, iconName)
+            selectedShelfId.value = createdShelf.id
         }
     }
 
