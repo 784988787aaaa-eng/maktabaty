@@ -109,12 +109,29 @@ private fun resolveMimeType(fileName: String): String {
         lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
         lower.endsWith(".webp") -> "image/webp"
         lower.endsWith(".gif") -> "image/gif"
+        lower.endsWith(".bmp") -> "image/bmp"
+        lower.endsWith(".ico") -> "image/x-icon"
+        lower.endsWith(".mp3") -> "audio/mpeg"
+        lower.endsWith(".wav") -> "audio/wav"
+        lower.endsWith(".ogg") || lower.endsWith(".oga") -> "audio/ogg"
+        lower.endsWith(".m4a") -> "audio/mp4"
+        lower.endsWith(".aac") -> "audio/aac"
+        lower.endsWith(".flac") -> "audio/flac"
+        lower.endsWith(".mp4") || lower.endsWith(".m4v") -> "video/mp4"
+        lower.endsWith(".webm") -> "video/webm"
         lower.endsWith(".woff2") -> "font/woff2"
         lower.endsWith(".woff") -> "font/woff"
         lower.endsWith(".ttf") -> "font/ttf"
         lower.endsWith(".otf") -> "font/otf"
         else -> "application/octet-stream"
     }
+}
+
+private fun isTextMimeType(mime: String): Boolean {
+    return mime.startsWith("text/") ||
+        mime == "application/javascript" ||
+        mime == "application/json" ||
+        mime == "image/svg+xml"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,13 +183,15 @@ fun ReaderScreen(
         onBack()
     }
 
-    // Memory Cleanup & Progress Persistence when Reader closes
+    // Memory Cleanup, Audio/Media Stop & Progress Persistence when Reader closes
     DisposableEffect(book.id) {
         onDispose {
             onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
             webViewRef?.let { wv ->
                 try {
                     wv.stopLoading()
+                    wv.onPause()
+                    wv.pauseTimers()
                     wv.removeAllViews()
                     wv.destroy()
                 } catch (_: Exception) {}
@@ -239,6 +258,8 @@ fun ReaderScreen(
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
                         setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                        onResume()
+                        resumeTimers()
 
                         settings.apply {
                             javaScriptEnabled = true
@@ -250,6 +271,7 @@ fun ReaderScreen(
                             allowFileAccessFromFileURLs = true
                             @Suppress("DEPRECATION")
                             allowUniversalAccessFromFileURLs = true
+                            mediaPlaybackRequiresUserGesture = false
                             builtInZoomControls = false
                             displayZoomControls = false
                             useWideViewPort = true
@@ -294,8 +316,11 @@ fun ReaderScreen(
                             ): WebResourceResponse? {
                                 val reqUri = request?.url ?: return null
                                 if (reqUri.host == VIRTUAL_BOOK_HOST && reqUri.path?.startsWith("/books/") == true) {
-                                    val relPath = reqUri.path!!.removePrefix("/books/")
-                                    val targetFile = File(booksRoot, relPath)
+                                    val rawRelPath = reqUri.path!!.removePrefix("/books/")
+                                    val decodedRelPath = Uri.decode(rawRelPath)
+                                    val targetFile = File(booksRoot, decodedRelPath).let { f ->
+                                        if (f.exists()) f else File(booksRoot, rawRelPath)
+                                    }
                                     try {
                                         if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
                                             val mime = resolveMimeType(targetFile.name)
@@ -320,7 +345,7 @@ fun ReaderScreen(
                                             }
                                             return WebResourceResponse(
                                                 mime,
-                                                "UTF-8",
+                                                if (isTextMimeType(mime)) "UTF-8" else null,
                                                 200,
                                                 "OK",
                                                 mapOf(

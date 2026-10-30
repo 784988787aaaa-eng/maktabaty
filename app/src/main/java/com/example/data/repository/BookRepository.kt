@@ -5,6 +5,8 @@ import android.net.Uri
 import com.example.data.db.BookDao
 import com.example.data.importer.BookImporter
 import com.example.data.importer.HtmlBookParser
+import com.example.data.importer.ImportUriResult
+import com.example.data.importer.MultiBookArchiveProposal
 import com.example.data.importer.SampleBooksProvider
 import com.example.data.model.Book
 import com.example.data.model.Bookmark
@@ -13,8 +15,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.UUID
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+
+data class BatchImportOutcome(
+    val importedSingleBooks: List<Book>,
+    val multiBookProposals: List<MultiBookArchiveProposal>
+)
 
 class BookRepository(
     private val bookDao: BookDao,
@@ -88,6 +101,89 @@ class BookRepository(
                 }
             }
         }
+    }
+
+    suspend fun importOrInspectBook(
+        uri: Uri,
+        customTitle: String? = null,
+        onQuickBookStaged: ((Book) -> Unit)? = null
+    ): Result<ImportUriResult> = withContext(Dispatchers.IO) {
+        try {
+            val outcome = BookImporter.importOrInspectUri(context, uri, customTitle, onQuickBookStaged)
+            if (outcome is ImportUriResult.SingleBookImported) {
+                bookDao.insertBook(outcome.book)
+            }
+            Result.success(outcome)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun importOrInspectMultipleBooks(uris: List<Uri>): Result<BatchImportOutcome> = withContext(Dispatchers.IO) {
+        val importedBooks = mutableListOf<Book>()
+        val proposals = mutableListOf<MultiBookArchiveProposal>()
+        var lastError: Throwable? = null
+
+        for (uri in uris) {
+            try {
+                when (val res = BookImporter.importOrInspectUri(context, uri)) {
+                    is ImportUriResult.SingleBookImported -> {
+                        bookDao.insertBook(res.book)
+                        importedBooks.add(res.book)
+                    }
+                    is ImportUriResult.MultiBookArchiveDetected -> {
+                        proposals.add(res.proposal)
+                    }
+                }
+            } catch (e: Exception) {
+                lastError = e
+            }
+        }
+
+        if (importedBooks.isNotEmpty() || proposals.isNotEmpty()) {
+            Result.success(BatchImportOutcome(importedBooks, proposals))
+        } else {
+            Result.failure(lastError ?: IllegalArgumentException("تعذر استيراد الملفات المحددة"))
+        }
+    }
+
+    suspend fun commitMultiBookProposalToNewShelf(
+        proposal: MultiBookArchiveProposal,
+        colorHex: String = "#0284C7",
+        iconName: String = "auto_stories"
+    ): Pair<Shelf, List<Book>> = withContext(Dispatchers.IO) {
+        val createdShelf = createShelf(
+            name = proposal.zipBaseName,
+            colorHex = colorHex,
+            iconName = iconName
+        )
+        val finalizedBooks = BookImporter.commitMultiBookProposal(
+            context = context,
+            proposal = proposal,
+            shelfId = createdShelf.id
+        )
+        for (book in finalizedBooks) {
+            bookDao.insertBook(book)
+        }
+        Pair(createdShelf, finalizedBooks)
+    }
+
+    suspend fun commitMultiBookProposalStandalone(
+        proposal: MultiBookArchiveProposal
+    ): List<Book> = withContext(Dispatchers.IO) {
+        val finalizedBooks = BookImporter.commitMultiBookProposal(
+            context = context,
+            proposal = proposal,
+            shelfId = null
+        )
+        for (book in finalizedBooks) {
+            bookDao.insertBook(book)
+        }
+        finalizedBooks
+    }
+
+    fun cancelMultiBookProposal(proposal: MultiBookArchiveProposal) {
+        BookImporter.cancelMultiBookProposal(proposal)
     }
 
     suspend fun importBook(
@@ -215,13 +311,18 @@ class BookRepository(
         return File(bookDir, book.entryHtmlPath)
     }
 
+    fun getBookDirectory(book: Book): File {
+        val booksRoot = File(context.filesDir, "books")
+        return File(booksRoot, book.folderPath)
+    }
+
     /**
-     * Copies the book's HTML file to a temporary directory `cacheDir/shared_books/`
-     * renamed with the book's clean human-readable title (`<BookTitle>.html`)
-     * so external apps (WhatsApp, Telegram, etc.) receive the file under its real title.
+     * Prepares the book for external sharing under its clean human-readable title:
+     * - If `book.fileCount <= 1`: copies the standalone HTML file to `cacheDir/shared_books/${cleanTitle}.html`
+     * - If `book.fileCount > 1` (rich-media book with images/audio/assets): compresses the entire book directory
+     *   (`filesDir/books/${book.folderPath}`) into `cacheDir/shared_books/${cleanTitle}.zip` preserving relative paths.
      */
     fun prepareSharedBookFile(book: Book): File {
-        val sourceFile = getBookAbsoluteFile(book)
         val sharedDir = File(context.cacheDir, "shared_books").apply {
             if (!exists()) mkdirs()
         }
@@ -229,11 +330,38 @@ class BookRepository(
             .replace(Regex("[\\\\/:*?\"<>|]"), "_")
             .trim()
             .ifBlank { "book" }
-        val targetFile = File(sharedDir, "$cleanTitle.html")
-        if (sourceFile.exists()) {
-            sourceFile.copyTo(targetFile, overwrite = true)
+
+        val bookDir = getBookDirectory(book)
+        if (book.fileCount > 1 && bookDir.exists() && bookDir.isDirectory) {
+            val targetZip = File(sharedDir, "$cleanTitle.zip")
+            if (targetZip.exists()) {
+                targetZip.delete()
+            }
+            zipDirectoryContents(bookDir, targetZip)
+            return targetZip
+        } else {
+            val sourceFile = getBookAbsoluteFile(book)
+            val targetFile = File(sharedDir, "$cleanTitle.html")
+            if (sourceFile.exists()) {
+                sourceFile.copyTo(targetFile, overwrite = true)
+            }
+            return targetFile
         }
-        return targetFile
+    }
+
+    private fun zipDirectoryContents(sourceDir: File, targetZipFile: File) {
+        ZipOutputStream(BufferedOutputStream(FileOutputStream(targetZipFile))).use { zos ->
+            sourceDir.walkTopDown().forEach { file ->
+                if (file.isFile) {
+                    val relPath = file.relativeTo(sourceDir).path.replace("\\", "/")
+                    val entry = ZipEntry(relPath)
+                    zos.putNextEntry(entry)
+                    BufferedInputStream(FileInputStream(file)).use { fis ->
+                        fis.copyTo(zos)
+                    }
+                    zos.closeEntry()
+                }
+            }
+        }
     }
 }
-

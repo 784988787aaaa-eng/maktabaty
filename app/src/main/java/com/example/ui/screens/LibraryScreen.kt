@@ -61,6 +61,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -87,6 +88,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.importer.MultiBookArchiveProposal
 import com.example.data.model.Book
 import com.example.ui.components.BookDetailDialog
 import com.example.ui.components.BookGridItem
@@ -116,6 +118,7 @@ fun LibraryScreen(
     val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
     val gridCardWidthDp by viewModel.gridCardWidthDp.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
+    val pendingMultiBookProposal by viewModel.pendingMultiBookProposal.collectAsStateWithLifecycle()
     val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
 
     var isSearchActive by remember { mutableStateOf(false) }
@@ -680,4 +683,87 @@ fun LibraryScreen(
             }
         )
     }
+
+    // Multi-Book ZIP Choice Dialog
+    pendingMultiBookProposal?.let { proposal ->
+        MultiBookZipDialog(
+            proposal = proposal,
+            onAddInNewShelf = { viewModel.confirmMultiBookImportWithNewShelf(proposal) },
+            onAddStandalone = { viewModel.confirmMultiBookImportStandalone(proposal) },
+            onCancel = { viewModel.cancelMultiBookImport(proposal) }
+        )
+    }
 }
+
+@Composable
+fun MultiBookZipDialog(
+    proposal: MultiBookArchiveProposal,
+    onAddInNewShelf: () -> Unit,
+    onAddStandalone: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val archiveBooksCount = proposal.archiveBooksCount
+    val zipBaseName = proposal.zipBaseName
+
+    AlertDialog(
+        onDismissRequest = onCancel,
+        modifier = Modifier.testTag("multi_book_zip_dialog"),
+        title = {
+            Text(
+                text = "أرشيف يضم عدة كتب ($archiveBooksCount كتب)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "تم اكتشاف $archiveBooksCount كتب داخل الملف المضغوط «$zipBaseName». كيف تود إضافتها إلى مكتبتي؟",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Button(
+                    onClick = onAddInNewShelf,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("multi_book_new_shelf_button"),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        text = "إضافتها في رف جديد باسم «$zipBaseName»",
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = onAddStandalone,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("multi_book_standalone_button"),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        text = "إضافتها ككتب مستقلة (بدون رف جديد)",
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(
+                onClick = onCancel,
+                modifier = Modifier.testTag("multi_book_cancel_button")
+            ) {
+                Text("إلغاء")
+            }
+        }
+    )
+}
+

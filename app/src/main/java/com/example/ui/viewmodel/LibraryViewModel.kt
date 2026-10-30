@@ -8,6 +8,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.db.AppDatabase
+import com.example.data.importer.ImportUriResult
+import com.example.data.importer.MultiBookArchiveProposal
 import com.example.data.model.Book
 import com.example.data.model.Bookmark
 import com.example.data.model.Shelf
@@ -66,6 +68,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     )
 
     val importState = MutableStateFlow<ImportState>(ImportState.Idle)
+
+    // Multi-book ZIP archive user choice state
+    val pendingMultiBookProposal = MutableStateFlow<MultiBookArchiveProposal?>(null)
+    private val proposalQueue = ArrayDeque<MultiBookArchiveProposal>()
 
     // True when launched directly via ACTION_VIEW / ACTION_SEND so LibraryScreen never flashes
     val isOpeningExternalFile = MutableStateFlow(false)
@@ -149,14 +155,28 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         preferences.edit().putString("viewMode", next.name).apply()
     }
 
+    private fun enqueueProposals(proposals: List<MultiBookArchiveProposal>) {
+        if (proposals.isEmpty()) return
+        for (p in proposals) {
+            proposalQueue.addLast(p)
+        }
+        if (pendingMultiBookProposal.value == null) {
+            pendingMultiBookProposal.value = proposalQueue.removeFirstOrNull()
+        }
+    }
+
+    private fun advanceNextProposalOrClear() {
+        pendingMultiBookProposal.value = proposalQueue.removeFirstOrNull()
+    }
+
     /**
      * Direct-to-Reader fast path for external file intents (WhatsApp, Files, Telegram):
-     * Immediately stages the HTML file on disk and opens ReaderScreen in <15ms without flashing LibraryScreen.
+     * Immediately stages single HTML/ZIP books on disk and opens ReaderScreen, or shows MultiBookZipDialog if a multi-book ZIP is opened.
      */
     fun openExternalUriImmediately(uri: Uri) {
         isOpeningExternalFile.value = true
         viewModelScope.launch {
-            val result = repository.importBook(
+            val result = repository.importOrInspectBook(
                 uri = uri,
                 customTitle = null,
                 onQuickBookStaged = { stagedBook ->
@@ -165,14 +185,22 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                     observeBookmarksFor(stagedBook.id)
                 }
             )
-            result.onSuccess { fullBook ->
-                // Update full TOC & pageCount seamlessly (same book.id so WebView does not reload)
-                val current = activeBook.value
-                if (current == null || current.id == fullBook.id) {
-                    activeBook.value = fullBook
+            result.onSuccess { outcome ->
+                when (outcome) {
+                    is ImportUriResult.SingleBookImported -> {
+                        val fullBook = outcome.book
+                        val current = activeBook.value
+                        if (current == null || current.id == fullBook.id) {
+                            activeBook.value = fullBook
+                        }
+                        isOpeningExternalFile.value = false
+                        observeBookmarksFor(fullBook.id)
+                    }
+                    is ImportUriResult.MultiBookArchiveDetected -> {
+                        isOpeningExternalFile.value = false
+                        enqueueProposals(listOf(outcome.proposal))
+                    }
                 }
-                isOpeningExternalFile.value = false
-                observeBookmarksFor(fullBook.id)
             }.onFailure { err ->
                 isOpeningExternalFile.value = false
                 importState.value = ImportState.Error(err.message ?: "تعذر فتح الملف المحدد")
@@ -182,11 +210,20 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun importBook(uri: Uri, customTitle: String? = null, onComplete: ((Book?) -> Unit)? = null) {
         viewModelScope.launch {
-            importState.value = ImportState.Loading("جاري تحليل البنية الوصفية وألوان الغلاف...")
-            val result = repository.importBook(uri, customTitle)
-            result.onSuccess { book ->
-                importState.value = ImportState.Success(book, 1)
-                onComplete?.invoke(book)
+            importState.value = ImportState.Loading("جاري فحص واستيراد الملف...")
+            val result = repository.importOrInspectBook(uri, customTitle)
+            result.onSuccess { outcome ->
+                when (outcome) {
+                    is ImportUriResult.SingleBookImported -> {
+                        importState.value = ImportState.Success(outcome.book, 1)
+                        onComplete?.invoke(outcome.book)
+                    }
+                    is ImportUriResult.MultiBookArchiveDetected -> {
+                        importState.value = ImportState.Idle
+                        enqueueProposals(listOf(outcome.proposal))
+                        onComplete?.invoke(null)
+                    }
+                }
             }.onFailure { err ->
                 importState.value = ImportState.Error(err.message ?: "تعذر استيراد الملف المحدد")
                 onComplete?.invoke(null)
@@ -203,16 +240,71 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             return
         }
         viewModelScope.launch {
-            importState.value = ImportState.Loading("جاري استيراد وتحليل ${uris.size} كتب...")
-            val result = repository.importMultipleBooks(uris)
-            result.onSuccess { list ->
-                importState.value = ImportState.Success(list.first(), list.size)
-                onComplete?.invoke(list)
+            importState.value = ImportState.Loading("جاري استيراد وتحليل ${uris.size} ملفات...")
+            val result = repository.importOrInspectMultipleBooks(uris)
+            result.onSuccess { batch ->
+                if (batch.multiBookProposals.isNotEmpty()) {
+                    enqueueProposals(batch.multiBookProposals)
+                }
+                if (batch.importedSingleBooks.isNotEmpty()) {
+                    importState.value = ImportState.Success(batch.importedSingleBooks.first(), batch.importedSingleBooks.size)
+                } else {
+                    importState.value = ImportState.Idle
+                }
+                onComplete?.invoke(batch.importedSingleBooks)
             }.onFailure { err ->
                 importState.value = ImportState.Error(err.message ?: "تعذر استيراد الكتب المحددة")
                 onComplete?.invoke(emptyList())
             }
         }
+    }
+
+    fun confirmMultiBookImportWithNewShelf(proposal: MultiBookArchiveProposal? = pendingMultiBookProposal.value) {
+        val activeProposal = proposal ?: return
+        viewModelScope.launch {
+            importState.value = ImportState.Loading("جاري إنشاء رف «${activeProposal.zipBaseName}» وإضافة الكتب...")
+            runCatching {
+                repository.commitMultiBookProposalToNewShelf(activeProposal)
+            }.onSuccess { (createdShelf, books) ->
+                selectedShelfId.value = createdShelf.id
+                filterType.value = FilterType.ALL
+                advanceNextProposalOrClear()
+                if (books.isNotEmpty()) {
+                    importState.value = ImportState.Success(books.first(), books.size)
+                } else {
+                    importState.value = ImportState.Idle
+                }
+            }.onFailure { err ->
+                advanceNextProposalOrClear()
+                importState.value = ImportState.Error(err.message ?: "تعذر إتمام إضافة كتب الأرشيف")
+            }
+        }
+    }
+
+    fun confirmMultiBookImportStandalone(proposal: MultiBookArchiveProposal? = pendingMultiBookProposal.value) {
+        val activeProposal = proposal ?: return
+        viewModelScope.launch {
+            importState.value = ImportState.Loading("جاري إضافة ${activeProposal.archiveBooksCount} كتب إلى مكتبتي...")
+            runCatching {
+                repository.commitMultiBookProposalStandalone(activeProposal)
+            }.onSuccess { books ->
+                advanceNextProposalOrClear()
+                if (books.isNotEmpty()) {
+                    importState.value = ImportState.Success(books.first(), books.size)
+                } else {
+                    importState.value = ImportState.Idle
+                }
+            }.onFailure { err ->
+                advanceNextProposalOrClear()
+                importState.value = ImportState.Error(err.message ?: "تعذر إتمام إضافة كتب الأرشيف")
+            }
+        }
+    }
+
+    fun cancelMultiBookImport(proposal: MultiBookArchiveProposal? = pendingMultiBookProposal.value) {
+        val activeProposal = proposal ?: return
+        repository.cancelMultiBookProposal(activeProposal)
+        advanceNextProposalOrClear()
     }
 
     fun clearImportState() {
@@ -332,8 +424,13 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                         "${context.packageName}.fileprovider",
                         targetFile
                     )
+                    val mimeType = if (book.fileCount > 1 || targetFile.extension.equals("zip", ignoreCase = true)) {
+                        "application/zip"
+                    } else {
+                        "text/html"
+                    }
                     val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/html"
+                        type = mimeType
                         putExtra(Intent.EXTRA_STREAM, uri)
                         putExtra(Intent.EXTRA_SUBJECT, book.title)
                         putExtra(Intent.EXTRA_TEXT, "كتاب «${book.title}» من منصة مكتبتي")
@@ -348,4 +445,3 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 }
-

@@ -315,7 +315,137 @@ class ExampleRobolectricTest {
         bookDir.deleteRecursively()
     }
 
+    @Test
+    fun testSingleRichMediaBookZipImportPreservesCompanionImagesAndAudioAndSharesAsZip(): Unit = runBlocking {
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+
+        val zipFile = File(context.cacheDir, "كتاب_السيرة_المصور.zip")
+        java.util.zip.ZipOutputStream(java.io.FileOutputStream(zipFile)).use { zos ->
+            zos.putNextEntry(java.util.zip.ZipEntry("index.html"))
+            zos.write(
+                """
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head><meta charset="utf-8"><title>السيرة النبوية المصورة</title></head>
+                <body>
+                    <div class="page">
+                        <img src="images/pic.png" />
+                        <audio src="audio/clip.mp3"></audio>
+                    </div>
+                </body>
+                </html>
+                """.trimIndent().toByteArray(Charsets.UTF_8)
+            )
+            zos.closeEntry()
+
+            zos.putNextEntry(java.util.zip.ZipEntry("images/pic.png"))
+            zos.write(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
+            zos.closeEntry()
+
+            zos.putNextEntry(java.util.zip.ZipEntry("audio/clip.mp3"))
+            zos.write("FAKE_MP3_AUDIO_CONTENT".toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+        }
+
+        val inspection = com.example.data.importer.BookImporter.inspectZipFile(context, zipFile)
+        assertTrue(inspection is com.example.data.importer.ZipInspectionResult.SingleBook)
+        val importedBook = (inspection as com.example.data.importer.ZipInspectionResult.SingleBook).book
+
+        assertEquals("السيرة النبوية المصورة", importedBook.title)
+        assertTrue(importedBook.fileCount > 1)
+        assertEquals(3, importedBook.fileCount)
+
+        val bookDir = repository.getBookDirectory(importedBook)
+        assertTrue(File(bookDir, "index.html").exists())
+        assertTrue(File(bookDir, "images/pic.png").exists())
+        assertTrue(File(bookDir, "audio/clip.mp3").exists())
+
+        // Verify sharing a rich-media book (fileCount > 1) packages the entire directory into a .zip
+        val sharedZip = repository.prepareSharedBookFile(importedBook)
+        assertTrue(sharedZip.exists())
+        assertEquals("السيرة النبوية المصورة.zip", sharedZip.name)
+
+        val sharedEntries = mutableSetOf<String>()
+        java.util.zip.ZipInputStream(java.io.FileInputStream(sharedZip)).use { zis ->
+            var entry = zis.nextEntry
+            while (entry != null) {
+                sharedEntries.add(entry.name)
+                zis.closeEntry()
+                entry = zis.nextEntry
+            }
+        }
+        assertTrue(sharedEntries.contains("index.html"))
+        assertTrue(sharedEntries.contains("images/pic.png"))
+        assertTrue(sharedEntries.contains("audio/clip.mp3"))
+
+        sharedZip.delete()
+        bookDir.deleteRecursively()
+        zipFile.delete()
+        Unit
+    }
+
+    @Test
+    fun testMultiBookArchiveZipDetectionAndNewShelfOrStandaloneImport(): Unit = runBlocking {
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+
+        val zipFile = File(context.cacheDir, "سلسلة القصص القرآني.zip")
+        java.util.zip.ZipOutputStream(java.io.FileOutputStream(zipFile)).use { zos ->
+            zos.putNextEntry(java.util.zip.ZipEntry("book1.html"))
+            zos.write("""<!DOCTYPE html><html lang="ar"><head><title>قصة أصحاب الكهف</title></head><body><p>الكتاب الأول</p></body></html>""".toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+
+            zos.putNextEntry(java.util.zip.ZipEntry("book2.html"))
+            zos.write("""<!DOCTYPE html><html lang="ar"><head><title>قصة ذي القرنين</title></head><body><p>الكتاب الثاني</p></body></html>""".toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+
+            zos.putNextEntry(java.util.zip.ZipEntry("book3.html"))
+            zos.write("""<!DOCTYPE html><html lang="ar"><head><title>قصة سفينة نوح</title></head><body><p>الكتاب الثالث</p></body></html>""".toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+        }
+
+        // 1. Test Multi-Book Archive Detection + Adding into a New Shelf named after the ZIP
+        val inspection1 = com.example.data.importer.BookImporter.inspectZipFile(context, zipFile)
+        assertTrue(inspection1 is com.example.data.importer.ZipInspectionResult.MultiBookArchive)
+        val proposal1 = (inspection1 as com.example.data.importer.ZipInspectionResult.MultiBookArchive).proposal
+
+        assertEquals("سلسلة القصص القرآني", proposal1.zipBaseName)
+        assertEquals(3, proposal1.archiveBooksCount)
+
+        val (createdShelf, shelfBooks) = repository.commitMultiBookProposalToNewShelf(proposal1)
+        assertEquals("سلسلة القصص القرآني", createdShelf.name)
+        assertEquals(3, shelfBooks.size)
+        assertTrue(shelfBooks.all { it.shelfId == createdShelf.id })
+
+        val dbShelfBooks = dao.getBooksByShelf(createdShelf.id).first()
+        assertEquals(3, dbShelfBooks.size)
+
+        // Clean up first batch
+        for (b in shelfBooks) {
+            repository.deleteBook(b.id)
+        }
+        repository.deleteShelf(createdShelf)
+
+        // 2. Test Multi-Book Archive Detection + Adding as Standalone Books (shelfId = null)
+        val inspection2 = com.example.data.importer.BookImporter.inspectZipFile(context, zipFile)
+        assertTrue(inspection2 is com.example.data.importer.ZipInspectionResult.MultiBookArchive)
+        val proposal2 = (inspection2 as com.example.data.importer.ZipInspectionResult.MultiBookArchive).proposal
+
+        val standaloneBooks = repository.commitMultiBookProposalStandalone(proposal2)
+        assertEquals(3, standaloneBooks.size)
+        assertTrue(standaloneBooks.all { it.shelfId == null })
+
+        // Clean up second batch
+        for (b in standaloneBooks) {
+            repository.deleteBook(b.id)
+        }
+        zipFile.delete()
+        Unit
+    }
+
 }
+
 
 
 
