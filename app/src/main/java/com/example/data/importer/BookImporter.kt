@@ -368,7 +368,7 @@ object BookImporter {
     ): Book {
         val rawHtml = entryFile.readText(Charsets.UTF_8)
         val quickMeta = HtmlBookParser.parseQuickHeader(rawHtml, fallbackTitle, bookDir = bookDir)
-        val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, quickMeta.pageCount)
+        val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, quickMeta.pageCount, bookDir = bookDir)
         entryFile.writeText(injectedHtml, Charsets.UTF_8)
 
         val dirStats = computeDirectoryStats(bookDir)

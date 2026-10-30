@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" name="viewport"/>
+<meta content="#FFF1F6" name="theme-color"/>
+<meta content="light dark" name="color-scheme"/>
+<meta content="إصدارات مكتبتي الفاخرة — حواريّةٌ في بناءِ الذات" name="author"/>
+<meta content="خيمة في القلب — رواية وجدانية بتصميم قراءة متوافق مع تطبيق مكتبتي." name="description"/>
+<title>خَيْمَةٌ فِي القَلْب — رحلةُ فتاةٍ من ركامِ الصراخ إلى سكينةِ البناء</title>
+<style>:root{
+ --bg-primary:#FFF1F6;--bg-secondary:#FFFAFC;--bg-soft-rose:#F9DFE9;--bg-pearl-gold:#F8E8EE;
+ --accent-rose:#B94F7A;--accent-rose-light:#D47D9E;--accent-gold:#B88945;--accent-gold-soft:rgba(184,137,69,.24);
+ --text-primary:#91405F;--text-secondary:#A36D82;--line:rgba(185,79,122,.18);
+ --shadow-card:0 18px 48px rgba(145,64,95,.09);--reader-font:21px;
+ --font-body:"Noto Naskh Arabic","Amiri",serif;
+ --font-headings:"Aref Ruqaa","Amiri",serif;
+ --font-chapter-titles:"Reem Kufi","Noto Kufi Arabic",sans-serif;
+ --font-quotes:"Amiri","Noto Naskh Arabic",serif;
+ --font-interface:"Noto Sans Arabic","IBM Plex Sans Arabic",sans-serif;
+ --font-numbers:"Noto Sans Arabic","IBM Plex Sans Arabic",sans-serif;
+ --reader-family:var(--font-body);
+ --paper-edge:#DED8CB;--forest:#91405F;--app-wash:#F8E8EE;
+ color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body,.app{touch-action:pan-y pinch-zoom}
+button,input,select{touch-action:manipulation}
+#bookStage,.panel{touch-action:pan-y pinch-zoom}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);}
+body{overflow:hidden}
+button,input,select{font:inherit}
+button{touch-action:manipulation}
+.app{height:100vh;max-height:100vh;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(145deg,var(--bg-primary),var(--app-wash) 60%,var(--bg-primary));}
+.top-bar{height:58px;min-height:58px;flex:0 0 58px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(12px,3vw,22px);gap:10px;background:var(--bg-secondary);border-bottom:1px solid var(--line);z-index:10;box-shadow:0 3px 14px rgba(145,64,95,.055)}
+.brand{display:flex;align-items:center;gap:9px;min-width:0;color:var(--forest);font-family:var(--font-interface);font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-gem{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:50%;color:#fff;background:linear-gradient(145deg,var(--accent-rose),var(--forest));font-size:15px;box-shadow:0 3px 9px rgba(145,64,95,.18)}
+.tools{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.icon-btn,.nav-btn{border:1px solid var(--line);background:var(--bg-primary);color:var(--forest);border-radius:12px;min-width:40px;min-height:40px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-interface);font-size:13px;font-weight:700;cursor:pointer;transition:background .18s,border-color .18s,transform .15s}
+.icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.icon-btn:active,.nav-btn:active{transform:scale(.97)}
+.icon-btn:focus-visible,.nav-btn:focus-visible,.primary-btn:focus-visible,.toc-item:focus-visible,.theme-btn:focus-visible{outline:3px solid var(--accent-gold);outline-offset:2px}
+.icon-btn.bookmarked{background:var(--bg-pearl-gold);color:var(--accent-gold);border-color:var(--accent-gold)}
+.running-header{height:36px;min-height:36px;flex:0 0 36px;display:flex;align-items:center;justify-content:center;gap:9px;padding:2px 14px;background:var(--forest);color:#F7F4ED;border-bottom:2px solid var(--accent-gold);font-family:var(--font-interface);font-size:11px;font-weight:700;letter-spacing:.02em;text-align:center}
+.running-header[hidden]{display:none}.running-header-mark{color:#D9B979;font-size:12px}
+.book-stage{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:clamp(10px,2.7vw,22px) clamp(9px,2vw,16px) 18px;display:flex;align-items:flex-start;justify-content:center;scrollbar-width:thin;scrollbar-color:rgba(185,79,122,.28) transparent}
+.page-canvas{width:100%;max-width:760px;min-height:100%;height:auto;margin:0 auto;padding:clamp(20px,4.4vw,38px) clamp(18px,5vw,46px) clamp(30px,5vw,46px);position:relative;background:var(--bg-secondary);border:1px solid var(--paper-edge);border-radius:18px;box-shadow:var(--shadow-card);display:block;overflow:visible}
+.page-canvas:before{content:"";position:absolute;inset:8px;border:1px solid rgba(184,137,69,.16);border-radius:12px;pointer-events:none}
+.page{position:relative;z-index:1;width:100%;max-width:100%;font-family:var(--font-body);font-size:var(--reader-font);line-height:2.02;overflow-wrap:break-word;word-wrap:break-word;animation:pageIn .22s ease both}
+@keyframes pageIn{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
+.eyebrow{display:inline-flex;align-items:center;justify-content:center;gap:8px;color:var(--accent-rose);background:var(--bg-soft-rose);border:1px solid var(--line);border-radius:99px;padding:5px 15px;font-family:var(--font-interface);font-size:.61em;font-weight:700;letter-spacing:.025em;margin:0 auto 18px}
+h1,h2,h3,p{margin-top:0;max-width:100%}
+h1{font-family:var(--font-headings);font-size:1.62em;line-height:1.55;color:var(--forest);margin:0 0 16px;font-weight:700}
+h2{font-family:var(--font-headings);font-size:1.18em;line-height:1.65;color:var(--accent-rose);margin:0 0 16px;font-weight:700}
+h3{font-family:var(--font-headings);font-size:1em;color:var(--accent-gold);margin:22px 0 9px;font-weight:700}
+p{font-family:var(--font-body);margin:0 0 1.02em;text-align:justify;white-space:normal;overflow-wrap:break-word;hyphens:none}
+.reading p:not(.subtitle){text-indent:1.15em}
+.reading p + p{margin-top:.08em}
+.cover-page{min-height:clamp(520px,72vh,820px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;isolation:isolate;padding:clamp(28px,6vw,58px) 12px;background:radial-gradient(ellipse at 50% 42%,#FFFEFA 0%,#FFF1F6 57%,#F8E8EE 100%);border:1px solid rgba(184,137,69,.34);border-radius:12px;overflow:hidden}
+.cover-page:before,.cover-page:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(184,137,69,.32);border-radius:48% 48% 12% 12%;width:76%;height:78%;top:11%;left:12%;pointer-events:none}
+.cover-page:after{width:69%;height:71%;top:14.5%;left:15.5%;border-color:rgba(185,79,122,.22);border-style:dashed}
+.cover-art{width:min(44%,210px);height:auto;max-height:190px;margin:0 auto 18px;filter:drop-shadow(0 9px 13px rgba(145,64,95,.16))}
+.cover-page .eyebrow{margin-bottom:18px;background:rgba(255,254,250,.78)}
+.cover-page h1{font-family:var(--font-headings);font-size:clamp(2.05em,7vw,3.05em);line-height:1.42;letter-spacing:.005em;color:var(--forest);margin:0 0 12px;text-shadow:0 2px 0 rgba(255,255,255,.7)}
+.cover-page .subtitle{font-family:var(--font-body);font-size:1em;line-height:1.9;color:var(--text-secondary);max-width:88%;margin:0 auto 14px;text-align:center}
+.cover-page .ornament{margin:13px 0 10px}
+.cover-page .author{font-family:var(--font-interface);font-size:.66em;line-height:1.8;color:var(--text-secondary);margin:5px 0 22px;max-width:90%}
+.primary-btn{border:1px solid rgba(255,255,255,.28);border-radius:99px;background:linear-gradient(135deg,var(--accent-rose),var(--forest));color:#fff;padding:11px 27px;font-family:var(--font-interface);font-size:.68em;font-weight:700;cursor:pointer;box-shadow:0 7px 18px rgba(145,64,95,.22)}
+.ornament{color:var(--accent-gold);letter-spacing:.32em;font-size:.8em;margin:16px 0;text-align:center}
+.dedication{min-height:58vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 4px}
+.dedication h1{font-family:var(--font-headings);font-size:1.38em;color:var(--forest)}
+.dedication p{font-family:var(--font-body);text-align:center;font-size:1.02em;line-height:2.15;margin:0 auto 1.2em;max-width:92%}
+.quote-card{position:relative;border-inline-start:4px solid var(--accent-gold);padding:clamp(18px,4vw,28px);background:linear-gradient(135deg,var(--bg-pearl-gold),var(--bg-secondary));border-radius:14px;box-shadow:0 8px 24px rgba(145,64,95,.055);margin:18px 0;border-top:1px solid var(--accent-gold-soft);border-bottom:1px solid var(--accent-gold-soft);font-family:var(--font-quotes)}
+.quote-card:before{content:"“";position:absolute;top:-17px;inset-inline-end:15px;color:rgba(184,137,69,.25);font-family:var(--font-quotes);font-size:68px;line-height:1}
+.quote-text{font-family:var(--font-quotes);font-size:1.12em;line-height:2.08;color:var(--text-primary);text-align:center}
+.quote-caption{color:var(--accent-rose);font-family:var(--font-interface);font-size:.68em;font-weight:700;margin-top:15px;text-align:center}
+.opener{min-height:clamp(440px,65vh,720px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 12px;position:relative}
+.opener:before{content:"";position:absolute;inset:8% 8%;border:1px solid var(--accent-gold-soft);border-radius:48% 48% 14px 14px;pointer-events:none}
+.chapter-number{display:inline-flex;align-items:center;justify-content:center;color:var(--accent-gold);background:var(--bg-pearl-gold);border:1px solid var(--accent-gold-soft);border-radius:99px;padding:6px 20px;font-family:var(--font-chapter-titles);font-size:.68em;font-weight:700;margin-bottom:20px}
+.opener h1{font-family:var(--font-chapter-titles);font-size:clamp(1.65em,5vw,2.3em);line-height:1.7;max-width:90%;margin:0 auto 20px;color:var(--forest);font-weight:700}
+.opener .quote-card{max-width:92%;margin:4px auto 12px}
+.reading .section-opening{font-family:var(--font-headings);color:var(--forest);text-align:center;font-size:1.28em;line-height:1.75;margin:0 auto 1.25em;padding:0 8px 16px;max-width:92%;border-bottom:1px solid var(--accent-gold-soft);position:relative}
+.reading .section-opening:after{content:"✦";position:absolute;bottom:-12px;left:calc(50% - 10px);width:20px;background:var(--bg-secondary);color:var(--accent-gold);font-size:13px;line-height:1.2}
+.pullquote,.wisdom-pearl{font-family:var(--font-quotes);border-inline-start:3px solid var(--accent-gold);border-top:1px solid var(--accent-gold-soft);border-bottom:1px solid var(--accent-gold-soft);border-inline-end:1px solid var(--accent-gold-soft);padding:15px 18px;margin:20px 0;background:var(--bg-pearl-gold);border-radius:12px;font-size:.95em;line-height:1.95}
+.wisdom-badge{display:block;font-family:var(--font-interface);font-size:.62em;font-weight:700;color:var(--accent-gold);margin-bottom:7px}
+.manal-voice{font-family:var(--font-quotes);border-inline-start:3px solid var(--accent-rose);padding:15px 18px;margin:20px 0;background:var(--bg-soft-rose);border-radius:12px;font-size:.96em;line-height:2;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.manal-badge{display:block;font-family:var(--font-interface);font-size:.62em;font-weight:700;color:var(--accent-rose);margin-bottom:6px}
+.toc-list{display:flex;flex-direction:column;gap:9px;margin-top:20px}
+.toc-item{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:start;border:1px solid var(--line);border-radius:12px;padding:12px 15px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-interface);font-size:.76em;line-height:1.6;cursor:pointer;transition:border-color .2s,transform .15s}
+.toc-item:active{transform:scale(.99)}
+.toc-item.toc-chapter{font-family:var(--font-chapter-titles);background:var(--bg-soft-rose);border-color:var(--accent-rose-light);font-weight:700;color:var(--forest);margin-top:7px}
+.toc-item small{color:var(--accent-gold);font-family:var(--font-numbers);font-variant-numeric:tabular-nums;font-size:.78em;font-weight:700;white-space:nowrap;background:var(--bg-secondary);padding:3px 9px;border-radius:99px;border:1px solid var(--accent-gold-soft)}
+.closing{min-height:clamp(440px,65vh,720px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px 10px}
+.closing h1{font-family:var(--font-headings);font-size:1.65em;max-width:90%}.closing p{font-family:var(--font-body);text-align:center;color:var(--text-secondary);max-width:88%}
+.bottom-nav-dock{min-height:66px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px calc(env(safe-area-inset-bottom,8px) + 8px);background:var(--bg-secondary);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(145,64,95,.045);z-index:4}
+.nav-btn{min-width:94px;border-radius:12px;background:var(--forest);color:#fff;border-color:var(--forest);font-family:var(--font-interface);font-size:12px;padding:9px 15px}
+.nav-btn:disabled{opacity:.34;cursor:default}
+.page-counter{font-family:var(--font-numbers);font-size:11px;font-weight:700;color:var(--text-secondary);font-variant-numeric:tabular-nums;background:var(--bg-primary);border:1px solid var(--line);border-radius:99px;padding:6px 13px}
+.overlay{position:fixed;inset:0;z-index:45;background:rgba(88,32,56,.42);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;padding:12px}
+#searchPanel.overlay{align-items:flex-start;padding-top:64px;padding-bottom:76px}
+.overlay.open{display:flex}
+.panel{width:min(100%,650px);max-height:min(76vh,680px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg-secondary);border:1px solid var(--paper-edge);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(88,32,56,.22)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.panel-head h2{margin:0;color:var(--forest);font-family:var(--font-interface);font-size:16px;font-weight:700}
+.search-bar-wrap{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.field input,.field select,#searchInput{width:100%;min-height:46px;padding:10px 14px 10px 42px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-interface);font-size:14px;outline:none;transition:border-color .18s,box-shadow .18s}
+#searchInput:focus{border-color:var(--accent-rose);box-shadow:0 0 0 3px rgba(185,79,122,.14)}
+.search-clear-btn{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);min-width:30px;min-height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg-secondary);color:var(--accent-rose);font-family:var(--font-interface);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:2px 8px}
+.search-clear-btn[hidden]{display:none}
+.search-status{font-family:var(--font-interface);font-size:12px;color:var(--text-secondary);margin:4px 2px 10px;display:flex;align-items:center;justify-content:space-between}
+.search-result{width:100%;display:block;text-align:start;padding:12px 14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-interface);cursor:pointer;transition:border-color .18s,background .18s}
+.search-result:hover,.search-result:focus-visible{border-color:var(--accent-rose);background:var(--bg-soft-rose)}
+.search-result-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.search-result strong{display:block;color:var(--forest);font-family:var(--font-interface);font-size:13px;font-weight:700}
+.search-result-page{font-family:var(--font-numbers);font-variant-numeric:tabular-nums;font-size:11px;font-weight:700;color:var(--accent-gold);background:var(--bg-secondary);border:1px solid var(--accent-gold-soft);border-radius:99px;padding:2px 9px;white-space:nowrap}
+.search-result small{display:block;color:var(--text-secondary);font-family:var(--font-body);font-size:13.5px;line-height:1.85;margin-top:4px}
+mark.search-hit-mark{background:rgba(185,79,122,.18);color:var(--forest);padding:1px 5px;border-radius:5px;font-weight:700}
+mark.page-search-highlight{background:linear-gradient(135deg,rgba(249,223,233,.95),rgba(248,232,238,.95));color:var(--forest);padding:1px 6px;border-radius:6px;border-bottom:2px solid var(--accent-rose);box-shadow:0 2px 8px rgba(185,79,122,.14);font-weight:inherit}
+.empty{color:var(--text-secondary);text-align:center;padding:18px;font-family:var(--font-interface);font-size:14px}
+@media(min-width:700px){.book-stage{padding:22px}.page-canvas{padding:42px 52px 50px}.top-bar{padding-inline:24px}.running-header{font-size:12px}}
+@media(max-width:380px){.brand{font-size:12px}.icon-btn{min-width:36px;min-height:36px;padding:5px 8px}.tools{gap:4px}.page-canvas{padding:20px 15px 28px}.page{line-height:1.95}.nav-btn{min-width:82px;padding-inline:10px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+
+<style id="maktabati-perf-booster">
+  @font-face {
+    font-family: "Amiri";
+    src: url("assets/fonts/amiri/amiri-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/amiri/amiri-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Amiri";
+    src: url("assets/fonts/amiri/amiri-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/amiri/amiri-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("assets/fonts/noto-naskh-arabic/noto-naskh-arabic-500.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("assets/fonts/noto-naskh-arabic/noto-naskh-arabic-600.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("assets/fonts/noto-naskh-arabic/noto-naskh-arabic-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Aref Ruqaa";
+    src: url("assets/fonts/aref-ruqaa/aref-ruqaa-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/aref-ruqaa/aref-ruqaa-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Aref Ruqaa";
+    src: url("assets/fonts/aref-ruqaa/aref-ruqaa-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/aref-ruqaa/aref-ruqaa-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Reem Kufi";
+    src: url("assets/fonts/reem-kufi/reem-kufi-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Reem Kufi";
+    src: url("assets/fonts/reem-kufi/reem-kufi-500.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Reem Kufi";
+    src: url("assets/fonts/reem-kufi/reem-kufi-600.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Reem Kufi";
+    src: url("assets/fonts/reem-kufi/reem-kufi-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-500.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-600.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Sans Arabic";
+    src: url("assets/fonts/noto-sans-arabic/noto-sans-arabic-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Sans Arabic";
+    src: url("assets/fonts/noto-sans-arabic/noto-sans-arabic-500.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Sans Arabic";
+    src: url("assets/fonts/noto-sans-arabic/noto-sans-arabic-600.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Sans Arabic";
+    src: url("assets/fonts/noto-sans-arabic/noto-sans-arabic-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Kufi Arabic";
+    src: url("assets/fonts/noto-kufi-arabic/noto-kufi-arabic-400.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-kufi-arabic/noto-kufi-arabic-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Kufi Arabic";
+    src: url("assets/fonts/noto-kufi-arabic/noto-kufi-arabic-500.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-kufi-arabic/noto-kufi-arabic-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Kufi Arabic";
+    src: url("assets/fonts/noto-kufi-arabic/noto-kufi-arabic-600.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-kufi-arabic/noto-kufi-arabic-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Noto Kufi Arabic";
+    src: url("assets/fonts/noto-kufi-arabic/noto-kufi-arabic-700.woff2") format("woff2"),
+         url("https://maktabati.app/assets/fonts/noto-kufi-arabic/noto-kufi-arabic-700.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  :root {
+    --reader-font-size: 100%;
+    --font-scale: 1;
+  }
+  html, body {
+    width: 100%;
+    max-width: 100% !important;
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  .app {
+    width: 100%;
+    max-width: 100% !important;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  .book-stage, .stage {
+    width: 100%;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page-canvas, .page, .book-page, .page-container {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    position: relative;
+    transform-origin: center center;
+  }
+  .maktabati-gpu-hint {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+  @keyframes maktabatiMicroSlideNext {
+    0% {
+      opacity: 0.5;
+      transform: translateX(-10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes maktabatiMicroSlidePrev {
+    0% {
+      opacity: 0.5;
+      transform: translateX(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  .maktabati-transition-next {
+    animation: maktabatiMicroSlideNext 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .maktabati-transition-prev {
+    animation: maktabatiMicroSlidePrev 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  #pageInnerContent, .page-body, .page-content {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: calc(1em * var(--font-scale, 1));
+  }
+  #pageInnerContent *, .page-body *, .page-content *, .page-canvas * {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+  #pageInnerContent img, .page-body img, .page-content img,
+  #pageInnerContent svg, .page-body svg, .page-content svg,
+  #pageInnerContent video, .page-body video, .page-content video {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  #pageInnerContent table, .page-body table, .page-content table {
+    display: block;
+    max-width: 100% !important;
+    overflow-x: auto;
+    box-sizing: border-box !important;
+  }
+  .quote-box, blockquote, .insight-card, .flip-card, .quiz-card, .quiz-option {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-wrap: anywhere !important;
+  }
+  .overlay {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 45;
+  }
+  .bottom-nav-dock, .controls-bar, .page-footer {
+    flex-shrink: 0;
+    z-index: 4;
+  }
+</style>
+<script id="maktabati-storage-isolation">
+(function(){
+  if (window.__maktabatiV8Initialized) return;
+  window.__maktabatiV8Initialized = true;
+  window.__maktabatiV7Initialized = true;
+  window.__maktabatiV6Initialized = true;
+  window.__maktabatiV5Initialized = true;
+  window.__maktabatiV4Initialized = true;
+  window.__maktabatiV3Initialized = true;
+  try {
+    const P = "book_book_a64d9e4acf_", TOTAL = 105;
+    const memStore = {};
+    const key = function(k) { k = String(k); return k.indexOf(P) === 0 ? k : P + k; };
+
+    function purgeLegacyDomArtifacts() {
+      try {
+        const legacyIds = [
+          'maktabati-zoom-badge',
+          'maktabati-distortion-toast',
+          'maktabati-guard-toast',
+          'maktabati-page-curl-overlay',
+          'maktabati-curl-layer',
+          'maktabati-curl-backside',
+          'maktabati-curl-back',
+          'maktabati-curl-shadow',
+          'maktabati-curl-spine'
+        ];
+        for (let i = 0; i < legacyIds.length; i++) {
+          const el = document.getElementById(legacyIds[i]);
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+      } catch (e) {}
+    }
+
+    function getDomPageElements() {
+      try {
+        const dataPageEls = Array.from(document.querySelectorAll('[data-page]')).filter(function(el) {
+          return /^\d+$/.test((el.getAttribute('data-page') || '').trim());
+        });
+        if (dataPageEls.length > 0) return dataPageEls;
+        return Array.from(document.querySelectorAll('article.page, section.page, div.page, .book-page')).filter(function(el) {
+          return el.classList && (el.classList.contains('page') || el.classList.contains('book-page'));
+        });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function resolveTrueTotalPages() {
+      try {
+        const data = getBookData();
+        const pages = getPagesArray(data);
+        if (pages && pages.length > 0) return pages.length;
+        const domPages = getDomPageElements();
+        if (domPages.length > 0) return domPages.length;
+        const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+        if (counterEl) {
+          const m = (counterEl.textContent || '').match(/(\d+)\s*(?:\/|من)\s*(\d+)/);
+          if (m && Number(m[2]) > 0) return Number(m[2]);
+        }
+      } catch (e) {}
+      return TOTAL;
+    }
+
+    function reportPageToBridge(oneBasedPage, totalPages) {
+      try {
+        const tot = Math.max(1, Number(totalPages) || resolveTrueTotalPages() || 1);
+        const cur = Math.max(1, Math.min(tot, Number(oneBasedPage) || 1));
+        window.__maktabatiLastSavedPage = cur - 1;
+        if (window.__maktabatiLastReportedPage === cur && window.__maktabatiLastReportedTotal === tot) {
+          return;
+        }
+        window.__maktabatiLastReportedPage = cur;
+        window.__maktabatiLastReportedTotal = tot;
+        if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
+          window.MaktabatiBridge.onPageChanged(cur, tot);
+        }
+      } catch (e) {}
+    }
+
+    function syncDomActivePageWithBridge() {
+      try {
+        const domPages = getDomPageElements();
+        if (domPages.length > 0) {
+          let activeIdx = -1;
+          for (let i = 0; i < domPages.length; i++) {
+            if (domPages[i].classList && domPages[i].classList.contains('active')) {
+              activeIdx = i;
+              break;
+            }
+          }
+          if (activeIdx >= 0) {
+            reportPageToBridge(activeIdx + 1, domPages.length);
+            return;
+          }
+        }
+        const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+        if (counterEl) {
+          const m = (counterEl.textContent || '').match(/(\d+)\s*(?:\/|من)\s*(\d+)/);
+          if (m && Number(m[1]) > 0 && Number(m[2]) > 0) {
+            reportPageToBridge(Number(m[1]), Number(m[2]));
+          }
+        }
+      } catch (e) {}
+    }
+
+    function notifyBridgeFromJson(sv) {
+      try {
+        if (!sv || sv.charAt(0) !== '{') return;
+        const d = JSON.parse(sv);
+        if (!d) return;
+        const pNum = typeof d.currentPage === 'number' ? d.currentPage : (typeof d.page === 'number' ? d.page : null);
+        if (pNum !== null) {
+          reportPageToBridge(pNum + 1, resolveTrueTotalPages());
+        }
+      } catch (e) {}
+    }
+
+    const fallbackStorage = {
+      getItem: function(k) {
+        const sk = key(k);
+        return Object.prototype.hasOwnProperty.call(memStore, sk) ? memStore[sk] : null;
+      },
+      setItem: function(k, v) {
+        const sk = key(k);
+        const sv = String(v);
+        memStore[sk] = sv;
+        notifyBridgeFromJson(sv);
+      },
+      removeItem: function(k) {
+        delete memStore[key(k)];
+      },
+      clear: function() {
+        for (const prop in memStore) {
+          if (Object.prototype.hasOwnProperty.call(memStore, prop)) delete memStore[prop];
+        }
+      }
+    };
+
+    let nativeStorageOk = false;
+    try {
+      const ls = window.localStorage;
+      if (ls) {
+        ls.setItem(P + "__probe__", "1");
+        ls.removeItem(P + "__probe__");
+        nativeStorageOk = true;
+      }
+    } catch (e) {
+      nativeStorageOk = false;
+    }
+
+    if (!nativeStorageOk) {
+      try {
+        Object.defineProperty(window, 'localStorage', {
+          configurable: true,
+          enumerable: true,
+          get: function() { return fallbackStorage; }
+        });
+      } catch (e) {}
+    } else {
+      try {
+        const origGet = Storage.prototype.getItem;
+        const origSet = Storage.prototype.setItem;
+        const origRem = Storage.prototype.removeItem;
+
+        Storage.prototype.getItem = function(k) {
+          const sk = key(k);
+          try {
+            const v = origGet.call(this, sk);
+            return v !== null ? v : (memStore[sk] !== undefined ? memStore[sk] : null);
+          } catch (e) {
+            return memStore[sk] !== undefined ? memStore[sk] : null;
+          }
+        };
+
+        Storage.prototype.setItem = function(k, v) {
+          const sk = key(k);
+          const sv = String(v);
+          memStore[sk] = sv;
+          try { origSet.call(this, sk, sv); } catch (e) {}
+          notifyBridgeFromJson(sv);
+        };
+
+        Storage.prototype.removeItem = function(k) {
+          const sk = key(k);
+          delete memStore[sk];
+          try { origRem.call(this, sk); } catch (e) {}
+        };
+      } catch (storageErr) {}
+    }
+
+    const pageHtmlCache = {};
+
+    function getBookData() {
+      try { if (typeof BOOK_DATA !== 'undefined' && BOOK_DATA) return BOOK_DATA; } catch (e) {}
+      try { if (window.BOOK_DATA) return window.BOOK_DATA; } catch (e) {}
+      return null;
+    }
+
+    function getPagesArray(data) {
+      if (!data) return null;
+      if (Array.isArray(data.pages)) return data.pages;
+      if (Array.isArray(data.chapters)) return data.chapters;
+      if (Array.isArray(data.sections)) return data.sections;
+      if (Array.isArray(data.slides)) return data.slides;
+      return null;
+    }
+
+    function getCurrentPageIndex() {
+      try {
+        if (typeof state !== 'undefined' && state) {
+          if (typeof state.currentPage === 'number') return state.currentPage;
+          if (typeof state.page === 'number') return state.page;
+        }
+      } catch (e) {}
+      try { if (typeof currentPage === 'number') return currentPage; } catch (e) {}
+      if (window.state) {
+        if (typeof window.state.currentPage === 'number') return window.state.currentPage;
+        if (typeof window.state.page === 'number') return window.state.page;
+      }
+      if (typeof window.currentPage === 'number') return window.currentPage;
+      const domPages = getDomPageElements();
+      if (domPages.length > 0) {
+        for (let i = 0; i < domPages.length; i++) {
+          if (domPages[i].classList && domPages[i].classList.contains('active')) {
+            return i;
+          }
+        }
+      }
+      if (typeof window.__maktabatiLastSavedPage === 'number') return window.__maktabatiLastSavedPage;
+      if (typeof window.__maktabatiFallbackPage === 'number') return window.__maktabatiFallbackPage;
+      return 0;
+    }
+
+    function setCurrentPageIndex(newIdx) {
+      window.__maktabatiFallbackPage = newIdx;
+      window.__maktabatiLastSavedPage = newIdx;
+      try {
+        if (typeof state !== 'undefined' && state) {
+          state.currentPage = newIdx;
+          state.page = newIdx;
+        }
+      } catch (e) {}
+      try { if (typeof currentPage !== 'undefined') currentPage = newIdx; } catch (e) {}
+      if (window.state) {
+        window.state.currentPage = newIdx;
+        window.state.page = newIdx;
+      }
+    }
+
+    function getActivePageCanvas() {
+      return document.getElementById('pageCanvas')
+        || document.getElementById('pageInnerContent')
+        || document.getElementById('pageContent')
+        || document.querySelector('.page-canvas, .page.active, .book-page.active, .page-body, .app')
+        || document.body;
+    }
+
+    let transitionCleanupTimer = null;
+    function animateSubtlePageTransition(delta) {
+      try {
+        const target = getActivePageCanvas();
+        if (!target || target === document.body) return;
+        target.classList.remove('maktabati-transition-next', 'maktabati-transition-prev');
+        void target.offsetWidth;
+        const cls = delta >= 0 ? 'maktabati-transition-next' : 'maktabati-transition-prev';
+        target.classList.add(cls);
+        if (transitionCleanupTimer) clearTimeout(transitionCleanupTimer);
+        transitionCleanupTimer = setTimeout(function() {
+          try {
+            target.classList.remove('maktabati-transition-next', 'maktabati-transition-prev');
+          } catch (e) {}
+        }, 200);
+      } catch (e) {}
+    }
+
+    function buildPageHtml(pageObj, idx) {
+      if (pageHtmlCache[idx]) return pageHtmlCache[idx];
+      if (!pageObj) return '';
+      const parts = [];
+      const badge = pageObj.chapterTag || pageObj.chapterNumber || pageObj.sectionTitle || pageObj.badge || ('صفحة ' + (idx + 1));
+      const heading = pageObj.title || pageObj.heading || pageObj.name || '';
+      const sub = pageObj.subtitle || '';
+
+      if (badge) {
+        parts.push('<div style="display:inline-block;align-self:center;padding:3px 12px;border-radius:99px;font-size:0.8em;font-weight:bold;opacity:0.88;border:1px solid currentColor;margin-bottom:8px;">' + badge + '</div>');
+      }
+      if (heading) {
+        parts.push('<h2 style="margin:0 0 8px 0;line-height:1.45;text-align:center;font-size:1.32em;">' + heading + '</h2>');
+      }
+      if (sub && sub !== heading) {
+        parts.push('<div style="text-align:center;opacity:0.8;font-size:0.92em;margin-bottom:10px;">' + sub + '</div>');
+      }
+      if (pageObj.ayah || pageObj.verse) {
+        parts.push('<div class="quote-box" style="margin:8px 0;padding:10px 14px;border-right:3px solid #D97706;background:rgba(217,119,6,0.08);border-radius:10px;text-align:center;font-weight:bold;font-size:1.05em;line-height:1.8;">' + (pageObj.ayah || pageObj.verse) + '</div>');
+      }
+      if (pageObj.hadith) {
+        parts.push('<div class="quote-box" style="margin:8px 0;padding:9px 13px;border-right:3px solid #B94F7A;background:rgba(185,79,122,0.07);border-radius:10px;font-size:0.96em;line-height:1.7;">' + pageObj.hadith + '</div>');
+      }
+      if (typeof pageObj.content === 'string' && pageObj.content.trim()) {
+        parts.push('<div style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.content + '</div>');
+      } else if (typeof pageObj.html === 'string' && pageObj.html.trim()) {
+        parts.push('<div style="line-height:1.85;font-size:1em;">' + pageObj.html + '</div>');
+      } else if (typeof pageObj.body === 'string' && pageObj.body.trim()) {
+        parts.push('<p style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.body + '</p>');
+      } else if (typeof pageObj.text === 'string' && pageObj.text.trim()) {
+        parts.push('<p style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.text + '</p>');
+      }
+      if (Array.isArray(pageObj.paragraphs)) {
+        pageObj.paragraphs.forEach(function(p) {
+          if (typeof p === 'string' && p.trim()) {
+            parts.push('<p style="line-height:1.85;font-size:1em;margin:0 0 10px 0;text-align:justify;">' + p + '</p>');
+          } else if (p && typeof p.text === 'string') {
+            parts.push('<p style="line-height:1.85;font-size:1em;margin:0 0 10px 0;text-align:justify;">' + p.text + '</p>');
+          }
+        });
+      }
+      const quoteText = pageObj.quote || pageObj.epigraph || pageObj.reflection || '';
+      if (quoteText) {
+        parts.push('<blockquote style="margin:10px 0;padding:10px 14px;border-right:3px solid currentColor;opacity:0.9;font-style:italic;border-radius:8px;background:rgba(128,128,128,0.07);">' + quoteText + '</blockquote>');
+      }
+      const built = parts.join('');
+      pageHtmlCache[idx] = built;
+      return built;
+    }
+
+    // =========================================================================
+    // 1. SILENT FLUID REFLOW ZOOM ENGINE & SILENT LAYOUT CONTAINMENT
+    //    (Zero DOM HUD elements or warning toasts inside WebView)
+    // =========================================================================
+    let currentZoomPercent = 100;
+
+    const MaktabatiLayoutGuard = {
+      inspectAndHeal: function() {
+        try {
+          const canvas = getActivePageCanvas();
+          if (!canvas) return { healedCount: 0 };
+          const canvasWidth = canvas.clientWidth || window.innerWidth || 360;
+          let healedCount = 0;
+
+          const candidates = canvas.querySelectorAll(
+            'table, img, svg, video, pre, code, blockquote, .quote-box, .flip-card, .insight-card, .quiz-card, .quiz-option, div, p, section, article, h1, h2, h3, h4'
+          );
+          for (let i = 0; i < candidates.length; i++) {
+            const el = candidates[i];
+            if (!el) continue;
+            if (el.scrollWidth > canvasWidth + 8) {
+              el.style.setProperty('max-width', '100%', 'important');
+              el.style.setProperty('box-sizing', 'border-box', 'important');
+              el.style.setProperty('overflow-wrap', 'anywhere', 'important');
+              el.style.setProperty('word-break', 'break-word', 'important');
+              if (el.style.width && el.style.width.indexOf('px') !== -1) {
+                el.style.setProperty('width', '100%', 'important');
+                el.style.setProperty('min-width', '0', 'important');
+              }
+              healedCount++;
+            }
+          }
+          return { healedCount: healedCount };
+        } catch (e) {
+          return { healedCount: 0 };
+        }
+      }
+    };
+    window.MaktabatiLayoutGuard = MaktabatiLayoutGuard;
+
+    window.__maktabatiSetFluidZoom = function(percent, fromNative) {
+      try {
+        let target = Math.round(Number(percent) || 100);
+        if (target < 75) target = 75;
+        if (target > 200) target = 200;
+
+        currentZoomPercent = target;
+        const scale = +(target / 100).toFixed(2);
+        const root = document.documentElement;
+        root.style.setProperty('--reader-font', String(scale));
+        root.style.setProperty('--reader-font-size', target + '%');
+        root.style.setProperty('--font-scale', String(scale));
+
+        try {
+          if (typeof state !== 'undefined' && state) {
+            state.fontScale = scale;
+          }
+          if (window.state) {
+            window.state.fontScale = scale;
+          }
+        } catch (e) {}
+
+        const bodyContainers = document.querySelectorAll('#pageInnerContent, #pageBody, .page-body, .page-content');
+        for (let i = 0; i < bodyContainers.length; i++) {
+          bodyContainers[i].style.fontSize = 'calc(1.08rem * ' + scale + ')';
+          bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
+        }
+
+        MaktabatiLayoutGuard.inspectAndHeal();
+
+        if (!fromNative && window.MaktabatiBridge && window.MaktabatiBridge.onZoomChanged) {
+          window.MaktabatiBridge.onZoomChanged(target);
+        }
+      } catch (e) {}
+    };
+
+    // Zero-reflow check: only acts if the book template left its container completely empty
+    function healBlankPageIfNeeded() {
+      try {
+        purgeLegacyDomArtifacts();
+        syncDomActivePageWithBridge();
+        let container = document.getElementById('pageCanvas')
+          || document.getElementById('pageInnerContent')
+          || document.getElementById('pageContent')
+          || document.querySelector('.page-canvas, .page.active .page-body, .page.active, .book-page.active');
+
+        if (container && (container.childElementCount > 0 || (container.textContent || '').trim().length > 0)) {
+          MaktabatiLayoutGuard.inspectAndHeal();
+          return;
+        }
+
+        const data = getBookData();
+        const pages = getPagesArray(data);
+        if (!pages || !pages.length) return;
+        const idx = Math.max(0, Math.min(pages.length - 1, getCurrentPageIndex()));
+        const pageObj = pages[idx];
+        if (!pageObj) return;
+
+        if (!container) {
+          const stage = document.createElement('div');
+          stage.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;padding:12px;box-sizing:border-box;';
+          stage.innerHTML =
+            '<div id="pageInnerContent" style="flex:1;background:#FCF9F2;color:#1F1A17;border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,0.2);"></div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;margin-top:8px;background:rgba(0,0,0,0.35);color:#fff;border-radius:12px;">' +
+              '<button id="btnPrevPage" onclick="window.__maktabatiTurn(-1)" style="padding:6px 14px;border-radius:8px;border:0;font-weight:bold;">السابق</button>' +
+              '<span id="pageCounter"></span>' +
+              '<button id="btnNextPage" onclick="window.__maktabatiTurn(1)" style="padding:6px 14px;border-radius:8px;border:0;font-weight:bold;">التالي</button>' +
+            '</div>';
+          document.body.appendChild(stage);
+          container = document.getElementById('pageInnerContent');
+        }
+
+        const html = buildPageHtml(pageObj, idx);
+        if (html && container) {
+          container.innerHTML = html;
+        }
+        const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
+        if (counterEl && !(counterEl.textContent || '').trim()) {
+          counterEl.textContent = (idx + 1) + ' / ' + pages.length;
+        }
+        MaktabatiLayoutGuard.inspectAndHeal();
+        reportPageToBridge(idx + 1, pages.length);
+      } catch (e) {}
+    }
+
+    window.__maktabatiTurn = function(delta) {
+      const data = getBookData();
+      const pages = getPagesArray(data);
+      if (pages && pages.length) {
+        const curIdx = getCurrentPageIndex();
+        const nextIdx = Math.max(0, Math.min(pages.length - 1, curIdx + delta));
+        if (nextIdx === curIdx) return;
+        setCurrentPageIndex(nextIdx);
+        const container = document.getElementById('pageInnerContent') || document.getElementById('pageContent') || document.getElementById('pageCanvas');
+        if (container) {
+          container.innerHTML = buildPageHtml(pages[nextIdx], nextIdx);
+        }
+        const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
+        if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
+        animateSubtlePageTransition(delta);
+        MaktabatiLayoutGuard.inspectAndHeal();
+        reportPageToBridge(nextIdx + 1, pages.length);
+        return;
+      }
+      const domPages = getDomPageElements();
+      if (domPages.length > 0) {
+        const curIdx = getCurrentPageIndex();
+        const nextIdx = Math.max(0, Math.min(domPages.length - 1, curIdx + delta));
+        if (nextIdx === curIdx) return;
+        for (let i = 0; i < domPages.length; i++) {
+          if (i === nextIdx) domPages[i].classList.add('active');
+          else domPages[i].classList.remove('active');
+        }
+        const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+        if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + domPages.length;
+        animateSubtlePageTransition(delta);
+        MaktabatiLayoutGuard.inspectAndHeal();
+        reportPageToBridge(nextIdx + 1, domPages.length);
+      }
+    };
+
+    window.__maktabatiGoToDomPage = function(targetZeroBasedIdx) {
+      try {
+        if (typeof window.goToPage === 'function') {
+          window.goToPage(targetZeroBasedIdx);
+          setTimeout(syncDomActivePageWithBridge, 30);
+          return;
+        }
+        const domPages = getDomPageElements();
+        if (domPages.length > 0) {
+          const target = Math.max(0, Math.min(domPages.length - 1, Number(targetZeroBasedIdx) || 0));
+          const cur = getCurrentPageIndex();
+          const diff = target - cur;
+          if (diff !== 0) {
+            const btnSelector = diff > 0
+              ? '#btnNextPage,#nextBtn,.btn-next,[data-action="next"]'
+              : '#btnPrevPage,#prevBtn,.btn-prev,[data-action="prev"]';
+            const btn = document.querySelector(btnSelector);
+            if (btn) {
+              const steps = Math.abs(diff);
+              for (let s = 0; s < steps; s++) {
+                if (!btn.disabled) btn.click();
+              }
+              animateSubtlePageTransition(diff);
+              setTimeout(syncDomActivePageWithBridge, 30);
+              return;
+            }
+          }
+          for (let i = 0; i < domPages.length; i++) {
+            if (i === target) domPages[i].classList.add('active');
+            else domPages[i].classList.remove('active');
+          }
+          const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+          if (counterEl) counterEl.textContent = (target + 1) + ' / ' + domPages.length;
+          if (diff !== 0) animateSubtlePageTransition(diff);
+          reportPageToBridge(target + 1, domPages.length);
+        }
+      } catch (e) {}
+    };
+
+    let domSyncObserverAttached = false;
+    let domSyncDebounceTimer = null;
+    function scheduleDomPageSync() {
+      if (domSyncDebounceTimer) clearTimeout(domSyncDebounceTimer);
+      domSyncDebounceTimer = setTimeout(function() {
+        syncDomActivePageWithBridge();
+      }, 25);
+    }
+
+    function attachLiveDomPageObserver() {
+      if (domSyncObserverAttached || !document.body) return;
+      domSyncObserverAttached = true;
+      try {
+        const observer = new MutationObserver(function() {
+          scheduleDomPageSync();
+        });
+        observer.observe(document.body, {
+          attributes: true,
+          attributeFilter: ['class'],
+          subtree: true,
+          childList: true,
+          characterData: true
+        });
+      } catch (e) {}
+      document.addEventListener('click', function() {
+        scheduleDomPageSync();
+      }, { passive: true });
+      scheduleDomPageSync();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        purgeLegacyDomArtifacts();
+        attachLiveDomPageObserver();
+        setTimeout(healBlankPageIfNeeded, 20);
+      });
+    } else {
+      purgeLegacyDomArtifacts();
+      attachLiveDomPageObserver();
+      setTimeout(healBlankPageIfNeeded, 20);
+    }
+
+    function triggerUniversalPageTurn(delta) {
+      try {
+        const beforePage = getCurrentPageIndex();
+        if (delta > 0 && typeof window.nextPage === 'function') {
+          window.nextPage();
+          animateSubtlePageTransition(delta);
+          setTimeout(function() {
+            syncDomActivePageWithBridge();
+            MaktabatiLayoutGuard.inspectAndHeal();
+          }, 25);
+          return true;
+        }
+        if (delta < 0 && typeof window.prevPage === 'function') {
+          window.prevPage();
+          animateSubtlePageTransition(delta);
+          setTimeout(function() {
+            syncDomActivePageWithBridge();
+            MaktabatiLayoutGuard.inspectAndHeal();
+          }, 25);
+          return true;
+        }
+        if (typeof window.changePage === 'function') {
+          window.changePage(delta);
+          animateSubtlePageTransition(delta);
+          setTimeout(function() {
+            syncDomActivePageWithBridge();
+            MaktabatiLayoutGuard.inspectAndHeal();
+          }, 25);
+          return true;
+        }
+        if (typeof window.goToPage === 'function') {
+          window.goToPage(beforePage + delta);
+          animateSubtlePageTransition(delta);
+          setTimeout(function() {
+            syncDomActivePageWithBridge();
+            MaktabatiLayoutGuard.inspectAndHeal();
+          }, 25);
+          return true;
+        }
+        const btnSelector = delta > 0
+          ? '#btnNextPage,#nextBtn,.btn-next,[data-action="next"]'
+          : '#btnPrevPage,#prevBtn,.btn-prev,[data-action="prev"]';
+        const btn = document.querySelector(btnSelector);
+        if (btn && !btn.disabled) {
+          btn.click();
+          animateSubtlePageTransition(delta);
+          setTimeout(function() {
+            syncDomActivePageWithBridge();
+            MaktabatiLayoutGuard.inspectAndHeal();
+          }, 25);
+          return true;
+        }
+        window.__maktabatiTurn(delta);
+        return true;
+      } catch (e) {}
+      return false;
+    }
+
+    // =========================================================================
+    // 2. CLEAN TOUCH NAVIGATION (SUBTLE SMOOTH FADE & MICRO-SLIDE)
+    //    + 2-FINGER FLUID REFLOW PINCH-TO-ZOOM
+    // =========================================================================
+    const INTERACTIVE_PROTECTED_SELECTOR =
+      'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay,.panel,#searchPanel,#tocPanel';
+
+    function isProtectedInteractiveTarget(tgt) {
+      if (!tgt || !tgt.closest) return false;
+      return Boolean(tgt.closest(INTERACTIVE_PROTECTED_SELECTOR));
+    }
+
+    let tStartX = 0, tStartY = 0, tStartPage = 0, tIgnore = false;
+    let isPinching = false, pinchStartDist = 0, pinchStartZoom = 100;
+
+    function getTouchDist(t0, t1) {
+      const dx = t0.clientX - t1.clientX;
+      const dy = t0.clientY - t1.clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    document.addEventListener('touchstart', function(e) {
+      if (!e.touches) return;
+
+      // 2-Finger Pinch-to-Zoom (Fluid Reflow Zoom)
+      if (e.touches.length >= 2) {
+        tIgnore = true;
+        isPinching = true;
+        pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+        pinchStartZoom = currentZoomPercent;
+        return;
+      }
+
+      isPinching = false;
+      if (e.touches.length !== 1) { tIgnore = true; return; }
+      const tgt = e.target;
+      if (isProtectedInteractiveTarget(tgt)) {
+        tIgnore = true;
+        return;
+      }
+
+      tIgnore = false;
+      tStartX = e.touches[0].clientX;
+      tStartY = e.touches[0].clientY;
+      tStartPage = getCurrentPageIndex();
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+      if (!e.touches) return;
+
+      if (isPinching && e.touches.length >= 2) {
+        const dist = getTouchDist(e.touches[0], e.touches[1]);
+        if (pinchStartDist > 20) {
+          const ratio = dist / pinchStartDist;
+          const nextZoom = Math.round(pinchStartZoom * ratio);
+          if (Math.abs(nextZoom - currentZoomPercent) >= 2) {
+            window.__maktabatiSetFluidZoom(nextZoom, false);
+          }
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+      if (isPinching) {
+        if (!e.touches || e.touches.length < 2) {
+          isPinching = false;
+        }
+        return;
+      }
+
+      if (tIgnore || !e.changedTouches || e.changedTouches.length !== 1) {
+        return;
+      }
+
+      const dx = e.changedTouches[0].clientX - tStartX;
+      const dy = e.changedTouches[0].clientY - tStartY;
+      const absX = Math.abs(dx), absY = Math.abs(dy);
+      const vw = Math.max(240, window.innerWidth || 360);
+      const swipeThreshold = Math.min(vw * 0.22, 64);
+
+      const completedHorizontalSwipe = absX >= swipeThreshold && absX > absY * 1.25;
+      if (!completedHorizontalSwipe) {
+        return;
+      }
+
+      setTimeout(function() {
+        const dirAttr = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
+        const isRtl = dirAttr === 'rtl';
+        const delta = isRtl ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1);
+        if (getCurrentPageIndex() !== tStartPage) {
+          animateSubtlePageTransition(delta);
+          return;
+        }
+        triggerUniversalPageTurn(delta);
+      }, 16);
+    }, { passive: true });
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="app">
+<header class="top-bar">
+<div class="brand"><span class="brand-gem">✿</span><span>خيمةٌ في القلب</span></div>
+<div class="tools">
+<button aria-label="بحث في الكتاب" class="icon-btn" id="searchOpen" title="بحث في الكتاب" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><line x1="20" x2="16.2" y1="20" y2="16.2"></line></svg>
+</button>
+<button aria-label="الفهرس" class="icon-btn" id="tocOpen" title="فهرس الرحلة" type="button">☷</button>
+<button aria-label="حفظ علامة مرجعية لهذه الصفحة" aria-pressed="false" class="icon-btn" id="bookmarkBtn" title="علامة مرجعية" type="button">☆</button>
+</div>
+</header>
+<div aria-atomic="true" aria-live="polite" class="running-header" hidden="" id="runningHeader">
+<span aria-hidden="true" class="running-header-mark">✦</span>
+<span id="runningHeaderText"></span>
+</div>
+<main class="book-stage" id="bookStage">
+<div class="page-canvas" id="pageCanvas">
+<article class="page cover-page">
+<div class="cover-crest">
+<svg fill="none" height="36" viewbox="0 0 48 48" width="36">
+<path d="M24 6C27 14 34 19 42 22C34 25 27 30 24 38C21 30 14 25 6 22C14 19 21 14 24 6Z" fill="rgba(158,59,90,0.12)" stroke="#C49148" stroke-width="2"></path>
+<circle cx="24" cy="22" fill="#9E3B5A" r="4"></circle>
+</svg>
+</div>
+<div class="eyebrow">✿ رحلةٌ إلى السكينةِ وبناءِ الذات ✿</div>
+<h1>خَيْمَةٌ فِي القَلْب</h1>
+<p class="subtitle">رحلةُ فتاةٍ من ركامِ الصراخ إلى سكينةِ البناء</p>
+<div class="ornament">✦ ❀ ✦</div>
+<p class="author">حواريّةٌ وجدانيّةٌ في بناءِ الذاتِ والسكينة</p>
+<button class="primary-btn" onclick="nextPage()">افتحي خيمتكِ ‹</button>
+</article>
+
+</div>
+</main>
+<footer class="bottom-nav-dock">
+<button aria-label="الانتقال إلى الصفحة السابقة" class="nav-btn" id="prevBtn" type="button">السابق ‹</button>
+<span aria-atomic="true" aria-live="polite" class="page-counter" id="pageCounter">1 / 105</span>
+<button aria-label="الانتقال إلى الصفحة التالية" class="nav-btn" id="nextBtn" type="button">التالي ›</button>
+</footer>
+</div>
+<div aria-labelledby="tocTitle" aria-modal="true" class="overlay" id="tocPanel" role="dialog">
+<section class="panel">
+<div class="panel-head"><h2 id="tocTitle">✿ فهرسُ الرحلة</h2><button aria-label="إغلاق الفهرس" class="icon-btn closePanel" type="button">✕</button></div>
+<div class="toc-list" id="tocList"></div>
+</section>
+</div>
+<div aria-labelledby="searchTitle" aria-modal="true" class="overlay" id="searchPanel" role="dialog">
+<section class="panel">
+<div class="panel-head"><h2 id="searchTitle">✿ البحثُ في الكتاب</h2><button aria-label="إغلاق البحث" class="icon-btn closePanel" id="searchCloseBtn" type="button">✕</button></div>
+<div class="search-bar-wrap">
+<input autocomplete="off" id="searchInput" placeholder="اكتبي كلمةً أو عبارةً للبحث في جميع الصفحات..." type="search"/>
+<button aria-label="مسح عبارة البحث" class="search-clear-btn" hidden="" id="searchClearBtn" type="button">مسح</button>
+</div>
+<div aria-live="polite" class="search-status" id="searchStatus" role="status">ابحثي في كامل محتوى الكتاب (١٠٥ صفحات) مع التشكيل أو بدونه.</div>
+<div id="searchResults"></div>
+</section>
+</div>
+<script>
+const BOOK_DATA = {"title":"خَيْمَةٌ فِي القَلْب","subtitle":"رحلةُ فتاةٍ من ركامِ الصراخ إلى سكينةِ البناء","author":"إصدارات مكتبتي الفاخرة — حواريّةٌ في بناءِ الذات","edition":"الطبعة الرقمية التفاعلية","pages":[{"type":"cover","title":"خَيْمَةٌ فِي القَلْب","subtitle":"رحلةُ فتاةٍ من ركامِ الصراخ إلى سكينةِ البناء","author":"حواريّةٌ وجدانيّةٌ في بناءِ الذاتِ والسكينة"},{"type":"dedication","title":"إهداء","paragraphs":["إلى كلِّ فتاةٍ جلستْ في ركنٍ ضيق، تُغلقُ كتابًا وتفتحُ قلبًا، تبحثُ بين السطور عمّا لم تجدْه بين الجدران...","إلى منالَ التي فينا جميعًا، هذه الصفحاتُ مصباحٌ صغير، يكفي لإضاءةِ الخطوةِ التالية."]},{"type":"quote-showcase","quote":"«إنَّ مع العُسرِ يُسرًا» وإنَّ مع كلِّ بيتٍ تصدّعتْ جدرانُه، قلبًا واحدًا يقرّر ألّا يكون امتدادًا للتصدّع، بل أن يكون أوّلَ حجرٍ في جدارٍ جديد.","caption":"على عتبةِ الكتاب"},{"type":"toc","title":"فهرسُ الرحلة"},{"type":"reading","chapterTag":"الفاتحة","sectionTitle":"مِنْ ركنِ الغرفةِ الضيّق","paragraphs":["في ركنِ غرفتي الضيّق، حيث لا يصلُ ضوءُ المصباحِ الخافت إلا إلى منتصفِ الصفحة، أجلسُ وأمامي هذا الكتاب.","بالخارج، خلفَ البابِ الخشبيِّ الذي تآكلتْ أطرافُه، يرتفعُ صوتُ أبي غاضبًا كالعادة، وتردُّ عليه أمي بصراخٍ أعلى. لغةٌ لا أعرفها ولا تشبهني، لكنها اللغةُ الوحيدةُ التي يتحدّثُ بها بيتُنا منذ أدركتْ عينايَ الدنيا.","أضعُ يديَّ على أذنيَّ، وأغرقُ في صمتِ الأوراق."]},{"type":"reading","chapterTag":"الفاتحة","sectionTitle":"مِنْ ركنِ الغرفةِ الضيّق","paragraphs":["أنا \"منال\"، الفتاةُ التي يقولون عنها إنها \"فاتتها قافلةُ التعليم\"، ولا يعرفون أنني في غرفتي هذه قد بنيتُ قوافلَ من الأحلامِ والكلمات. لستُ حزينةً لأنني لم أُكمل مدرستي، فالكتبُ التي جئتُ بها من الأرصفةِ وباعةِ الخردة علّمتني كيف أقرأ قلبي، لكنها لم تعلّمني بعدُ كيف أُرمّمُ هذا القلبَ الذي تصدّعَ من أثرِ الصراخِ اليومي.","أحيانًا، حين يهدأ الضجيجُ فجأة، يداهمني خوفٌ غريب. أنظرُ إلى مرآتي الصدئة وأتساءل:","هل سأكونُ مثلَهم يومًا؟"]},{"type":"reading","chapterTag":"الفاتحة","sectionTitle":"مِنْ ركنِ الغرفةِ الضيّق","paragraphs":["هل سأحملُ معي هذه النيرانَ إلى بيتٍ جديد حين يطرقُ النصيبُ بابي؟","كيف يمكنُ لفتاةٍ مثلي، لا تملكُ شهاداتٍ معلّقةً على الجدران، ولا مالًا في الخزائن، ولا سكنًا في الروح، أن تبنيَ \"ذاتًا\" قويّة؟","وكيف لي أن أتعلَّمَ فنَّ إدارةِ الحياة، وأنا لم أرَ في حياتي إلا سوءَ الإدارة؟"]},{"type":"reading","chapterTag":"الفاتحة","sectionTitle":"مِنْ ركنِ الغرفةِ الضيّق","paragraphs":["أيها الحكيم...","لقد فتحتُ كتابَك هذا بقلبٍ يرتجفُ خجلًا وأملًا. لا أملكُ إلا صدقي، ورغبتي في أن أكونَ \"أنا\" لا \"هم\".","فهل يمكنُ للوردةِ أن تنبتَ في أرضٍ لم تذقْ طعمَ العناية؟ وهل للسكينةِ أن تجدَ طريقَها لمن نبتتْ في جوفِ العاصفة؟"]},{"type":"reading","chapterTag":"الفاتحة","sectionTitle":"مِنْ ركنِ الغرفةِ الضيّق","paragraphs":["أريدُ أن أتعلَّم، ليس لأجلِ امتحانٍ أو شهادة، بل لأجلِ تلك المرأةِ التي ستكونُ أمًّا وزوجةً وصانعةَ حياةٍ يومًا ما...","أريدُ أن أكونَ \"منال\" التي لم تُهزم.","فمِنْ أينَ أبدأ، والزادُ قليل، والطريقُ موحش؟"]},{"type":"chapter-opener","chapterNumber":"الأوّل","title":"البابُ الأوّل","epigraph":"«الألمُ الذي يرفضُ القسوةَ هو أُولى علاماتِ التعافي.. ومن خافَ أن يُشبهَ جلّادَه، فقد وضعَ قدمَه على أوّلِ طريقِ النجاة.»"},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"يقظةُ الألم.. الخوفُ الذي يَحرُسكِ","paragraphs":["حينَ تُدفنُ البذرةُ في باطنِ الأرضِ المظلم، تحت أطنانٍ من الترابِ الثقيل، لا تكونُ على علمٍ بأنها تنمو. هي تظنُّ أنها دُفنتْ لتختنق، ولا تدري أن العتمةَ والضغطَ هما اللذان يدفعانِها لتشقَّ طريقَها نحو النور.","يا منال، حينَ تعيشينَ في بيتٍ لغتُه الوحيدةُ هي الغضبُ والصراخ، وتجدينَ نفسَكِ تتألمينَ وتبحثينَ عن الهدوءِ في زاويةٍ ضيقةٍ مع كتاب، فهذا الألمُ ليس ضعفًا، بل هو دليلُ عافيةٍ مبكِّر.","إنه يُشبهُ تمامًا ألمَ العينينِ حين تخرجانِ من غرفةٍ شديدةِ الظلام إلى ضوءِ الشمسِ الساطع؛ فالعينُ التي تتألمُ من الضوءِ هي عينٌ سليمةٌ تُبصِر، والقلبُ الذي يتألمُ من القسوةِ هو قلبٌ حيٌّ يرفضُ التشوُّه."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"الخوفُ حارسًا لا سجّانًا","paragraphs":["الخوفُ الذي يداهمكِ أمامَ المرآة، وسؤالُكِ المحترق: \"هل سأحملُ معي هذه النيرانَ إلى بيتٍ جديد؟\"، هو أعظمُ هديةٍ منحتْها لكِ بصيرتُكِ.","إن أخطرَ ما يُهدّدُ الإنسانَ في بيئةٍ مضطربة ليس أن يتأذّى، بل أن \"يعتاد\" الأذى حتى يظنَّه هو الأصل، فيتحوَّلَ إلى نسخةٍ ممّن جرحوه دون أن يشعر.","أمّا أنتِ، فقد رفضتِ الاستسلامَ لهذا الإرث. الخوفُ من تكرارِ الخطأ هو الحارسُ الذي يقفُ على بابِ روحِك، ليمنعَ صفاتِهم من التسرُّبِ إليكِ."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"حكايةُ شخصينِ في قريةِ الماءِ المرّ","paragraphs":["تأمّلي معي حالَ شخصينِ كَبِرا في قريةٍ لا تشربُ إلا من ماءٍ ملوّث.","الأوّلُ اعتادَ الطعم، وشَرِبَ حتى سَقِم، ظنًّا منه أن كلَّ مياهِ الدنيا هكذا.","والثاني، لاحظَ المرارة، فقرّر أن يَعطشَ قليلًا، ويحفرَ بئرًا صغيرةً بيدِه ليبحثَ عن ماءٍ صافٍ، رغم أنه لم يَذقْه من قبل."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"حكايةُ شخصينِ في قريةِ الماءِ المرّ","paragraphs":["ألمُ العطشِ عند الثاني هو الذي أنقذه.","أنتِ الآن تحفرينَ بئرَكِ الخاصة. لا تملكينَ شهادات؟ لا بأس. أصدقُ دروسِ الحياة لا تُكتبُ على السبّورة، بل تُحفرُ في الوجدان. والبيتُ السعيدُ لا يُبنى بالمالِ الذي في الخزائن، بل بالسكينةِ التي تملأُ القلب.","لا تكرهي خوفَكِ، ولا تخجلي من قلقك. اجعلي منهما بوصلةً تدلُّكِ على ما لا تريدينَ أن تكونيه."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"حكايةُ شخصينِ في قريةِ الماءِ المرّ","paragraphs":["خلاصةٌ تُحفظ الألمُ الذي يرفضُ القسوة هو أُولى علاماتِ التعافي.. ومن خافَ أن يُشبهَ جلّادَه، فقد وضعَ قدمَه على أوّلِ طريقِ النجاة.","تقولُ منال: لم أنظرْ للأمرِ هكذا من قبلُ يا أستاذ.. كنتُ أحسبُ ارتجافي أمامَ صراخهما دليلًا على انكساري، واليومَ تهمسُ لي بأنه دليلُ عافيتي. كأنّك أزحتَ عن كاهلي حِملًا ثقيلًا حين جعلتَ خوفي حارسًا لا سجّانًا. لكن، ألا يُرهقُ هذا الحارسُ صاحبَه؟ أخافُ أن يطولَ وقوفي عند بئرِ الماءِ المرّ، فتموتَ روحي عطشًا قبلَ أن أصلَ للماءِ الصافي الذي ذكرتَه. كيف أجعلُ هذا الخوفَ يدفعني للأمامِ ولا يربطني مكاني؟"]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"حكايةُ شخصينِ في قريةِ الماءِ المرّ","paragraphs":["الحارسُ يا منال يُنهكُه التعبُ إن ظلَّ واقفًا في العراءِ يرقبُ الخطر، لذا نحنُ لا نتركُه يواجهُ العاصفةَ بلا مأوى. الخوفُ يحمينا في البداية، لكنّنا نحتاجُ إلى مكانٍ نلتقطُ فيه أنفاسَنا، حتى لا نموتَ عطشًا ونحنُ نحفرُ بئرَنا."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"خيمةٌ في القلب.. مساحتُكِ التي لا يراها أحد","paragraphs":["تخيّلي معي محيطًا هائجًا، تضربُ العواصفُ سطحَه بلا رحمة، وتتلاطمُ أمواجُه بغضبٍ يصمُّ الآذان. لو بقيتِ على السطح، سيبتلعكِ الدوارُ والإنهاك.","لكن، على بُعدِ أمتارٍ قليلةٍ في أعماقِ هذا المحيطِ نفسِه، يسودُ سكونٌ عجيب، وهدوءٌ لا تُعكّرُه ريحٌ ولا تقطعُه موجة.","هذا المحيطُ هو بيتُكِ الذي تعيشينَ فيه الآن يا منال. السطحُ هو الصراخُ والصراعُ الذي لا تملكينَ إيقافه، والعمقُ هو الخيمةُ الداخلية التي يجبُ أن تنصبيها في قلبكِ لتأوي إليها كلّما اشتدَّ الضجيج."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"حين ندرك أن النجاة في الداخل","paragraphs":["الخوفُ يربطنا في مكانِنا ويستنزفنا حين نظنُّ أنّنا يجبُ أن نُغيّرَ الخارجَ لنرتاح، أو حين نقفُ أمامَ البئرِ المرّةِ ننتظرُ أن يصفوَ ماؤها.","لكنَّ النجاةَ الحقيقيةَ تبدأُ حين ندركُ أنّنا لا نستطيعُ تغييرَ الآخرين، ولا نملكُ إسكاتَ أصواتِهم، لكنّنا نستطيعُ حمايةَ المساحةِ التي بداخلنا.","أنتِ بحاجةٍ إلى بناءِ خيمةٍ خفيّةٍ في أعماقِك، لا يطرقُها والدُكِ بغضبه، ولا تقتحمُها أمُّكِ بصراخها، خيمةٌ لا مفتاحَ لها إلا بيدكِ أنتِ."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"كيف تُبنى هذه الخيمة؟","paragraphs":["تُبنى بتلكَ اللحظاتِ التي تختلينَ فيها بنفسكِ مع كتابٍ تحتَ ضوءٍ خافت.","تُبنى بسجّادةِ صلاةٍ تُلقينَ عليها تعبَ الأيامِ في جوفِ الليل.","تُبنى بخيالكِ وأنتِ ترسمينَ تفاصيلَ البيتِ الذي تتمنّينَ بناءَه غدًا."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"كيف تُبنى هذه الخيمة؟","paragraphs":["تُبنى بقرارٍ صامتٍ وعميقٍ تتّخذينَه كلّما ارتفعتِ الأصوات: \"جسدي هنا بينهم، لكنَّ روحي في مأمنٍ بعيدٍ عنهم.\""]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"المحارةُ التي تصنعُ لؤلؤة","paragraphs":["حين يشتعلُ الصراعُ في الخارج، لا تواجهيه بمحاولةِ الاستماعِ والتحليل، ولا تُرهقي نفسكِ بالغضب، بل انسحبي بهدوءٍ إلى خيمتكِ الداخلية.","قولي لنفسكِ: \"هذا صراخُهم هم، لغتُهم هم، يُعبّرُ عن ألمهم وفوضاهم، ولا علاقةَ لروحي به.\"","كوني كالمحارةِ التي يُحيطُ بها الموجُ المالحُ من كلِّ جانب، لكنّها تُغلِقُ على نفسِها لتصنعَ في عتمتها لؤلؤة."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"المحارةُ التي تصنعُ لؤلؤة","paragraphs":["في هذه الخيمةِ الخفيّة، ستجدينَ قطراتٍ من الماءِ الصافي تروي عطشكِ يوميًّا، وتمنحُكِ القوّةَ لتُواصلي حفرَ بئركِ الكبرى في الحياة، دونَ أن تستسلمي للظمأ على حافّةِ الانتظار.","خلاصةٌ تُحفظ نحنُ لا نملكُ مفاتيحَ الأبوابِ التي تُغلَقُ علينا في الخارج، لكنّنا نملكُ بناءَ مدينةٍ كاملةٍ في الداخل، لا يدخلُها إلا من نأذنُ له.","تقولُ منال: لطالما ظننتُ أن انزوائي مع كتبي هو مجرّدُ \"هروبٍ\" يُشعرني بالذنب، كأنّني أتركهم في غرقهم وأنجو وحدي.. لكنّك يا شيخي أعدتَ تسميةَ الأشياء؛ سمّيتَ هروبي بناءً! بالأمسِ فقط، حين اشتدَّ وقعُ الكلماتِ الجارحة بالخارج، أغمضتُ عينيَّ وتخيّلتُ خيمتكَ التي وصفت.. شعرتُ ببرودةِ السكينةِ قليلًا، لكن كيفَ لي أن أُقنعَ قلبي ألّا يُشفقَ عليهم لدرجةِ أن يفتحَ بابَ الخيمةِ فيحترقَ معهم؟"]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"المحارةُ التي تصنعُ لؤلؤة","paragraphs":["القلبُ الذي يُشفقُ على من يصرخُ في وجهه هو قلبٌ نبيلٌ جدًّا يا منال، ولا عجبَ أن تشعري بالذنبِ وأنتِ تنجينَ بروحكِ بينما هم يتخبّطون. لكن دعينا ننظرُ إلى هذا الذنبِ من شُرفةٍ أخرى، لنفهمَ دورَكِ الحقيقيَّ في هذه القصّة."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"الوراثةُ ليستْ قدرًا.. كيف نكسرُ سلسلةَ الوجع؟","paragraphs":["حين نرى حريقًا يلتهمُ بيتًا، فإن إلقاءَ أنفسِنا في النارِ تضامنًا مع من بالداخل لا يُطفئُ اللهب، بل يزيدُ من حجمِ الحريقِ وعددِ الضحايا.","الشفقةُ الحقيقيّة، يا صاحبتي، ليست في أن نحترقَ معهم، بل في أن نبتعدَ خطوةً لنبنيَ مكانًا آمنًا لا تصلُه النيران."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"وراءَ القسوةِ حكاياتٌ قديمة","paragraphs":["قد يكونُ أبواكِ بدورهما قد حملا آثارَ حرائقَ قديمة، لكنَّ ذلك لا يُبرِّرُ الصراخَ أو الأذى، ولا يُلغي مسؤوليّتَهما عن أثرِه فيكِ.","نحنُ في عائلاتِنا لا نُورّثُ لونَ العيونِ وتقاسيمَ الوجوهِ فقط، بل نُورّثُ الانفعالات، وطريقةَ الغضب، والعجزَ عن التعبير.","قد يكونُ والدُكِ حين يغضب، ووالدتُكِ حين تصرخ، يُكرّرانِ مشهدًا عاشاه في طفولتهما، أو يُخرجانِ قهرًا لم يتعلَّما كيف يتعاملانِ معه؛ وهذا تفسيرٌ محتملٌ للسلوك، لا عذرٌ له. لقد استلما \"سلسلةَ الوجع\" من جيلٍ سابق، وقاما بتمريرها، كابرًا عن كابر، دونَ وعيٍ أو قصد."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"حين تكونُ النجاةُ إحسانًا","paragraphs":["شعورُكِ بالذنبِ ينبعُ من ظنّكِ أن النجاةَ خيانة، وأن الشفقةَ تقتضي المُقاسمةَ في الألم. لكن ماذا لو أخبرتُكِ أن نجاتَكِ هي أعظمُ إحسانٍ تُقدّمينه لاسمِ هذه العائلة؟","إذا جعلتِ الشفقةَ تعني أن تفتحي بابَ خيمتكِ لتحترقي بنيرانِ غضبهم، فقد تتراكمُ في روحكِ آثارُ ذلكَ الأذى، وقد تنعكسُ على علاقاتكِ المقبلة إن لم تجدي مساحةً آمنةً للتعافي. لذلك احمي حدودَكِ واطلبي العونَ حين تحتاجينَ إليه؛ فالتعافيُ لا يعني إنكارَ ما حدث، بل ألّا تدعيه يحدّدُ مستقبلكِ.","وهكذا تستمرُّ السلسلة."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"أنتِ كاسرةُ السلسلة","paragraphs":["أمّا حين تختارينَ النجاةَ وتعتزلينَ الضجيج، فأنتِ تتّخذينَ أصعبَ قرارٍ في تاريخِ عائلتكِ؛ أنتِ تلعبينَ دورَ \"كاسرةِ السلسلة\".","كأنّكِ تقفينَ بشجاعةٍ في وجهِ التاريخِ وتقولين: \"هذا الألمُ يتوقّفُ عندي، ولن يمرَّ عبري إلى من بعدي.\""]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"درسُ المُنقذِ البحري","paragraphs":["في قواعدِ الإنقاذِ البحري، يُلقَّنُ المنقذُ درسًا صارمًا: \"حين تسبحُ نحوَ غريق، لا تدعْه يُمسكُ بك وهو في ذروةِ ذعره، وإلّا جذبكَ للأسفل، وغرقتُما معًا.\"","أبواكِ يغرقانِ في بحرٍ من فوضى المشاعرِ وقسوةِ الأيّام. وما تستطيعينَ تقديمُه لهما لا يكونُ بابتلاعِ الماءِ معهما، بل بالمحافظةِ على حياتكِ وحدودكِ، وبأن تبنيَ مستقبلًا أكثرَ أمانًا إن اخترتِ ذلك؛ فالرحمةُ لا تعني تحمُّلَ الأذى، ولا تقعُ عليكِ وحدكِ مسؤوليّةُ إصلاحِ العائلة.","خلاصةٌ تُحفظ النجاةُ من فوضى الأهلِ ليست عقوقًا، بل هي أصدقُ محاولةٍ لإنقاذِ السلالةِ من توارثِ الألم.. فمن يُنقذُ الغرقى لا يغرقُ معهم."]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"درسُ المُنقذِ البحري","paragraphs":["تقولُ منال: \"كاسرةُ السلسلة\"... كأنّكَ وضعتَ في يدي سيفًا من نور، لا لأقاتلَ به أهلي، بل لأقطعَ به تلك الخيوطَ الخفيّةَ التي كانت تجذبني لأكونَ نسخةً منهم. واللهِ يا شيخي إنّني الآن أتنفّسُ بعمقٍ لم أعرفه، وأشعرُ بمسؤوليّةٍ تجاهَ أطفالي الذين لم يُولدوا بعد؛ كأنّني أحميهم من الآن. ولكن، كيفَ لي أن أفكَّ هذا الارتباطَ بالوجعِ حين أخرجُ من خيمتي؟ ففي النهاية، لا بدَّ لي أن أجلسَ معهما على مائدةٍ واحدة، وأنظرَ في عينيْ أبي حين يغلي غضبه.. كيفَ أبقى \"ناجيةً\" والماءُ المالحُ يلمسُ قدميَّ في كلِّ خطوة؟"]},{"type":"reading","chapterTag":"البابُ الأوّل","sectionTitle":"درسُ المُنقذِ البحري","paragraphs":["ما أجملَ هذا السيفَ الذي تلمعُ قبضتُه في وعيكِ يا منال. نعم، لا مفرَّ من أن يلمسَ الماءُ المالحُ قدميكِ، فنحن لا نعيشُ في خيالاتٍ معزولة، بل في واقعٍ يفرضُ علينا تقاسمَ رغيفِ الخبزِ والجلوسَ في الغرفةِ ذاتها.","وهنا ننتقلُ من بناءِ الخيمةِ في الأعماق، إلى إرساءِ القواعدِ على الأرض..."]},{"type":"chapter-opener","chapterNumber":"الثاني","title":"البابُ الثاني","epigraph":"«ليس كلُّ ما يحدثُ حولنا يجبُ أن يحدثَ بداخلنا.. أتقني فنَّ المشاهدةِ من خلفِ الزجاج، لترَيْ العاصفةَ دونَ أن تبتلّي بمطرها.»"},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الجدرانُ التي لا نرفعُها تسقطُ علينا","paragraphs":["تخيّلي أنّكِ تجلسينَ خلفَ نافذةٍ زجاجيّةٍ متينة، وتراقبينَ عاصفةً هوجاءَ تضربُ الشارع. ترَيْنَ الأشجارَ تنحني، والأشياءَ تتطاير، وتسمعينَ زمجرةَ الريحِ تضربُ الزجاج.","هل تبتلُّ ثيابُكِ؟ هل يفسدُ ترتيبُ غرفتكِ؟","لا."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الجدرانُ التي لا نرفعُها تسقطُ علينا","paragraphs":["لأنَّ هناكَ جدارًا شفّافًا يفصلُ بينَ \"المشهد\" الذي ترينه، وبين \"المساحة\" التي تجلسينَ فيها."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الجدارُ الذي يحمي الروح","paragraphs":["حين تجلسينَ على المائدةِ ويغلي غضبُ أبيكِ، فإنَّ الخطرَ الأكبرَ ليس في صوتِه العالي، بل في غيابِ هذا \"الجدارِ الزجاجي\" بين روحِه وروحِك.","في غيابِ الجدرانِ الخفيّةِ التي تبنيها أرواحُنا، نُصبحُ أرضًا مستباحةً لمعاركِ الآخرين. والجدرانُ التي لا نرفعُها بأيدينا لحمايةِ أنفسنا، ستسقطُ حتمًا علينا حين تهتزُّ نفوسُ من حولنا."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"كيف ترفعينَ هذا الجدارَ وأنتِ تنظرينَ في عينيه؟","paragraphs":["يُرفعُ الجدارُ بتغييرِ \"طريقةِ الرؤية\".","نحنُ نتأذّى من صراخِ مَن نحبّ، لأنّنا نتلقّاه كرسالةٍ موجَّهةٍ ضدَّنا، تهدمُ قيمتنا، أو تُشعرنا بالرفض. لكنَّ الحقيقةَ الغائبةَ هي أنَّ غضبَهم العشوائيَّ لا علاقةَ له بكِ أنتِ؛ إنّه يخصُّهم هم. هو انعكاسٌ لحروبهم الداخليّة، لعجزهم عن إدارةِ الحياة، لضيقِ صدورِهم بما يحملون."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"ثوبُ المُراقبِ المُحايد","paragraphs":["حين يبدأُ الضجيج، أريدكِ أن ترتدي ثوبَ \"المُراقبِ المُحايد\".","لا تتلقّي الكلماتِ بقلبكِ كابنةٍ مكسورةٍ تنتظرُ الرضا، بل راقبي المشهدَ بعقلكِ كطبيبةٍ تنظرُ إلى مريضٍ يتلوّى.","قولي في سرّك: \"هذا الرجلُ يتألّم، وهذه النارُ تحرقُه هو قبلَ أن تصلَني، وهذا الصراخُ هو طريقتُه البائسةُ لطلبِ النجدةِ أو فرضِ السيطرةِ الخاوية.\""]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"ثوبُ المُراقبِ المُحايد","paragraphs":["بمجرّدِ أن تفصلي بينَ \"غضبهم\" وبينَ \"قيمتكِ\"، يرتفعُ الجدارُ الزجاجي.","ستسمعينَ الصوتَ العالي، قد يُزعجُ أُذنكِ، وقد تبتلُّ قدمُكِ ببعضِ الماءِ المالحِ الذي تحدّثتِ عنه، نعم، لكنّكِ لن تشربي منه. لن تسمحي لهذا الغضبِ أن يتسرّبَ إلى نظرتكِ لنفسكِ، أو يُفسدَ خطّتكِ في الحياة.","لا تجادلي العاصفة، ولا تحاولي إقناعَها بالهدوء، فالرياحُ لا تسمعُ المنطق. أدّي واجبكِ ببرٍّ هادئ، ردّي بكلماتٍ مقتضبةٍ لا تفتحُ بابًا لجدال، وكوني حاضرةً بجسدكِ، لكن اجعلي انفعالكِ الداخليَّ محتفظًا بمسافته الآمنة."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"ثوبُ المُراقبِ المُحايد","paragraphs":["كوني معهم، ولا تكوني منهم.","خلاصةٌ تُحفظ ليس كلُّ ما يحدثُ حولنا يجبُ أن يحدثَ بداخلنا.. أتقني فنَّ المشاهدةِ من خلفِ الزجاج، لترَيْ العاصفةَ دونَ أن تبتلّي بمطرها.","تقولُ منال: \"مُراقبٌ محايد\"... كأنّني سأُشاهدُ مسرحيّةً لستُ بطلتَها، بعدَ أن كنتُ أظنُّ أنّني المتَّهمةُ الوحيدةُ فيها. والله يا شيخي إنّني كنتُ أهربُ بنظري إلى صحني حتى لا أرى الغضب، فإذا بي أجدُ الغضبَ قد استقرَّ في قلبي وتشرّبتْه روحي. سأحاولُ أن أرى في صراخهما \"مرضًا\" يحتاجُ شفقةً لا \"سوطًا\" يجلدُ قيمتي. لكن، ألا يخشى المُراقبُ أن يُفهمَ صمتُه خلفَ الزجاجِ على أنّه جفاءٌ أو قلّةُ أدب؟ كيف أكونُ هادئةً ومنفصلةً بقلبي، دونَ أن أبدوَ قاسيةً في نظرهم؟"]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"ثوبُ المُراقبِ المُحايد","paragraphs":["ما أرقَّ هذا القلبَ يا منال، قلبٌ يخشى أن يجرحَ من يجلده! هذا التساؤلُ وحدَه يُثبتُ أنّكِ لم تفقدي بوصلةَ الرحمة، وأنّكِ تبحثينَ عن \"النجاة\" لا عن \"الانتقام\". وهنا يكمنُ السرُّ الدقيقُ الذي يفصلُ بينَ العقوقِ المذموم، وبينَ حمايةِ النفسِ المشروعة."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"كيف تسمعينَ الضجيجَ دونَ أن يبتلعَكِ؟","paragraphs":["تأمّلي معي شجرةَ الصفصافِ حين تهبُّ عليها عاصفةٌ هوجاء.","لو كانتْ فروعُها صلبةً متصلّبةً كلوحِ الخشب، لقسمتْها الريحُ نصفين، ولظنّتِ العاصفةُ أنَّ هذه الشجرةَ تتحدّاها.","لكنَّ الصفصافَ يصنعُ شيئًا بديعًا؛ يُلِينُ أغصانَه، وينحني بمرونةٍ مع اتجاهِ الريح، يتركها تمرُّ من خلالِ أوراقه وتظنُّ أنها انتصرتْ عليه، بينما جذورُه في الأعماقِ لم تتزحزحْ قِيدَ أُنملة!"]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الانفصالُ سرٌّ في القلب لا قناعٌ على الوجه","paragraphs":["\"الانفصالُ الشعوريّ\" الذي تحدّثنا عنه يا منال، هو سرٌّ من أسرارِ القلب، لا قناعٌ نلبسُه على الوجه. الجدارُ الزجاجيُّ نبنيه في أرواحنا، لا بين أعينِنا وأعينِهم.","حين يشتعلُ الغضبُ في الخارج، فإن الصمتَ الممزوجَ بنظراتٍ باردةٍ أو استعلاءٍ خفيّ، سيُفهمُ —كما تفضّلتِ— على أنه جفاءٌ، أو تحدٍّ مستفِزّ، وكأنّكِ لوحُ خشبٍ صلبٍ يُعاندُ الريح. والعاصفةُ لا تحتملُ من يتجاهلها، بل تزيدُ عنفوانًا لتُثبتَ وجودَها.","إذن، كيف تنجينَ دون أن تكسري حبلَ البِرّ؟"]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"كوني صفصافةَ القلب","paragraphs":["كوني كشجرةِ الصفصاف؛ جذورُكِ —قلبُكِ ومشاعرُكِ— راسخةٌ في خيمتكِ الداخلية لا تتأثّر، وأغصانُكِ —لسانُكِ وتعابيرُ وجهكِ— تَلِينُ للعاصفةِ حتى تمرّ.","في ذروةِ الصراخ، لا تصمتي صمتَ المتجاهل، بل استخدمي ما أُسمّيه \"كلماتِ الماء\". العاصفةُ نار، والنارُ لا تُطفأُ بالمنطقِ ولا بالجدال، بل تُطفأُ بالماء.","قولي بكلماتٍ قصيرةٍ ونبرةٍ خفيضةٍ محترمة:"]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"كوني صفصافةَ القلب","paragraphs":["\"حاضرٌ يا أبي.\"","\"أبشِر، سيحدثُ ما تريد.\"","\"حقُّكِ عليَّ يا أمي.\""]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الانحناءُ ليس انكسارًا","paragraphs":["هل انحناؤكِ هذا يعني إقرارًا بأنّكِ سيّئةٌ أو مخطئة؟ أبدًا.","أنتِ في داخلكِ تعرفينَ قيمتك، وتعرفينَ أن هذا الغضبَ لا يُمثّلكِ. لكن هذه الكلماتِ هي مجرّدُ \"طريقةِ مرورٍ\" آمنة، تُطفئينَ بها الحريقَ في الخارج، وتُرضينَ بها ربَّكِ الذي أمرَ بخفضِ جناحِ الذلِّ من الرحمة، وفي الوقتِ نفسِه تُحافظينَ على طاقةِ روحكِ من الاستنزاف.","حين تسمعينَ الضجيجَ بهذه الطريقة، فإنّكِ تمتصّينَ الصدمةَ بعقلك، وتُفرّغينَها بلسانكِ اللين، دون أن تسمحي لها بالوصولِ إلى مستقرِّ قلبك."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الانحناءُ ليس انكسارًا","paragraphs":["أنتِ لم تعودي تلكَ الفتاةَ المكسورةَ التي تُطأطئُ رأسَها لتشربَ الإهانة، بل أصبحتِ تلكَ الفتاةَ الحكيمةَ التي تنحني للعاصفةِ بوعي، لتمرَّ بأقلِّ الخسائر، ثم تعودَ لتقفَ شامخةً حين يهدأُ كلُّ شيء.","خلاصةٌ تُحفظ البرُّ في بيوتِ الغضبِ ليس أن تحترقَ معهم، بل أن تُلِينَ لهم جناحَ الجسدِ واللسان، بينما تحتفظُ بروحكَ في حصنٍ آمنٍ لا يصلُه اللهب."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الانحناءُ ليس انكسارًا","paragraphs":["تقولُ منال: سبحانَ من علّمكَ هذه الحكمةَ يا أستاذ.. كنتُ أحسبُ الليونةَ انكسارًا، فإذا بها حيلةُ الأقوياءِ للبقاء. سأُجرّبُ من الليلة أن أكون تلكَ الشجرة؛ أُحني رأسي للريحِ بكلماتٍ طيّبةٍ وأنا أعلمُ أنَّ جذوري ثابتةٌ في خيمتي. لكن، بعدما تمرُّ العاصفةُ وأرفعُ رأسي، أجدُ في صدري ضِيقًا غريبًا.. ليس غضبًا عليهم، بل حزنًا يُمزّقني لحالهم ولحياتِهم التي تضيعُ في الصراخ. كيف يمكنُ لهذه \"الشفقة\" أن تُحرّرني من هذا الثقلِ كما وعدت؟ وكيف أنظرُ إليهما كضحيّتينِ دون أن أضعفَ وأسقطَ في بئرِ أوجاعِهما مرّةً أخرى؟","هذا الحزنُ الشفيفُ الذي يغمركِ بعد العاصفة يا منال، هو أرفعُ منازلِ النضج، وهو الدليلُ القاطعُ على أنّكِ لم تعودي ضحيّةً تبكي على نفسها، بل أصبحتِ روحًا كبيرةً تبكي على من آذاها."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الانحناءُ ليس انكسارًا","paragraphs":["لقد تحوّلَ سؤالكِ من: \"لماذا يفعلون بي هذا؟\" إلى: \"يا ليتهم يُدركونَ ما يفعلونه بأنفسهم!\". وهذا الانتقالُ يضعنا أمامَ الإضاءةِ الأخيرةِ في هذا الباب."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الشفقةُ الواعية.. أن ترَيْ الندوبَ لا الجروح","paragraphs":["الضيقُ الذي تشعرينَ به بعد العاصفةِ يا منال هو \"ضريبةُ النُّبل\"؛ هو بقايا اشتباكِ قلبكِ الحيِّ مع واقعٍ بائس.","لكنّ هذا الحزنَ يصبحُ ثقيلًا ومُمزّقًا حين تظنّينَ أنّكِ \"مسؤولة\" عن شفائهم، أو حين تفتحينَ قلبكِ ليشعرَ بكلِّ أوجاعهم."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الصوتُ خلفَ السور","paragraphs":["تخيّلي أنّكِ تسيرينَ بجانبِ سُورِ مستشفى للأمراضِ النفسية، وسمعتِ من وراءِ السُّورِ شخصًا يصرخُ بكلماتٍ غيرِ مفهومة، أو يسبُّ المارّة.","هل ستحملينَ كلماتِه على محملِ الشخصي؟","هل ستحزنينَ لدرجةِ الانكسار لأن حياتَه تضيعُ هكذا؟"]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الصوتُ خلفَ السور","paragraphs":["ستُشفقينَ عليه حتمًا، لكنّها شفقةٌ \"من الخارج\"؛ شفقةٌ تُدركُ أنه مريضٌ وأنّ تصرّفاتِه هي نتاجُ علّتِه لا إرادته."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"طفلانِ كبيرانِ تائهان","paragraphs":["يا منال، قد يكونُ أبواكِ عالقَينِ في أنماطٍ من الغضبِ والتوتّر تعلّماها عبرَ تجاربَ قاسية. وربّما استُنزفا في معاركِ الحياة حتى صَعُبَ عليهما الوصولُ إلى السكينة؛ لكنَّ فهمَ الخلفيّة لا يجعلُ الأذى مقبولًا، ولا يُسقطُ حقَّكِ في الحماية.","حين تخرجينَ من خيمتكِ، أريدكِ أن تنظري إليهما كـ\"طفلينِ كبيرين\" تائهَين، لم يتعلّما أبدًا كيف يحبّانِ نفسيهما، فكيف لهما أن يُحبّا الآخرينَ بهدوء؟"]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الندوبُ قبلَ الجروح","paragraphs":["الشفقةُ الواعيةُ هي أن تفهمي أن وراءَ سلوكهما تاريخًا قديمًا من الألم، مع الاعترافِ في الوقتِ نفسه بأنَّ الجرحَ الذي يسبّبه لكِ الغضبُ الآن حقيقيٌّ ويستحقُّ أن تضعيَ له حدًّا. افهمي الخلفيّةَ دونَ أن تُنكري الأذى أو تسمحي باستمراره.","حين تُدركينَ أن صراخهما هو قمّةُ عجزِهما، سيتحوّلُ حزنُكِ المُمزّق إلى \"رحمةٍ باردة\"؛ رحمةٌ تدعو لهما بظهرِ الغيب، وتتمنّى لهما السكينة، لكنّها ترفضُ أن تموتَ عطشًا في بئرِ أوجاعهما.","تذكّري دائمًا: أنتِ لستِ مُنقذةً لهما، ولستِ طبيبتهما النفسيّة. دوركِ الوحيدُ والبطوليُّ هو ألّا تكوني \"ضحيّةً ثالثة\"."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الندوبُ قبلَ الجروح","paragraphs":["أن ترَيْ حالَهما كدرسٍ قاسٍ لما لا تريدينَ تكراره، وأن تُحوّلي ذلك الحزنَ إلى وقودٍ يحثُّ خطاكِ نحو بناءِ عالمكِ الخاصِّ المليءِ بالرحمة.","خلاصةٌ تُحفظ: الشفقةُ الواعيةُ أن ترحميَ ما مرّوا به دونَ أن تتحمّلي مسؤوليّةَ معالجةِ صعوباتهم أو إصلاحِ اختياراتهم. يمكنكِ أن تتمنّي لهم الخير، مع حمايةِ نفسكِ من الأذى."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الندوبُ قبلَ الجروح","paragraphs":["تقولُ منال: يا شيخي، كأنّك أعطيتني مجهرًا أرى به ما خلفَ الصراخ.. الرجلُ الذي خلفَ السور.. كم هذا التشبيهُ موجعٌ وصادق! سأحملُ هذا الدعاءَ في سجّادةِ صلاتي، وسأتركُ لهما رحلتَهما مع الله، فقلبي الصغيرُ لم يَعُدْ يتّسعُ لمحاولةِ إصلاحِ ما أفسدَه الدهرُ فيهما. لكن، حين قلتَ لي إن دوري هو \"البرّ\" لا \"العلاج\"، شعرتُ فجأةً بفراغٍ مخيف.. إذا توقّفتُ عن الانشغالِ بمشاكلِهما، فبماذا أملأُ يديّ؟ أنا يا أستاذي لا أعرفُ كيف يكونُ \"البيتُ السعيد\" إلا في الروايات. كيف أتعلّمُ لغةً لم أسمعْها في بيتي قط؟ كيف أستعدُّ لبيتٍ جديد وأنا لم أرَ في واقعي إلا الهدم؟","هذا الفراغُ الذي تشعرينَ به الآنَ يا منال هو \"فراغُ العافية\"؛ إنها المساحةُ البيضاءُ التي تتجلّى حين نرفعُ الرُّكامَ عن الأرضِ استعدادًا للبناء."]},{"type":"reading","chapterTag":"البابُ الثاني","sectionTitle":"الندوبُ قبلَ الجروح","paragraphs":["طالما كانتْ يداكِ مشغولتينِ بمحاولةِ إطفاءِ حرائقِ بيتٍ ليس لكِ، لم يكنْ بإمكانكِ أن تُمسكي حجرًا واحدًا لتبني بيتكِ أنتِ.","والآن، وقد فرغتْ يداكِ من وهمِ الإصلاح، حانَ الوقتُ لتتعلّمي لغةَ الغد."]},{"type":"chapter-opener","chapterNumber":"الثالث","title":"البابُ الثالث","epigraph":"«البيوتُ التي لم تمنحْنا الدفء، منحتْنا دونَ أن تقصدَ خارطةَ الأخطاءِ التي يجبُ أن نتجنّبها.. فمن ذاقَ ألمَ البرد، هو أقدرُ الناسِ على صناعةِ الدفء.»"},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"ما لم نتعلَّمْه في بيوتِ آبائنا","paragraphs":["كيف لمن عاشَ عمرَه كلَّه في صحراءَ قاحلة، ولم يرَ في حياتِه زهرةً واحدة، أن يعرفَ كيف يزرعُ بستانًا؟","نحن نظنُّ دائمًا يا صديقتي أنّنا لا نتعلَّمُ الصوابَ إلا إذا رأينا نموذجًا صحيحًا أمامنا. نُقنعُ أنفسَنا بأن من نشأ في بيتٍ تغمرُه السكينةُ هو الوحيدُ القادرُ على بناءِ بيتٍ هادئ، وأن من نشأ في فوضى لن يُنتجَ إلا فوضى.","لكنَّ هذه كذبةٌ كبرى نجلدُ بها أرواحَنا."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"المعرفةُ العكسيّة","paragraphs":["الحقيقةُ العميقةُ هي أنّنا نتعلَّمُ الصوابَ بطريقتين: إمّا بالاقتداءِ بالجمالِ إن وُجد، أو بالفرارِ من القبحِ إن فُرضَ علينا.","وهذا ما أُسمّيه \"المعرفةَ العكسيّة\".","أنتِ يا منال تعرفينَ ملامحَ \"البيتِ السعيد\" أكثرَ ممّا تظنّين! حين كان الغضبُ يشتعلُ بالخارج، وتضعينَ يديكِ على أذنيكِ، ماذا كان يطلبُ قلبُكِ في تلك اللحظة؟ كان يصرخُ باحثًا عن \"الهمسةِ الهادئة\"."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"المعرفةُ العكسيّة","paragraphs":["وحين كانت القسوةُ تملأُ المكان، ماذا كانت روحُكِ ترجو؟ كانت ترجو \"تفهُّمًا واحتواءً\"."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"خريطةٌ كُتبتْ بلغةِ الألم","paragraphs":["كلُّ حرمانٍ عشتِه هو في الحقيقةِ درسٌ قاسٍ يُعلِّمكِ ما يجبُ أن تفعليه غدًا. أنتِ تمتلكينَ الخريطةَ كاملةً، لكنّها خريطةٌ كُتبتْ بلغةِ الألم.","أنتِ لم ترَيْ كيف يُبنى السقفُ، نعم، لكنّكِ حفظتِ عن ظهرِ قلبٍ كلَّ المعاولِ التي تهدمُ البيوت؛ والذي يعرفُ بدقّةٍ ما الذي يُصدِّعُ الجدران، سيعرفُ بالفطرةِ كيف يحافظُ عليها.","أمّا تلك الكتبُ التي تأوينَ إليها، والتي تظنّينَ أنها مجرّدُ رواياتٍ وخيالات، فهي في الحقيقةِ \"مفرداتُ لغتكِ الجديدة\". أنتِ تلتقطينَ لغةَ الحوار من بين السطور، وتتعلَّمينَ كيف يعتذرُ النبلاءُ من قصصِهم، وكيف يُدارُ الخلافُ باحترامٍ من حكاياتهم. أنتِ تبنينَ قاموسَكِ الخاصَّ بعيدًا عن قاموسِ أسرتك."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"المهندسُ أمامَ البيتِ المُتهاوي","paragraphs":["تأمّلي حالَ المهندسِ الذي يُكلَّفُ ببناءِ بيتٍ جديد، لكنّه يقفُ أوّلًا أمامَ بيتٍ قديمٍ يتهاوى. هو لا يتعلَّمُ من البيتِ المنهارِ كيف يبني، بل يتعلَّمُ \"ما الذي يجبُ ألّا يفعله\".","يرى أن الأساسَ الهشَّ أسقطَ الجدار، فيُعمّقُ أساسَه. ويرى أن النوافذَ الضيّقةَ منعتِ النور، فيُوسّعُ نوافذَه.","لقد كان البيتُ المنهارُ أستاذَه الأعظم، دونَ أن يقصد."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"المهندسُ أمامَ البيتِ المُتهاوي","paragraphs":["الفراغُ الذي بين يديكِ الآن، املئيه بهذا التأمُّلِ العكسي. كلّما رأيتِ موقفًا قاسيًا في بيتكِ، قولي لنفسكِ: \"هذا ما لن أفعلَه في بيتي.\" وكلّما قرأتِ معنًى جميلًا في كتاب، قولي: \"هذه اللبنةُ الأولى في سقفِ خيمتي غدًا.\"","خلاصةٌ تُحفظ البيوتُ التي لم تمنحْنا الدفء، منحتْنا دونَ أن تقصدَ خارطةَ الأخطاءِ التي يجبُ أن نتجنّبها.. فمن ذاقَ ألمَ البرد، هو أقدرُ الناسِ على تقديرِ الدفءِ وصناعته."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"المهندسُ أمامَ البيتِ المُتهاوي","paragraphs":["تقولُ منال: \"المعرفةُ العكسيّة\"... كأنّني كنتُ أجمعُ الحطامَ طوال هذه السنين لأعرفَ كيف أتجنَّبُ الزلزال. والله يا أيها الحكيم إنّني أحفظُ كلَّ الكلماتِ التي تجرحُ كأنّها ندوبٌ في جلدي، وسأدفنُها في صدري حتى لا تخرجَ أبدًا. لكنّني أتساءلُ بوجَل: هل يكفي \"ألّا نهدم\" لكي \"نبني\"؟ أخافُ أن يطولَ صمتي في بيتي المستقبليّ لأنّني لا أملكُ \"قاموسًا للودّ\"، فالحبُّ في بيتنا كان ضيفًا لم يطرقِ البابَ أبدًا. هل الحبُّ هو مجرّدُ \"غيابِ الصراخ\"؟","سؤالُكِ هذا يا منال يَزِنُ مكتبةً بأكملها. \"هل الحبُّ مجرَّدُ غيابِ الصراخ؟\" لا يا ابنتي، غيابُ الصراخِ يمنحُنا \"الأمان\"، لكنَّ الأمانَ وحدَه —على عظمته وضرورته— هو مجرَّدُ أرضٍ خاليةٍ صالحةٍ للزراعة، تنتظرُ من يبذرُ فيها الحياة."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"الحبُّ ليس صراخًا.. عن لغةٍ أخرى لا يعرفونها","paragraphs":["لو أنّنا أتينا بأرضٍ جرداء، وتوقّفنا تمامًا عن إلقاءِ الشوكِ والسمومِ فيها، فهل ستُزهرُ من تلقاءِ نفسها؟","بالطبعِ لا.","التوقُّفُ عن الأذى يُنقذُها من الخراب، لكنّها لن تصبحَ بستانًا يسرُّ الناظرينَ حتى نغرسَ فيها البذورَ ونسقيها بانتظام."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"الحبُّ ليس صراخًا.. عن لغةٍ أخرى لا يعرفونها","paragraphs":["هكذا هي البيوت؛ غيابُ الصراخِ يجعلُ البيتَ ملاذًا آمنًا يُلجأُ إليه، لكنَّ الودَّ هو الذي يجعلُه وطنًا يُشتاقُ إليه."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"الحبُّ أعمقُ من الصوت","paragraphs":["أنتِ تخافينَ أن يطولَ صمتُكِ لأنّكِ لا تملكينَ \"قاموسًا للودّ\" لم تسمعيه قطّ. لكن من قالَ إن الحبَّ محصورٌ في الحروفِ التي تُنطق؟","نحنُ نظنُّ، لقلّةِ تجاربنا، أن الحبَّ قصائدُ تُتلى، أو عباراتٌ منمَّقةٌ لا يُجيدها إلا من تربّى عليها.","لكنَّ الحقيقةَ التي ستكتشفينَها غدًا، هي أن لغةَ الحبِّ أعمقُ من الصوت، وأوسعُ من الكلمات."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"الحبُّ يُكتبُ بالأفعالِ الصامتة","paragraphs":["الحبُّ يا منال لغةٌ تُكتبُ بالأفعالِ الصامتةِ قبلَ الحروفِ الرنّانة.","حين يعودُ شريككِ متعبًا فتستقبلينَه بوجهٍ هادئ وتضعينَ عنه عبءَ اليوم.. هذا نُطقٌ بالحبّ.","حين تصنعينَ له كوبًا دافئًا وتضعينَه بجوارِه دونَ أن يطلبه، لأنّكِ تحفظينَ تفاصيلَ تعبه.. هذه قصيدةٌ كاملة."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"الحبُّ يُكتبُ بالأفعالِ الصامتة","paragraphs":["حين يُخطئُ خطأً يسيرًا فتتغافلين، ولا تجعلينَ من الحبّةِ قبّةً كما كنتِ ترَينَ في بيتكِ القديم.. هذا هو أبلغُ ما في قاموسِ الودّ."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"لغةُ الودِّ تُخلَقُ لا تُورَّث","paragraphs":["لغةُ الودِّ لا تُورَّثُ يا صديقتي، بل تُخلق. تُخلقُ من الرغبةِ الصادقةِ في أن نكونَ سَكنًا لمن نحبّ.","وحين يمتلئُ قلبكِ بهذه الرغبة، ستجدينَ الكلماتِ تنسابُ على لسانكِ تلقائيًّا، حتى وإن كانت كلماتٍ بسيطةً لا تُشبهُ بلاغةَ الروايات.","الكلمةُ الصادقةُ المرتجلةُ التي تخرجُ من قلبٍ ظمآن، لها في الروحِ وقعٌ أدفأُ من ألفِ عبارةٍ تُقالُ بدافعِ الاعتياد."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"لغةُ الودِّ تُخلَقُ لا تُورَّث","paragraphs":["لا تخافي من الصمتِ المبدئي، فالصمتُ في بيتٍ آمن، خيرٌ من ضجيجٍ في بيتٍ مضطرب.","غدًا، حين تطمئنُّ روحكِ في بيتكِ الجديد، ستسقطُ عنكِ كلُّ الدروعِ التي كنتِ ترتدينَها للحمايةِ من عواصفِ أهلك، وستكتشفينَ أنّكِ تملكينَ من اللينِ والرحمةِ ما يُغطّي بيتًا بأكمله.","أنتِ لستِ فاقدةً للغةِ الحبّ، أنتِ فقط كنتِ تدّخرينَها لمن يستحقُّ أن يسمعها."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"لغةُ الودِّ تُخلَقُ لا تُورَّث","paragraphs":["خلاصةٌ تُحفظ غيابُ الأذى يرفعُ جدرانَ البيت، لكنَّ الرحمةَ هي التي تُنيرُ غرفه.. ولغةُ الودِّ ليست كلماتٍ نحفظُها من غيرنا، بل أفعالٌ تفيضُ من صدقِ قلوبنا.","تقولُ منال: يا صاحبَ القلبِ الكبير.. جعلتَ من صمتي الذي كنتُ أخشاه مساحةً للسكينة، لا فجوةً للجفاء. أدركتُ الآنَ أن الحبَّ أفعالٌ تُبنى بالصبرِ واللينِ، لا كلماتٌ تُحفظ. لكنّني يا شيخي، كلّما فكّرتُ في ذلكَ \"البيتِ الجديد\"، شعرتُ بثقلِ حقائبي.. أحملُ في صدري ذكرياتٍ مريرة، ومخاوفَ كَبِرَتْ معي، وعاداتٍ أخشى أن تتسرَّبَ منّي دونَ وعي. كيفَ أُميّزُ بين ما يجبُ أن آخذَه معي كـ\"درس\"، وبين ما يجبُ أن أُلقيَه خلفَ ظهري قبلَ أن أعبرَ عتبةَ داري الجديدة؟"]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"لغةُ الودِّ تُخلَقُ لا تُورَّث","paragraphs":["هذا الثقلُ الذي تشعرينَ به يا منال هو علامةُ \"المسافرِ الحكيم\"؛ فالمغرورُ يظنُّ أنه يستطيعُ أن يُهرولَ نحوَ مستقبلِه دونَ أن يلتفتَ لماضيه، فيتعثّرُ بذاتِ الحجارةِ التي أسقطتْه من قبل.","أمّا الحكيم، فهو الذي يجلسُ قبلَ الرحلة، يفتحُ حقائبَه على مَهَل، ويفرزُ محتواها قطعةً قطعة تحتَ ضوءِ الوعي."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"حقيبةُ الروح.. ماذا تأخذينَ وماذا تتركين؟","paragraphs":["تخيّلي أنّكِ تقفينَ على أعتابِ قصرٍ جديدٍ وجميل، ومعكِ حقائبُ قديمةٌ أتيتِ بها من بيتكِ المهدّم. بعضُ ما في هذه الحقائبِ هو \"ذهبٌ\" خالصٌ استخلصتِه من بينِ الأنقاض، وبعضُها الآخر ليس سوى \"رمادٍ\" وأوساخٍ ستُفسدُ سجّادَ قصركِ الجديد وتُكدّرُ هواءه.","السرُّ يا ابنتي يكمنُ في الغربلة. إليكِ كيفَ تُميّزينَ بين الزادِ وبينَ العبء."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"أوّلًا: ما يجبُ أن تتركيه خلفكِ — الرماد","paragraphs":["لا تجعلي الأذى الذي تعرّضتِ له تعريفًا وحيدًا لنفسكِ. نعم، لقد أُوذيتِ، ونعم، كانَ الواقعُ قاسيًا، ومن حقّكِ أن تعترفي بأثره وأن تطلبيَ الدعمَ للتعافي منه. وحين تدخلينَ علاقةً جديدة، امنحي نفسَكِ وقتًا لبناءِ الثقةِ والتواصلِ الواضح، دونَ أن تُحمّلي شريكَكِ مسؤوليّةَ أذى لم يرتكبه.","اتركي \"أصداءَ الأصوات\". تلكَ الكلماتُ الجارحةُ التي قيلتْ لكِ: \"أنتِ فاشلة\"، \"لن تصلحي لشيء\"... هذه ليستْ حقيقتكِ، بل هي سمومٌ أفرغها أصحابُها فيكِ لأنَّ أوعيتَهم ضاقتْ بها. لا تُعطيها تذكرةَ عبورٍ إلى بيتكِ الجديد.","اتركي \"توقُّعَ الكارثة\". البيئةُ المضطربةُ تُعلّمنا أنَّ الهدوءَ مجرَّدُ استراحةٍ بين عاصفتين. اتركي هذا الترقُّب، وتعلّمي أنَّ الهدوءَ يمكنُ أن يكونَ \"حالةً مستمرّة\"، وأنّه حقٌّ لكِ وليس فخًّا."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"ثانيًا: ما يجبُ أن تأخذيه معكِ — الذهب","paragraphs":["خذي \"قوّةَ النجاة\". أنتِ فتاةٌ لم تكسرها العواصف، وهذا يعني أنّكِ تملكينَ صلابةً داخليّةً وصبرًا لا يملكُه من عاشَ في دلالٍ دائم. هذه القوّةُ ستكونُ سندَكِ في مواجهةِ تحدّياتِ الحياةِ العاديّة.","خذي \"المجسّاتِ الحسّاسة\". أنتِ تملكينَ قدرةً فائقةً على قراءةِ المشاعرِ قبلَ أن تُنطَق، لأنّكِ اعتدتِ مراقبةَ تقلُّباتِ الجوِّ في بيتكِ. استخدمي هذه القدرةَ غدًا لا للتجسُّسِ على الغضب، بل للاحتواءِ المبكِّر؛ لتشعري بتعبِ زوجكِ قبلَ أن يتكلَّم، ولتفهمي حاجةَ طفلكِ قبلَ أن يبكي.","خذي \"خارطةَ الأخطاء\". تذكَّري جيّدًا تلك المواقفَ التي آلمتكِ، لا لتبكي عليها، بل لتكونَ هي \"كتيِّبَ التعليمات\" الذي يُخبركِ: \"هذا الطريقُ يُؤدّي إلى الهدم، سأسلكُ غيرَه.\""]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"ثانيًا: ما يجبُ أن تأخذيه معكِ — الذهب","paragraphs":["يا منال، البيتُ الجديدُ ليس مجرّدَ جدرانٍ وأثاث، بل هو بدايةٌ للزمن. حين تضعينَ قدمكِ على عتبته، ضعي الحقائبَ الثقيلةَ جانبًا، ولا تفتحي إلا ما فيه نفعٌ لغدكِ.","أنتِ لا تذهبينَ هناكَ لتكوني \"امتدادًا\" لأمكِ أو أبيكِ، بل لتكوني الأصلَ لنسلكِ أنتِ.","المسافرُ الحكيمُ لا يحملُ معه الحجارةَ التي تعثَّرَ بها، بل يحملُ \"الخبرةَ\" التي تجعلُه يتفاداها في المرّةِ القادمة."]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"ثانيًا: ما يجبُ أن تأخذيه معكِ — الذهب","paragraphs":["خلاصةٌ تُحفظ الذاكرةُ مستودع، فاجعليها مخزنًا للدروسِ لا مقبرةً للأوجاع.. خذي منها ما يُقوّي بناءكِ، واتركي فيها ما يأكلُ روحكِ.","تقولُ منال: يا أستاذي، لقد جعلتَ لآلامي وظيفةً نبيلةً بعد أن كانت محضَ أثقالٍ تُقوِّسُ ظهري. \"مجسّاتٌ حسّاسة\"... والله لقد أصبتَ كبدَ الحقيقة؛ فقد كنتُ أظنُّ حذري المفرطَ وسرعةَ تأثُّري عيبًا أداريه، فإذا بكَ تجعلُهما أدواتِ بناءٍ تسبقُ الكلمات. سأحاولُ من الآنَ أن أُفرِّغَ حقائبي من \"رمادِ\" التوقُّعاتِ المظلمة، وأُبقي على \"ذهبِ\" الخبرة. لكنّني، وأنا أنظرُ إلى يديَّ الخاليتين، أتوجَّسُ خيفةً من فكرةِ \"الهندسة\"؛ فأنا ابنةُ القليل، لم أملكْ يومًا ترفَ التخطيطِ ولا بريقَ الشهادات.. فكيفَ لي، وأنا بهذه الإمكاناتِ البسيطة، أن أرسمَ خارطةً لحياةٍ واسعة؟ وكيفَ نصنعُ من \"اللاشيءِ\" حياةً تليقُ بالسكينةِ التي تصفها؟"]},{"type":"reading","chapterTag":"البابُ الثالث","sectionTitle":"ثانيًا: ما يجبُ أن تأخذيه معكِ — الذهب","paragraphs":["لا تحتقري \"القليلَ\" الذي في يدكِ يا منال، فالبحرُ العظيم ما هو إلا قطراتٌ اجتمعت، والغابةُ الوارفةُ ما هي إلا بذورٌ صغيرةٌ صبَرَ عليها التراب.","أنتِ تظنّينَ أنّكِ ابنةُ \"اللاشيء\" لأنّكِ تفتقدينَ بريقَ الشهاداتِ الورقية، لكنّكِ لا تدرينَ أنّكِ تملكينَ \"شهادةَ الحياة\" التي لم تمنحْها الجامعاتُ لمن يملكونَ المالَ ويفتقدونَ التجربة.","لقد وصلنا إلى البابِ الأخيرِ في رحلتنا، حيث تتحوّلُ الرؤى إلى خطوات، والكلماتُ إلى واقع."]},{"type":"chapter-opener","chapterNumber":"الرابع","title":"البابُ الرابع","epigraph":"«ليستِ المدارسُ كلُّها بأسوار، ولا الشهاداتُ كلُّها بأوراق.. فمن قرأَ قلبَه في وحدته، فقد تخرَّجَ من أعظمِ جامعاتِ الأرض.»"},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"المدارسُ التي لا تمنحُ شهادات","paragraphs":["حين تنظرينَ إلى يديكِ الخاليتين، تذكّري أن القصورَ تُبنى من الطينِ والحجر، لكنَّ \"البيوتَ\" تُبنى من الأرواح.","المهندسُ الذي يملكُ أحدثَ الأدواتِ والخرائط قد يبني جدارًا أصمَّ لا حياةَ فيه، أمّا المرأةُ التي مَحَّصها الألم، وصهرتْها التجارب، فهي تبني زوايا بيتها بحكمةٍ تجعلُ من الكوخِ الضيّقِ جنّةً يتسابقُ إليها الناسُ طلبًا للسكينة."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"مدرسةُ المصباحِ الخافت","paragraphs":["أنتِ لم تُكملي تعليمكِ المدرسيَّ، نعم.. ولكن، هل فكَّرتِ يومًا في \"المدرسة\" التي كنتِ تُديرينها في غرفتكِ تحت ضوءِ المصباحِ الخافت؟","القراءةُ التي مارستِها بشغفٍ وأنتِ تهربينَ من الضجيج، هي أصدقُ أنواعِ التعليم؛ لأنّكِ لم تقرَئي لأجلِ \"علامةٍ\" في ورقة، بل قرأتِ لأجلِ \"علامةٍ\" في روحك.","الفهمُ الذي وصلَ بكِ إلى حدِّ التساؤلِ عن \"بناءِ الذات\" هو تفوُّقٌ عقليٌّ لا تمنحُه كلُّ المناهجِ الجافّة."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الهندسةُ التي لا تحتاجُ مسطرة","paragraphs":["هندسةُ الحياة يا ابنتي لا تحتاجُ إلى مساطرَ وخرائطَ معقّدة، بل تحتاجُ إلى \"وعيِ اللحظة\".","المثقّفُ الحقيقيُّ ليس من يحفظُ الكتب، بل من يعرفُ كيف يُحوِّلُ الكتابَ إلى \"خُلق\"؛ من يعرفُ كيف يصمتُ حينَ يشتعلُ الغضب، وكيفَ يبتسمُ حينَ تضيقُ الدنيا، وكيفَ يُديرُ ميزانيّةً بسيطةً بكرامةٍ لا تُشعرُ أحدًا بالفقر.","هذه هي الهندسةُ التي ستجعلُ بيتكِ المستقبليَّ مختلفًا عن كلِّ ما رأيتِ."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الهندسةُ التي لا تحتاجُ مسطرة","paragraphs":["لا تملكينَ شهادة؟ اجعلي \"حكمتكِ\" هي شهادتك.","لا تملكينَ مالًا؟ اجعلي \"تدبيركِ\" هو ثروتك.","لا تملكينَ جاهًا؟ اجعلي \"سكينتكِ\" هي هيبتك."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الهندسةُ التي لا تحتاجُ مسطرة","paragraphs":["القارئُ الذكيُّ مثلكِ لا يحتاجُ إلى من يُلقِّنُه كيفَ يعيش، بل يحتاجُ فقط إلى أن يثقَ بأن الأدواتِ التي صنعَها في سنواتِ عزلته هي أدواتٌ جبّارة، تكفي لبناءِ أعظمِ حياة.","خلاصةٌ تُحفظ ليستِ المدارسُ كلُّها بأسوار، ولا الشهاداتُ كلُّها بأوراق.. فمن قرأَ قلبَه في وحدته، فقد تخرَّجَ من أعظمِ جامعاتِ الأرض."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"زادُ الطريقِ الصغير.. كيف نصنعُ من القليلِ حياة؟","paragraphs":["تخيّلي أنّكِ تسيرينَ في طريقٍ مظلمٍ طويل، ولا تملكينَ إلا مصباحًا صغيرًا لا يُضيءُ لكِ إلا موضعَ قدمكِ التالية.","هل تجلسينَ في مكانكِ تبكينَ لأن المصباحَ لا يُضيءُ نهايةَ الطريق؟ أم تتقدّمينَ خطوةً واحدة، فتجدينَ أن المصباحَ قد أضاءَ لكِ الخطوةَ التي بعدها؟","هكذا هي الحياةُ التي تليقُ بكِ يا منال؛ لا تُبنى بضربةِ حظ، ولا بخطّةٍ سحريّةٍ واسعة، بل تُبنى بـ\"الزادِ الصغير\" اليومي."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"تدبيرُ التفاصيلِ الصغيرة","paragraphs":["صناعةُ الحياةِ من \"اللاشيء\" تبدأُ من إدارةِ التفاصيلِ البسيطةِ بجمال:","ترتيبُ الوقت: حين تنظّمينَ ساعاتِ يومكِ في بيتكِ البسيط، أنتِ تتدرّبينَ على إدارةِ مملكتكِ الكبرى غدًا.","- تجويدُ العمل: حين تطبخينَ طعامًا، أو ترتّبينَ ركنًا، افعليه بحبٍّ وإتقان، وكأنّكِ ترسمينَ لوحةً فنّيّة. هذا الإتقانُ هو الذي سيجعلُ من بيتكِ بيئةً منظّمةً تُريحُ الأعصابَ وتطردُ الفوضى."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"تدبيرُ التفاصيلِ الصغيرة","paragraphs":["- تغذيةُ العقل: صفحةٌ واحدةٌ من كتابٍ جيّدٍ كلَّ يوم، هي حجرُ بناءٍ جديدٍ في وعيك.","- الادّخارُ النفسيّ: كلُّ دقيقةٍ تقضينَها في سكينةٍ داخلَ خيمتكِ، هي رصيدٌ من الهدوءِ ستسحبينَ منه يومَ يطرقُ القلقُ بابك."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الروحُ العظيمةُ تصنعُ من القليلِ كثيرًا","paragraphs":["أنتِ لستِ بحاجةٍ إلى \"إمكاناتٍ\" لتكوني سيّدةً عظيمة، أنتِ بحاجةٍ إلى \"روحٍ\" عظيمة.","والروحُ العظيمةُ هي التي تعرفُ كيف تجعلُ من الخبزِ والملحِ مائدةً شهيّة، ومن الكلمةِ الطيّبةِ ركنًا دافئًا، ومن الصبرِ سلاحًا لا يُهزَم.","بيتُكِ القادمُ لن يكونَ \"بيتًا سعيدًا\" لأنه فخم، بل سيكونُ كذلك لأنّكِ أنتِ من تسكنينَه؛ أنتِ التي عرفتِ قيمةَ الكلمة، وقدّستِ الهدوء، وحوّلتِ \"عدمَ\" الإمكاناتِ إلى \"قوّةِ\" الإرادة."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الروحُ العظيمةُ تصنعُ من القليلِ كثيرًا","paragraphs":["خلاصةٌ تُحفظ لا يهمُّ كم تملكُ من الوسائل، المهمُّ كم تملكُ من المعنى.. فالقليلُ ببركةِ الحكمةِ كثير، والكثيرُ بغيابِ الروحِ هباء."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الروحُ العظيمةُ تصنعُ من القليلِ كثيرًا","paragraphs":["تقولُ منال: أيها الحكيم، وضعتَ المصباحَ في يدي، وعلّمتني أن الخطوةَ الواحدةَ تكفي.. لقد كنتُ أحتقرُ ساعاتي التي أقضيها في ترتيبِ زوايا بيتنا المتواضع أو القراءةِ في كتبي القديمة، وأراها مجرّدَ \"انتظارٍ\" باهتٍ لقطارِ الحياة، فإذا بك تخبرني أنها هي \"الحياةُ\" ذاتُها، وهي تدريبي الأغلى على رعايةِ الجمالِ وسطَ الركام. سأكفُّ عن النظرِ ليديَّ الخاليتينِ من الأوراقِ الملوّنة، وأبدأُ بالنظرِ إلى النورِ الذي بدأ يسطعُ في وعيي. أشعرُ الآنَ كأنّني تلك البذرةُ التي كانت تخشى العتمة، فإذا بها تدركُ أن الضغطَ لم يكن ليخنقها، بل ليُقوِّيَ ساقَها لتشقَّ الأرض. أريدُ منك الآن وصيّتكَ الأخيرة، تلك الكلمةَ التي أضعها تاجًا على رأسي حين يجيءُ يومي المنتظر، وأخرجُ من \"خيمةِ الورق\" إلى \"بيتِ الواقع\".. هل حانَ وقتُ إزهارِ الوردة؟"]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"الروحُ العظيمةُ تصنعُ من القليلِ كثيرًا","paragraphs":["نعم يا منال، حانَ وقتُ الإزهار؛ فالبذرةُ التي شقّتْ صخرةَ الخوفِ والجهل لا تستأذنُ أحدًا لتعانقَ الضياء.","أنتِ اليومَ لستِ تلك الفتاةَ التي بدأتْ معنا الرحلةَ بقلبٍ يرتجف، بل أنتِ \"صانعةُ حياةٍ\" نضجتْ قبلَ الأوان، وتزيّنتْ بالحكمةِ قبلَ أن تتزيّنَ بالذهب.","إليكِ الإضاءةَ الأخيرة، لغةَ الختامِ وفاتحةَ العمل."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"حينَ تُزهرُ الوردة.. العهدُ الجديد","paragraphs":["يقولونَ يا ابنتي إن البيوتَ تُبنى على الأرض، وأنا أقولُ لكِ إن البيوتَ تُبنى في \"الأرواحِ\" أوّلًا.","غدًا، حين تضعينَ قدمكِ على عتبةِ داركِ الجديدة، لن تكوني مجرّدَ \"زوجةٍ\" تنتظرُ من يُسعدها، بل ستكونينَ \"المصدرَ\" الذي يفيضُ بالسعادة.","تلك اللحظةُ التي تخرجينَ فيها من بيتِ الصراخِ إلى بيتِ السكينة هي لحظةُ \"العهد\"."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"حينَ تُزهرُ الوردة.. العهدُ الجديد","paragraphs":["لا تلتفتي وراءكِ بحقد، بل انظري بخفّة؛ فكلُّ ما مرَّ بكِ كان \"صقلًا\" لجوهرك. لولا عتمةُ بيتكِ القديم، لما عرفتِ كيف تُقدِّسينَ النور. ولولا جفافُ العاطفةِ الذي عشتِه، لما عرفتِ كيف ترْوينَ قلوبَ من حولكِ بالرحمة.","وصيّتي لكِ، وتاجُها الذي طلبتِ، أوجزُها لكِ في ثلاث:"]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"أوّلًا: كوني \"الملاذَ\" لا \"القاضي\"","paragraphs":["في بيتكِ الجديد، اجعلي من صوتكِ رداءً دافئًا. لا تجعلي من الحوارِ محاكمة، ولا من الخلافِ معركة. تذكّري دائمًا أن الكلمةَ التي لا تخرج، لا تُحدثُ جرحًا.","اعملي مع أهلِ بيتكِ على أن تكونوا لبعضكم مساحةَ أمانٍ واحتواء، لا مصدرًا للخوفِ أو الأذى."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"ثانيًا: قُدسيّةُ \"الجوِّ النفسيّ\"","paragraphs":["البيتُ ليس نظافةَ الجدران، بل طهارةَ الأنفاس. عاهدي نفسكِ ألّا يدخلَ \"سمُّ\" الصراخِ إلى بيتكِ أبدًا.","إن ضاقتْ بكِ السبل، فاعتزلي في \"خيمتكِ\" حتى تهدئي، ثم اخرجي بوجهٍ طلق.","تذكّري أن أطفالكِ سيشربون \"هدوءَكِ\" قبل أن يشربوا الحليب، وسيتعلّمون \"السكينةَ\" من نظرةِ عينيكِ قبل أن يتعلّموا الحروف."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"ثالثًا: أنتِ \"الأصل\" الجديد","paragraphs":["انسَيْ تمامًا جملةَ \"هكذا وجدنا آباءنا\". أنتِ اليومَ تبدئينَ تاريخًا جديدًا لسلالتكِ.","كلُّ فعلِ حُبٍّ، وكلُّ جلسةِ حوار، وكلُّ ضحكةٍ صافيةٍ في بيتكِ، هي مسمارٌ يُدقُّ في نعشِ الماضي المرير.","أنتِ لستِ \"ضحيّة\" بعد الآن، أنتِ \"المؤسِّسة\" لجيلٍ سيعرفُ المعنى الحقيقيَّ لكلمةِ \"بيت\"."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"ثالثًا: أنتِ \"الأصل\" الجديد","paragraphs":["يا منال... الوردةُ التي تنبتُ في الصخر تكون رائحتُها أزكى، وقوّتُها أعظم. لقد تعلّمتِ في \"ركنكِ الضيّق\" ما لم يتعلّمْه الكثيرون في القصور.","فامضِ ببركةِ الله، وضعي يدَكِ في يدِ النصيبِ بقلبٍ مطمئن، وعينٍ تُبصرُ الجمالَ في كلِّ شيء.","لقد انتهتْ كلماتُ الكتاب، لكنَّ رحلتكِ الحقيقيّةَ بدأتِ الآن."]},{"type":"reading","chapterTag":"البابُ الرابع","sectionTitle":"ثالثًا: أنتِ \"الأصل\" الجديد","paragraphs":["استودعُ اللهَ قلبكِ، وعقلكِ، وبيتكِ الذي سيُضيءُ يومًا ما ويقول للعابرين: \"هنا تسكنُ منال... هنا يسكنُ السلام.\"","خلاصةٌ تُحفظُ في القلب البيوتُ العظيمةُ لا تُبنى بالرخام، بل بالرحمة.. والمرأةُ الحكيمةُ هي التي تُحوّلُ رمادَ الماضي إلى وقودٍ يُنيرُ حاضرَها ومستقبلَ أطفالها.","تمّتِ الرحلة... وبدأ البناء."]},{"type":"chapter-opener","chapterNumber":"الخاتمة","title":"خاتمةُ الرحلة","epigraph":"«لقد صارَ لي الآنَ وطنٌ في داخلي، قبلَ أن أملكَ دارًا على الأرض.. وتعلّمتُ كيفَ أُزهرُ حتى لو كانتِ التربةُ صخرًا.»"},{"type":"reading","chapterTag":"خاتمةُ الرحلة","sectionTitle":"كلمةُ منال الأخيرة.. على عتبةِ الفجر","paragraphs":["أُغلقُ الكتابَ الآن... ولا أشعرُ بوزنِ الورقِ في يدي، بل أشعرُ بوزنِ الأملِ في قلبي.","يا صاحبي، ويا من أمسكتَ بيدي حين كادَ الضجيجُ يبتلعني...","لقد جئتُ إليك وأنا أظنّني \"بقايا\" إنسان، فخرجتُ من بين كلماتك وأنا أشعرُ أنّني \"بدايةُ\" أُمّة. لم أعدْ تلك الفتاةَ التي تسدُّ أذنيها عن الصراخِ هربًا، بل صرتُ تلك المرأةَ التي ستُعلّمُ الصمتَ كيف ينطقُ بالرحمة، والبيوتَ كيف تمتلئُ بالسكينة."]},{"type":"reading","chapterTag":"خاتمةُ الرحلة","sectionTitle":"كلمةُ منال الأخيرة.. على عتبةِ الفجر","paragraphs":["سأحملُ وصاياكَ الثلاثَ كما يحملُ المسافرُ في عتمةِ الليلِ سراجًا لا ينطفئ.","لن أكون \"امتدادًا\" للألم، بل سأكونُ \"الحدَّ الفاصل\" الذي ينتهي عنده الوجع، ويبدأ منه الودّ.","سأبني ذلك البيتَ الذي حلمتُ به، حجرًا من صبري، وسقفًا من صلاتي، وروحًا استمدّتْ نورَها من صدقِ كلماتك."]},{"type":"reading","chapterTag":"خاتمةُ الرحلة","sectionTitle":"كلمةُ منال الأخيرة.. على عتبةِ الفجر","paragraphs":["سأضعُ الكتابَ جانبًا لحظة... دعني أتنفّسُ مع هذه الفكرةِ الأخيرة.","لقد صار لي الآن \"وطنٌ\" في داخلي، قبلَ أن أملكَ دارًا على الأرض.","شكرًا لأنّك لم تُعلّمني كيف أقرأُ الكتب، بل علّمتني كيف أقرأُ نفسي... وكيف أُزهرُ، حتى لو كانت التربةُ صخرًا."]},{"type":"reading","chapterTag":"خاتمةُ الرحلة","sectionTitle":"كلمةُ منال الأخيرة.. على عتبةِ الفجر","paragraphs":["سأقومُ الآن... أُطفئُ مصباحي الخافت، لأستقبلَ فجرَ حياتي الجديدةِ بقلبٍ لا يرتجف.","استودعتُكَ اللهَ يا صاحبَ القلبِ الكبير...","ولقاؤنا في دعواتِ الغيب."]},{"type":"reading","chapterTag":"خاتمةُ الرحلة","sectionTitle":"كلمةُ منال الأخيرة.. على عتبةِ الفجر","paragraphs":["تمّ بحمدِ الله"]},{"type":"closing","title":"تمّتِ الرحلة... وبدأ البناء.","subtitle":"خيمةٌ في القلب — رحلةُ منال إلى ذاتها"}]};
+const STATE_KEY = "maktabati_khayma_fi_alqalb_state_v2";
+const themes = {
+  ivory: {
+    "--bg-primary": "#F2F1E9", "--bg-secondary": "#FFFEFA", "--bg-soft-rose": "#F9DFE9", "--bg-pearl-gold": "#F4EEDF",
+    "--accent-rose": "#B94F7A", "--accent-rose-light": "#B94F7A", "--accent-gold": "#B88945", "--text-primary": "#91405F", "--text-secondary": "#A36D82"
+  },
+  warm: {
+    "--bg-primary": "#F3EAE0", "--bg-secondary": "#FFFCF7", "--bg-soft-rose": "#EFE0D8", "--bg-pearl-gold": "#F5E9D6",
+    "--accent-rose": "#875447", "--accent-rose-light": "#B47C69", "--accent-gold": "#B88945", "--text-primary": "#342B26", "--text-secondary": "#75665C"
+  },
+  calm: {
+    "--bg-primary": "#FFF1F6", "--bg-secondary": "#FFFCF8", "--bg-soft-rose": "#F8E8EE", "--bg-pearl-gold": "#F0EFE2",
+    "--accent-rose": "#B76A8C", "--accent-rose-light": "#D47D9E", "--accent-gold": "#A88B55", "--text-primary": "#91405F", "--text-secondary": "#A36D82"
+  },
+  night: {
+    "--bg-primary": "#79334F", "--bg-secondary": "#79334F", "--bg-soft-rose": "#91405F", "--bg-pearl-gold": "#302E25",
+    "--accent-rose": "#E8B7CA", "--accent-rose-light": "#F4D5E1", "--accent-gold": "#D0AD70", "--text-primary": "#F4F1E9", "--text-secondary": "#E6CAD6"
+  },
+  pink: {
+    "--bg-primary": "#FFF1F6", "--bg-secondary": "#FFFAFC", "--bg-soft-rose": "#F9DFE9", "--bg-pearl-gold": "#F8E8EE",
+    "--accent-rose": "#B94F7A", "--accent-rose-light": "#D47D9E", "--accent-gold": "#B88970", "--text-primary": "#91405F", "--text-secondary": "#A36D82", "--forest": "#963E65", "--app-wash": "#FBE5EE"
+  }
+};
+
+let state = { page: 0, bookmarks: [], theme: "pink" };
+try {
+  const saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
+  if (saved && typeof saved === "object") {
+    state = { ...state, ...saved };
+    delete state.readerName;
+    delete state.currentPage;
+    state.page = Number.isInteger(saved.page) ? saved.page : 0;
+    state.bookmarks = Array.isArray(saved.bookmarks) ? saved.bookmarks.filter(Number.isInteger) : [];
+    state.theme = "pink";
+  }
+} catch (e) {}
+
+const $ = id => document.getElementById(id);
+// منال شخصية محورية في النص؛ لا تُستبدل باسم القارئة أو بأي تخصيص آلي.
+const personalizeText = str => String(str ?? "");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  } catch (e) {}
+  try {
+    if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
+      window.MaktabatiBridge.onPageChanged(state.page + 1, BOOK_DATA.pages.length);
+    }
+  } catch (e) {}
+}
+
+function applyPrefs() {
+  const t = themes.pink;
+  Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+}
+function formatParagraph(pText) {
+  const raw = String(pText ?? "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("خلاصةٌ تُحفظ")) {
+    const body = raw.replace(/^خلاصةٌ تُحفظ(?:ُ في القلب)?\s*:?\s*/, "");
+    return '<div class="wisdom-pearl"><div class="wisdom-badge">✦ خلاصةٌ تُحفظ في القلب ✦</div><div>' + esc(body) + '</div></div>';
+  }
+  if (/^تقولُ\s+منال\s*:/.test(raw) || /^تقولُ\s+مَنَال\s*:/.test(raw)) {
+    const body = raw.replace(/^تقولُ\s+(?:منال|مَنَال)\s*:\s*/, "");
+    return '<div class="manal-voice"><div class="manal-badge">✿ بَوْحُ ' + "منال" + '</div><div>' + esc(personalizeText(body)) + '</div></div>';
+  }
+  return "<p>" + esc(personalizeText(raw)) + "</p>";
+}
+
+function paragraphHtml(arr) {
+  return (arr || []).map(formatParagraph).join("");
+}
+
+function tocEntries() {
+  const entries = [];
+  let lastSection = "";
+  BOOK_DATA.pages.forEach((p, i) => {
+    if (p.type === "chapter-opener") {
+      entries.push({ p, i, isChapter: true, label: (p.chapterNumber ? "الباب " + p.chapterNumber + ": " : "") + (p.title || "") });
+    } else if (p.type === "reading" && p.sectionTitle && p.sectionTitle !== lastSection) {
+      lastSection = p.sectionTitle;
+      entries.push({ p, i, isChapter: false, label: p.sectionTitle });
+    }
+  });
+  return entries;
+}
+
+function renderToc() {
+  const items = tocEntries();
+  $("tocList").innerHTML = items.map(({ i, isChapter, label }) =>
+    '<button type="button" class="toc-item ' + (isChapter ? "toc-chapter" : "") + '" data-go="' + i + '"><span>' + (isChapter ? "✿ " : "◦ ") + esc(personalizeText(label)) + '</span><small>ص ' + (i + 1) + '</small></button>'
+  ).join("");
+}
+
+const renderedCache = {};
+function clearPageCache() {
+  Object.keys(renderedCache).forEach(k => delete renderedCache[k]);
+}
+
+function buildSinglePageMarkup(p, i) {
+  if (renderedCache[i]) return renderedCache[i];
+  let out = "";
+  if (p.type === "cover") {
+    out = '<article class="page cover-page" aria-label="غلاف الكتاب">' +
+      '<svg class="cover-art" viewBox="0 0 240 210" role="img" aria-label="خيمة تحت سماء هادئة" xmlns="http://www.w3.org/2000/svg">' +
+        '<defs><linearGradient id="tent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D47D9E"/><stop offset="1" stop-color="#91405F"/></linearGradient><linearGradient id="light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4EEDF"/><stop offset="1" stop-color="#D9C18E"/></linearGradient></defs>' +
+        '<circle cx="120" cy="94" r="82" fill="#F9DFE9"/><path d="M120 18c9 17 23 27 43 31-20 7-34 19-43 37-9-18-23-30-43-37 20-4 34-14 43-31Z" fill="#C08A52" opacity=".88"/>' +
+        '<path d="M36 166 120 55l84 111H36Z" fill="url(#tent)" stroke="#B88945" stroke-width="3" stroke-linejoin="round"/>' +
+        '<path d="M120 57v109M120 57 76 166h88L120 57Z" fill="url(#light)" opacity=".96"/>' +
+        '<path d="M102 166v-43q18-25 36 0v43" fill="#91405F"/><path d="M22 170q32-18 62 0t72 0 62 0" fill="none" stroke="#B94F7A" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M46 112q-12-16-4-29 15 4 17 20M194 112q12-16 4-29-15 4-17 20" fill="none" stroke="#B94F7A" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="43" cy="48" r="3" fill="#B88945"/><circle cx="198" cy="43" r="3" fill="#B88945"/><circle cx="26" cy="93" r="2" fill="#B88945"/><circle cx="215" cy="92" r="2" fill="#B88945"/>' +
+      '</svg>' +
+      '<div class="eyebrow">حكايةٌ عن النجاةِ وإعادةِ البناء</div>' +
+      '<h1>' + esc(personalizeText(p.title)) + '</h1>' +
+      '<p class="subtitle">' + esc(personalizeText(p.subtitle)) + '</p>' +
+      '<div class="ornament">✦ ─ ❖ ─ ✦</div>' +
+      '<p class="author">' + esc(personalizeText(p.author)) + '</p>' +
+      '<button type="button" class="primary-btn" onclick="nextPage()">ابدئي القراءة <span aria-hidden="true">←</span></button>' +
+    '</article>';
+  } else if (p.type === "dedication") {
+    out = '<article class="page dedication">' +
+      '<div class="eyebrow">✿ إهداءٌ من القلب ✿</div>' +
+      '<h1>إلى كلِّ قلبٍ أنثويٍّ يبحثُ عن السكينة</h1>' +
+      '<div class="ornament">✦ ❀ ✦</div>' +
+      paragraphHtml(p.paragraphs) +
+    '</article>';
+  } else if (p.type === "toc") {
+    out = '<article class="page">' +
+      '<div class="eyebrow">✿ خارطةُ القراءة ✿</div>' +
+      '<h1>' + esc(personalizeText(p.title || "فهرسُ الرحلة")) + '</h1>' +
+      '<p>اختاري بابًا أو محطةً للانتقالِ مباشرةً إلى موضعها:</p>' +
+      '<div class="toc-list">' + tocEntries().map(({ i: ti, isChapter, label }) =>
+        '<button type="button" class="toc-item ' + (isChapter ? "toc-chapter" : "") + '" data-go="' + ti + '"><span>' + (isChapter ? "✿ " : "◦ ") + esc(personalizeText(label)) + '</span><small>ص ' + (ti + 1) + '</small></button>'
+      ).join("") + '</div>' +
+    '</article>';
+  } else if (p.type === "chapter-opener") {
+    out = '<article class="page opener">' +
+      '<div class="chapter-number">' + esc(personalizeText(p.chapterNumber || "من الرحلة")) + '</div>' +
+      '<div class="ornament">✦ ─ ❖ ─ ✦</div>' +
+      '<h1>' + esc(personalizeText(p.title)) + '</h1>' +
+      (p.epigraph ? '<div class="quote-card"><div class="quote-text">' + esc(personalizeText(p.epigraph)) + '</div></div>' : '') +
+      '<div class="ornament">✦</div>' +
+    '</article>';
+  } else if (p.type === "reading") {
+    out = '<article class="page reading">' +
+      (isSectionOpening(i, p) ? '<h2 class="section-opening">' + esc(personalizeText(p.sectionTitle)) + '</h2>' : '') +
+      paragraphHtml(p.paragraphs) +
+      (p.pullquote ? '<blockquote class="pullquote">' + esc(personalizeText(p.pullquote)) + '</blockquote>' : '') +
+      (p.afterParagraphs ? paragraphHtml(p.afterParagraphs) : '') +
+    '</article>';
+  } else if (p.type === "quote-showcase") {
+    out = '<article class="page">' +
+      '<div style="text-align:center"><div class="eyebrow">✿ إضاءةٌ على العتبة ✿</div></div>' +
+      '<div class="quote-card">' +
+        '<div class="quote-text">' + esc(personalizeText(p.quote)) + '</div>' +
+        '<div class="quote-caption">✦ ' + esc(personalizeText(p.caption || "")) + ' ✦</div>' +
+      '</div>' +
+    '</article>';
+  } else if (p.type === "closing") {
+    out = '<article class="page closing">' +
+      '<div class="eyebrow">✿ مسكُ الختام ✿</div>' +
+      '<div class="ornament">✧ ❀ ✧</div>' +
+      '<h1>' + esc(personalizeText(p.title || "تمّتِ الرحلة")) + '</h1>' +
+      '<p>' + esc(personalizeText(p.subtitle || "")) + '</p>' +
+      '<div class="ornament">✦ ❀ ✦</div>' +
+      '<button type="button" class="primary-btn" onclick="goToPage(0)">العودةُ إلى الغلاف</button>' +
+    '</article>';
+  } else {
+    out = '<article class="page">' + paragraphHtml(p.paragraphs || [p.content || p.text || ""]) + '</article>';
+  }
+  renderedCache[i] = out;
+  return out;
+}
+
+function chapterTitleAt(index) {
+  for (let n = index; n >= 0; n--) {
+    const item = BOOK_DATA.pages[n];
+    if (item.type === "chapter-opener") return item.title || item.chapterNumber || "";
+    if (item.type === "reading" && item.chapterTag) return item.chapterTag;
+  }
+  return "";
+}
+
+function isSectionOpening(index, page) {
+  if (!page.sectionTitle) return false;
+  const previous = BOOK_DATA.pages[index - 1];
+  return !previous || previous.type !== "reading" || previous.sectionTitle !== page.sectionTitle;
+}
+
+function updateRunningHeader(index, page) {
+  const header = $("runningHeader");
+  const label = $("runningHeaderText");
+  const visible = page.type === "reading" || page.type === "chapter-opener";
+  const title = chapterTitleAt(index);
+  header.hidden = !visible || !title;
+  label.textContent = title;
+}
+
+// =========================================================================
+// محرك التطبيع والبحث العربي الشامل (تجاهل التشكيل، تطابق الهمزات والألفات والتاء المربوطة والياء)
+// =========================================================================
+const ARABIC_DIACRITICS_RE = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g;
+
+function normalizeArabicChar(ch) {
+  if (ch >= "\u064B" && ch <= "\u065F") return "";
+  if (ch === "\u0670" || ch === "\u0640" || (ch >= "\u0610" && ch <= "\u061A") || (ch >= "\u06D6" && ch <= "\u06ED")) return "";
+  if (ch === "أ" || ch === "إ" || ch === "آ" || ch === "ٱ") return "ا";
+  if (ch === "ؤ") return "و";
+  if (ch === "ئ" || ch === "ى") return "ي";
+  if (ch === "ة") return "ه";
+  return ch.toLowerCase();
+}
+
+function normalizeArabicWithMap(rawStr) {
+  const src = String(rawStr || "");
+  let normStr = "";
+  const map = [];
+  let prevWasSpace = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (/\s/.test(ch)) {
+      if (!prevWasSpace && normStr.length > 0) {
+        normStr += " ";
+        map.push(i);
+        prevWasSpace = true;
+      }
+      continue;
+    }
+    const n = normalizeArabicChar(ch);
+    if (!n) continue;
+    prevWasSpace = false;
+    for (let k = 0; k < n.length; k++) {
+      normStr += n[k];
+      map.push(i);
+    }
+  }
+  if (normStr.endsWith(" ")) {
+    normStr = normStr.slice(0, -1);
+    map.pop();
+  }
+  return { normStr, map, src };
+}
+
+const norm = s => normalizeArabicWithMap(s).normStr;
+
+function resolveOrigEndIndex(src, startOrigIdx) {
+  let end = startOrigIdx + 1;
+  while (end < src.length && ARABIC_DIACRITICS_RE.test(src[end])) {
+    ARABIC_DIACRITICS_RE.lastIndex = 0;
+    end++;
+  }
+  ARABIC_DIACRITICS_RE.lastIndex = 0;
+  return end;
+}
+
+function highlightMatchInVocalizedText(rawText, normQuery) {
+  if (!normQuery) return esc(rawText);
+  const { normStr, map, src } = normalizeArabicWithMap(rawText);
+  const pos = normStr.indexOf(normQuery);
+  if (pos < 0) return esc(src);
+  const origStart = map[pos];
+  const lastNormIdx = Math.min(map.length - 1, pos + normQuery.length - 1);
+  const origEnd = resolveOrigEndIndex(src, map[lastNormIdx]);
+  return esc(src.slice(0, origStart)) +
+    '<mark class="search-hit-mark">' + esc(src.slice(origStart, origEnd)) + '</mark>' +
+    esc(src.slice(origEnd));
+}
+
+function buildSnippetWithHighlight(rawText, normQuery) {
+  const { normStr, map, src } = normalizeArabicWithMap(rawText);
+  const pos = normStr.indexOf(normQuery);
+  if (pos < 0) return null;
+  const origStart = map[pos];
+  const lastNormIdx = Math.min(map.length - 1, pos + normQuery.length - 1);
+  const origEnd = resolveOrigEndIndex(src, map[lastNormIdx]);
+
+  let sliceStart = Math.max(0, origStart - 52);
+  let sliceEnd = Math.min(src.length, origEnd + 78);
+  if (sliceStart > 0) {
+    const spaceAfter = src.indexOf(" ", sliceStart);
+    if (spaceAfter > 0 && spaceAfter < origStart) sliceStart = spaceAfter + 1;
+  }
+  if (sliceEnd < src.length) {
+    const spaceBefore = src.lastIndexOf(" ", sliceEnd);
+    if (spaceBefore > origEnd) sliceEnd = spaceBefore;
+  }
+
+  const prefix = sliceStart > 0 ? "… " : "";
+  const suffix = sliceEnd < src.length ? " …" : "";
+  const before = esc(src.slice(sliceStart, origStart));
+  const matched = esc(src.slice(origStart, origEnd));
+  const after = esc(src.slice(origEnd, sliceEnd));
+
+  return {
+    snippetHtml: prefix + before + '<mark class="search-hit-mark">' + matched + '</mark>' + after + suffix,
+    dedupKey: normStr.slice(Math.max(0, pos - 20), Math.min(normStr.length, pos + normQuery.length + 20))
+  };
+}
+
+function applyCalmPageSearchHighlight(normQuery) {
+  if (!normQuery) return;
+  const canvas = $("pageCanvas");
+  if (!canvas) return;
+  const walker = document.createTreeWalker(canvas, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      const pTag = node.parentElement && node.parentElement.tagName;
+      if (pTag === "SCRIPT" || pTag === "STYLE" || pTag === "BUTTON" || pTag === "MARK") return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+  let firstMark = null;
+  for (let i = 0; i < textNodes.length; i++) {
+    const tNode = textNodes[i];
+    const raw = tNode.nodeValue;
+    const { normStr, map, src } = normalizeArabicWithMap(raw);
+    const pos = normStr.indexOf(normQuery);
+    if (pos < 0) continue;
+
+    const origStart = map[pos];
+    const lastNormIdx = Math.min(map.length - 1, pos + normQuery.length - 1);
+    const origEnd = resolveOrigEndIndex(src, map[lastNormIdx]);
+
+    const frag = document.createDocumentFragment();
+    if (origStart > 0) frag.appendChild(document.createTextNode(src.slice(0, origStart)));
+    const mark = document.createElement("mark");
+    mark.className = "page-search-highlight";
+    mark.textContent = src.slice(origStart, origEnd);
+    frag.appendChild(mark);
+    if (origEnd < src.length) frag.appendChild(document.createTextNode(src.slice(origEnd)));
+    if (tNode.parentNode) {
+      tNode.parentNode.replaceChild(frag, tNode);
+      if (!firstMark) firstMark = mark;
+    }
+  }
+  if (firstMark && typeof firstMark.scrollIntoView === "function") {
+    setTimeout(() => {
+      try { firstMark.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
+    }, 45);
+  }
+}
+
+let activeHighlightQuery = "";
+
+function renderCurrentPage() {
+  const i = Math.max(0, Math.min(BOOK_DATA.pages.length - 1, state.page));
+  state.page = i;
+  const p = BOOK_DATA.pages[i];
+  updateRunningHeader(i, p);
+  const out = buildSinglePageMarkup(p, i);
+  $("pageCanvas").innerHTML = out;
+  $("pageCounter").textContent = (i + 1) + " / " + BOOK_DATA.pages.length;
+  $("prevBtn").disabled = i === 0;
+  $("nextBtn").disabled = i === BOOK_DATA.pages.length - 1;
+  const isBm = state.bookmarks.includes(i);
+  $("bookmarkBtn").textContent = isBm ? "★" : "☆";
+  $("bookmarkBtn").classList.toggle("bookmarked", isBm);
+  $("bookmarkBtn").setAttribute("aria-pressed", String(isBm));
+  saveState();
+  try { if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) window.MaktabatiBridge.onPageChanged(i + 1, BOOK_DATA.pages.length); } catch (e) {}
+  $("bookStage").scrollTop = 0;
+  if (activeHighlightQuery) {
+    applyCalmPageSearchHighlight(activeHighlightQuery);
+  }
+}
+
+function goToPage(index, highlightQuery) {
+  activeHighlightQuery = typeof highlightQuery === "string" ? highlightQuery : "";
+  state.page = Math.max(0, Math.min(BOOK_DATA.pages.length - 1, index));
+  renderCurrentPage();
+  closePanels();
+}
+function nextPage() { goToPage(state.page + 1, ""); }
+function prevPage() { goToPage(state.page - 1, ""); }
+window.goToPage = goToPage;
+window.nextPage = nextPage;
+window.prevPage = prevPage;
+
+$("nextBtn").onclick = nextPage;
+$("prevBtn").onclick = prevPage;
+
+function openPanel(id) {
+  document.querySelectorAll(".overlay").forEach(x => {
+    if (x.id !== id) x.classList.remove("open");
+  });
+  const panelEl = $(id);
+  if (!panelEl) return;
+  panelEl.classList.add("open");
+  if (id === "searchPanel") {
+    const input = $("searchInput");
+    if (input) {
+      setTimeout(() => {
+        try { input.focus(); } catch (e) {}
+      }, 30);
+    }
+  }
+}
+function closePanels() {
+  document.querySelectorAll(".overlay").forEach(x => x.classList.remove("open"));
+}
+$("tocOpen").onclick = e => {
+  if (e && e.stopPropagation) e.stopPropagation();
+  openPanel("tocPanel");
+};
+$("searchOpen").onclick = e => {
+  if (e && e.stopPropagation) e.stopPropagation();
+  openPanel("searchPanel");
+};
+document.querySelectorAll(".closePanel").forEach(b => {
+  b.onclick = e => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    closePanels();
+  };
+});
+document.querySelectorAll(".overlay").forEach(o => {
+  o.addEventListener("click", e => {
+    if (e.target === o) closePanels();
+  });
+});
+
+$("bookmarkBtn").onclick = () => {
+  const i = state.page;
+  state.bookmarks = state.bookmarks.includes(i) ? state.bookmarks.filter(n => n !== i) : [...state.bookmarks, i];
+  saveState();
+  renderCurrentPage();
+};
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-go]");
+  if (b) {
+    e.stopPropagation();
+    const targetPage = Number(b.dataset.go);
+    const searchQuery = b.hasAttribute("data-search-hit") ? norm($("searchInput").value.trim()) : "";
+    goToPage(targetPage, searchQuery);
+  }
+});
+
+let searchTimer;
+function pageBlocksForSearch(p) {
+  const blocks = [];
+  const pushUnique = txt => {
+    const s = personalizeText(txt).trim();
+    if (s && !blocks.includes(s)) blocks.push(s);
+  };
+  [p.title, p.subtitle, p.author, p.sectionTitle, p.epigraph, p.quote, p.caption, p.pullquote, p.content, p.text].forEach(pushUnique);
+  (p.paragraphs || []).forEach(pushUnique);
+  (p.afterParagraphs || []).forEach(pushUnique);
+  return blocks;
+}
+
+function pageHeadingLabel(p, idx) {
+  const ch = p.chapterTag || (p.chapterNumber ? "الباب " + p.chapterNumber : "");
+  const sec = p.sectionTitle || p.title || "";
+  if (ch && sec && ch !== sec) return ch + " — " + sec;
+  return sec || ch || ("صفحة " + (idx + 1));
+}
+
+function executeBookSearch() {
+  const rawInput = $("searchInput").value || "";
+  const clearBtn = $("searchClearBtn");
+  const statusEl = $("searchStatus");
+  const resultsEl = $("searchResults");
+
+  if (clearBtn) clearBtn.hidden = rawInput.length === 0;
+  const q = norm(rawInput.trim());
+
+  if (!q) {
+    activeHighlightQuery = "";
+    if (statusEl) statusEl.textContent = "ابحثي في كامل محتوى الكتاب (" + BOOK_DATA.pages.length + " صفحات) مع التشكيل أو بدونه.";
+    resultsEl.innerHTML = "";
+    return;
+  }
+
+  const hits = [];
+  const seenPageKeys = new Set();
+
+  BOOK_DATA.pages.forEach((p, pageIdx) => {
+    const blocks = pageBlocksForSearch(p);
+    for (let b = 0; b < blocks.length; b++) {
+      const snip = buildSnippetWithHighlight(blocks[b], q);
+      if (snip) {
+        const pageDedupKey = pageIdx + "::" + snip.dedupKey;
+        if (!seenPageKeys.has(pageDedupKey)) {
+          seenPageKeys.add(pageDedupKey);
+          hits.push({
+            i: pageIdx,
+            label: pageHeadingLabel(p, pageIdx),
+            snippetHtml: snip.snippetHtml
+          });
+        }
+      }
+    }
+  });
+
+  if (hits.length > 0) {
+    if (statusEl) statusEl.textContent = "تم العثور على " + hits.length + " نتيجة في صفحات الكتاب:";
+    resultsEl.innerHTML = hits.slice(0, 100).map(h =>
+      '<button type="button" class="search-result" data-go="' + h.i + '" data-search-hit="1">' +
+        '<div class="search-result-head">' +
+          '<strong>✿ ' + esc(h.label) + '</strong>' +
+          '<span class="search-result-page">صفحة ' + (h.i + 1) + '</span>' +
+        '</div>' +
+        '<small>' + h.snippetHtml + '</small>' +
+      '</button>'
+    ).join("");
+  } else {
+    if (statusEl) statusEl.textContent = "لم يتم العثور على مطابقات لعبارة البحث.";
+    resultsEl.innerHTML = '<p class="empty">لا توجد نتائج مطابقة.</p>';
+  }
+}
+
+$("searchInput").addEventListener("input", () => {
+  const rawInput = $("searchInput").value || "";
+  if ($("searchClearBtn")) $("searchClearBtn").hidden = rawInput.length === 0;
+  clearTimeout(searchTimer);
+  if (!rawInput.trim()) {
+    executeBookSearch();
+    return;
+  }
+  if ($("searchStatus")) $("searchStatus").textContent = "جاري البحث...";
+  searchTimer = setTimeout(executeBookSearch, 90);
+});
+
+if ($("searchClearBtn")) {
+  $("searchClearBtn").onclick = e => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    $("searchInput").value = "";
+    activeHighlightQuery = "";
+    executeBookSearch();
+    renderCurrentPage();
+    try { $("searchInput").focus(); } catch (err) {}
+  };
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closePanels();
+    return;
+  }
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+  if (e.key === "ArrowRight") { document.documentElement.dir === "rtl" ? nextPage() : prevPage(); }
+  else if (e.key === "ArrowLeft") { document.documentElement.dir === "rtl" ? prevPage() : nextPage(); }
+});
+
+let touchX = 0, touchY = 0, singleFingerGesture = false;
+const stage = $("bookStage");
+stage.addEventListener("touchstart", e => {
+  if (e.touches.length !== 1) { singleFingerGesture = false; return; }
+  if (e.target && e.target.closest && e.target.closest(".overlay, .panel, button, input")) {
+    singleFingerGesture = false;
+    return;
+  }
+  const t = e.touches[0];
+  touchX = t.clientX;
+  touchY = t.clientY;
+  singleFingerGesture = true;
+}, { passive: true });
+stage.addEventListener("touchmove", e => {
+  if (e.touches.length !== 1) singleFingerGesture = false;
+}, { passive: true });
+stage.addEventListener("touchcancel", () => { singleFingerGesture = false; }, { passive: true });
+stage.addEventListener("touchend", e => {
+  if (!singleFingerGesture || e.changedTouches.length !== 1) { singleFingerGesture = false; return; }
+  const t = e.changedTouches[0], dx = t.clientX - touchX, dy = t.clientY - touchY;
+  singleFingerGesture = false;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 55) return;
+  if (Math.abs(dx) > Math.abs(dy) * 1.25) {
+    if (dx > 0) nextPage(); else prevPage();
+  }
+}, { passive: true });
+
+state.page = Math.max(0, Math.min(BOOK_DATA.pages.length - 1, Number(state.page) || 0));
+state.bookmarks = state.bookmarks.filter(i => i >= 0 && i < BOOK_DATA.pages.length);
+applyPrefs();
+renderCurrentPage();
+setTimeout(() => {
+  renderToc();
+  let warmIdx = 0;
+  function warmBatch() {
+    const end = Math.min(BOOK_DATA.pages.length, warmIdx + 8);
+    for (let k = warmIdx; k < end; k++) {
+      buildSinglePageMarkup(BOOK_DATA.pages[k], k);
+    }
+    warmIdx = end;
+    if (warmIdx < BOOK_DATA.pages.length) setTimeout(warmBatch, 20);
+  }
+  warmBatch();
+}, 16);
+</script>
+</body>
+</html>

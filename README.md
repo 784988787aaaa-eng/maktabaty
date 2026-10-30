@@ -1,48 +1,22 @@
-# مكتبتي — مكتبة الكتب الرقمية التفاعلية
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-تطبيق Android لإدارة الكتب الرقمية واستيرادها وقراءتها داخل قارئ HTML5 مدمج. يدعم المشروع ملفات HTML المستقلة وحزم ZIP التي تحتوي على صفحات وملفات CSS وJavaScript وصور وخطوط ووسائط.
+# Run and deploy your AI Studio app
 
-## ما يتضمنه التطبيق
+This contains everything you need to run your app locally.
 
-- مكتبة كتب مع رفوف وتصنيفات وعرض شبكي أو قائمة.
-- استيراد ملفات HTML وحزم ZIP وفتح الملفات المشتركة مع التطبيق.
-- قارئ HTML داخل Android WebView مع دعم العربية وRTL والخطوط المضمّنة.
-- فهرس، إشارات مرجعية، حفظ موضع القراءة، وتخصيص مظهر القراءة.
-- محرك تكبير متدفق للنص من 75% إلى 200% دون تحويل الصفحة إلى صورة أو مضاعفة تحجيم الخط.
-- ثيم فاتح ورقي وثيم داكن بهوية خضراء تحريرية ونحاسية.
+View your app in AI Studio: https://ai.studio/apps/e902d731-aad2-4528-8fa4-3b1affcac087
 
-## بنية المشروع
+## Run Locally
 
-- `ui/screens/LibraryScreen.kt`: شاشة المكتبة.
-- `ui/screens/ReaderScreen.kt`: شاشة القارئ وإدارة WebView.
-- `data/importer/`: استيراد الكتب وتحليل HTML والتقاط الغلاف.
-- `data/sandbox/SandboxHtmlInjector.kt`: طبقة التوافق ومحرك القراءة المعزول لكل كتاب.
-- `data/repository/BookRepository.kt`: إدارة الكتب وحفظها وترقيتها.
-- `ui/theme/`: ألوان التطبيق والخطوط والطباعة.
+**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
 
-## فتح المشروع وبناؤه
 
-1. افتح مجلد المشروع في Android Studio.
-2. استخدم Android SDK المتوافق مع إعداد `compileSdk` في `app/build.gradle.kts`.
-3. نفّذ Gradle Sync.
-4. شغّل اختبارات الوحدة قبل بناء نسخة تجريبية.
-5. ثبّت نسخة Debug على جهاز فعلي لاختبار استيراد الكتب والقراءة.
-
-> هذه الحزمة المصدرية لا تتضمن Gradle Wrapper؛ استخدم Gradle المتوافق الذي يديره Android Studio أو أضف Wrapper من بيئة التطوير لديك.
-
-## اختبار قارئ الكتب بعد التعديل
-
-اختبر ثلاثة أنواع من الكتب:
-1. كتاب يستخدم `BOOK_DATA.pages`.
-2. كتاب يستخدم عناصر صفحات DOM مع `data-page`.
-3. كتاب HTML طويل متدفق دون ترقيم صفحات مستقل.
-
-جرّب أحجام 75% و100% و150% و200%، وتحقق من بقاء النص كاملًا، وعدم قصّ الصفحة النشطة، وصحة عداد الصفحات، واستمرار الفهرس والإشارات المرجعية.
-
-## ملاحظات إصدار محرك القراءة V9
-
-يعتمد التكبير الآن على تحجيم جذر CSS فقط، بينما يبقى `WebView.textZoom` على 100% لمنع تضاعف التكبير. كما أصبحت قواعد التوافق أقل تدخلًا في عناصر التصميم، وأصبح اكتشاف صفحات `data-page` يستبعد التداخل والتكرار. راجع `AUDIT_AND_READER_ENGINE_V9.md` لتفاصيل التدقيق والتعديلات وحدود التحقق.
-
-## حدود التحقق الحالية
-
-تم فحص صياغة JavaScript لطبقة الحقن، لكن لم يتم بناء APK أو تنفيذ اختبار مرئي على هاتف/محاكي ضمن بيئة إعداد هذه النسخة. يلزم تنفيذ اختبار Android كامل قبل نشر التطبيق.
+1. Open Android Studio
+2. Select **Open** and choose the directory containing this project
+3. Allow Android Studio to fix any incompatibilities as it imports the project.
+4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
+5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
+6. Run the app on an emulator or physical device
+7. If you have already published your app in AI Studio, please [request upload key reset](https://support.google.com/googleplay/android-developer/answer/9842756#zippy=%2Crequest-an-upload-key-reset) in Google Play Console.

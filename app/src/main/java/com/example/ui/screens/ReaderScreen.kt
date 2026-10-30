@@ -236,9 +236,7 @@ fun ReaderScreen(
     }
 
     fun applyFluidZoomToWebView(wv: WebView, zoomPct: Int) {
-        // The injected reader engine scales the document root. Keep Chromium textZoom at 100%
-        // to prevent compounded scaling (e.g. 200% native × 200% CSS = 400%).
-        if (wv.settings.textZoom != 100) wv.settings.textZoom = 100
+        wv.settings.textZoom = zoomPct
         wv.evaluateJavascript(
             "if (typeof window.__maktabatiSetFluidZoom === 'function') window.__maktabatiSetFluidZoom($zoomPct, true);",
             null
@@ -288,7 +286,7 @@ fun ReaderScreen(
                             useWideViewPort = true
                             loadWithOverviewMode = true
                             defaultTextEncodingName = "UTF-8"
-                            textZoom = 100
+                            textZoom = textZoomPercent
                             cacheMode = WebSettings.LOAD_DEFAULT
                         }
                         lastAppliedZoom[0] = textZoomPercent
@@ -326,7 +324,7 @@ fun ReaderScreen(
                                     lastAppliedZoom[0] = clamped
                                     textZoomPercent = clamped
                                     prefs.edit().putInt("textZoomPercent", clamped).apply()
-                                    settings.textZoom = 100
+                                    settings.textZoom = clamped
                                     showFloatingZoomBadge = true
                                     zoomInteractionTick++
                                 }
@@ -340,27 +338,12 @@ fun ReaderScreen(
                                 request: WebResourceRequest?
                             ): WebResourceResponse? {
                                 val reqUri = request?.url ?: return null
-                                if (reqUri.host == VIRTUAL_BOOK_HOST && reqUri.path?.startsWith("/fonts/") == true) {
-                                    val fontResId = when (reqUri.path) {
-                                        "/fonts/amiri.ttf" -> com.example.R.font.amiri
-                                        "/fonts/cairo.ttf" -> com.example.R.font.cairo
-                                        else -> null
-                                    }
-                                    if (fontResId != null) {
-                                        try {
-                                            return WebResourceResponse(
-                                                "font/ttf",
-                                                null,
-                                                200,
-                                                "OK",
-                                                mapOf(
-                                                    "Access-Control-Allow-Origin" to "*",
-                                                    "Cache-Control" to "public, max-age=31536000"
-                                                ),
-                                                ctx.resources.openRawResource(fontResId)
-                                            )
-                                        } catch (_: Exception) {}
-                                    }
+                                if (reqUri.host == VIRTUAL_BOOK_HOST) {
+                                    com.example.data.typography.MaktabatiFontRegistry.interceptFontRequest(
+                                        context = ctx,
+                                        requestPath = reqUri.path,
+                                        bookDir = bookDir
+                                    )?.let { return it }
                                 }
                                 if (reqUri.host == VIRTUAL_BOOK_HOST && reqUri.path?.startsWith("/books/") == true) {
                                     val rawRelPath = reqUri.path!!.removePrefix("/books/")
@@ -369,14 +352,18 @@ fun ReaderScreen(
                                         if (f.exists()) f else File(booksRoot, rawRelPath)
                                     }
                                     try {
-                                        if (targetFile.isFile &&
-                                            targetFile.canonicalPath.startsWith(booksRoot.canonicalPath + File.separator)) {
+                                        if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
                                             val mime = resolveMimeType(targetFile.name)
                                             // Upgrade legacy book files on background I/O thread if needed
                                             if (mime == "text/html") {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV9Initialized")) {
-                                                    val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
+                                                if (!raw.contains("__maktabatiV8Initialized")) {
+                                                    val upgraded = SandboxHtmlInjector.injectIntoHtml(
+                                                        rawHtml = raw,
+                                                        bookId = book.id,
+                                                        pageCount = livePageCount,
+                                                        bookDir = bookDir
+                                                    )
                                                     targetFile.writeText(upgraded, Charsets.UTF_8)
                                                     return WebResourceResponse(
                                                         "text/html",
@@ -411,10 +398,10 @@ fun ReaderScreen(
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 super.onPageFinished(view, url)
                                 view?.let { wv ->
-                                    // A paginated book restores by page index, never by a stale scroll
-                                    // offset that can land midway through or conceal the selected page.
-                                    if (book.pageCount <= 1 && book.scrollY > 0) {
-                                        wv.postDelayed({ wv.scrollTo(0, book.scrollY) }, 30)
+                                    if (book.scrollY > 0) {
+                                        wv.postDelayed({
+                                            wv.scrollTo(0, book.scrollY)
+                                        }, 30)
                                     }
                                     if (readerTheme != ReaderThemeMode.ORIGINAL) {
                                         applyThemeToWebView(wv, readerTheme)

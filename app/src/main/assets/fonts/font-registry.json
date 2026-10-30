@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "offlineOnly": true,
+  "fonts": [
+    {
+      "familyName": "Amiri",
+      "cssFamilyName": "Amiri",
+      "folder": "assets/fonts/amiri/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/amiri/OFL.txt",
+      "editorialUsage": "النصوص الأدبية والكتب الكلاسيكية والاقتباسات",
+      "fallbackStack": "\"Amiri\", \"Noto Naskh Arabic\", serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/amiri/amiri-400.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/amiri/amiri-700.woff2" }
+      ]
+    },
+    {
+      "familyName": "Noto Naskh Arabic",
+      "cssFamilyName": "Noto Naskh Arabic",
+      "folder": "assets/fonts/noto-naskh-arabic/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/noto-naskh-arabic/OFL.txt",
+      "editorialUsage": "نصوص المتن الطويلة والقراءة السردية",
+      "fallbackStack": "\"Noto Naskh Arabic\", \"Amiri\", serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2" },
+        { "weight": 500, "styleName": "Medium", "woff2Path": "assets/fonts/noto-naskh-arabic/noto-naskh-arabic-500.woff2" },
+        { "weight": 600, "styleName": "SemiBold", "woff2Path": "assets/fonts/noto-naskh-arabic/noto-naskh-arabic-600.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/noto-naskh-arabic/noto-naskh-arabic-700.woff2" }
+      ]
+    },
+    {
+      "familyName": "Aref Ruqaa",
+      "cssFamilyName": "Aref Ruqaa",
+      "folder": "assets/fonts/aref-ruqaa/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/aref-ruqaa/OFL.txt",
+      "editorialUsage": "العناوين الأدبية والاقتباسات",
+      "fallbackStack": "\"Aref Ruqaa\", \"Amiri\", serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/aref-ruqaa/aref-ruqaa-400.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/aref-ruqaa/aref-ruqaa-700.woff2" }
+      ]
+    },
+    {
+      "familyName": "Reem Kufi",
+      "cssFamilyName": "Reem Kufi",
+      "folder": "assets/fonts/reem-kufi/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/reem-kufi/OFL.txt",
+      "editorialUsage": "عناوين الفصول والأبواب",
+      "fallbackStack": "\"Reem Kufi\", \"Noto Kufi Arabic\", sans-serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/reem-kufi/reem-kufi-400.woff2" },
+        { "weight": 500, "styleName": "Medium", "woff2Path": "assets/fonts/reem-kufi/reem-kufi-500.woff2" },
+        { "weight": 600, "styleName": "SemiBold", "woff2Path": "assets/fonts/reem-kufi/reem-kufi-600.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/reem-kufi/reem-kufi-700.woff2" }
+      ]
+    },
+    {
+      "familyName": "IBM Plex Sans Arabic",
+      "cssFamilyName": "IBM Plex Sans Arabic",
+      "folder": "assets/fonts/ibm-plex-sans-arabic/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/ibm-plex-sans-arabic/OFL.txt",
+      "editorialUsage": "الكتب الفكرية والمعرفية المعاصرة",
+      "fallbackStack": "\"IBM Plex Sans Arabic\", \"Noto Sans Arabic\", sans-serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-400.woff2" },
+        { "weight": 500, "styleName": "Medium", "woff2Path": "assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-500.woff2" },
+        { "weight": 600, "styleName": "SemiBold", "woff2Path": "assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-600.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-700.woff2" }
+      ]
+    },
+    {
+      "familyName": "Noto Sans Arabic",
+      "cssFamilyName": "Noto Sans Arabic",
+      "folder": "assets/fonts/noto-sans-arabic/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/noto-sans-arabic/OFL.txt",
+      "editorialUsage": "واجهة التطبيق والفهارس والبيانات الوصفية والأرقام",
+      "fallbackStack": "\"Noto Sans Arabic\", \"IBM Plex Sans Arabic\", sans-serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/noto-sans-arabic/noto-sans-arabic-400.woff2" },
+        { "weight": 500, "styleName": "Medium", "woff2Path": "assets/fonts/noto-sans-arabic/noto-sans-arabic-500.woff2" },
+        { "weight": 600, "styleName": "SemiBold", "woff2Path": "assets/fonts/noto-sans-arabic/noto-sans-arabic-600.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/noto-sans-arabic/noto-sans-arabic-700.woff2" }
+      ]
+    },
+    {
+      "familyName": "Noto Kufi Arabic",
+      "cssFamilyName": "Noto Kufi Arabic",
+      "folder": "assets/fonts/noto-kufi-arabic/",
+      "license": "SIL Open Font License 1.1",
+      "licensePath": "assets/fonts/noto-kufi-arabic/OFL.txt",
+      "editorialUsage": "العناوين الحديثة والتصنيفات",
+      "fallbackStack": "\"Noto Kufi Arabic\", \"Reem Kufi\", sans-serif",
+      "weights": [
+        { "weight": 400, "styleName": "Regular", "woff2Path": "assets/fonts/noto-kufi-arabic/noto-kufi-arabic-400.woff2" },
+        { "weight": 500, "styleName": "Medium", "woff2Path": "assets/fonts/noto-kufi-arabic/noto-kufi-arabic-500.woff2" },
+        { "weight": 600, "styleName": "SemiBold", "woff2Path": "assets/fonts/noto-kufi-arabic/noto-kufi-arabic-600.woff2" },
+        { "weight": 700, "styleName": "Bold", "woff2Path": "assets/fonts/noto-kufi-arabic/noto-kufi-arabic-700.woff2" }
+      ]
+    }
+  ]
+}

@@ -1,16 +1,24 @@
 package com.example.data.sandbox
 
+import com.example.data.typography.BookTypographyProfile
+import com.example.data.typography.MaktabatiFontRegistry
+import java.io.File
+
 /**
  * High-speed, non-intrusive preprocessor & runtime engine for standalone HTML/CSS/JS books:
  * 1. Preserves `<meta charset="utf-8">` and `<meta name="viewport">` at byte 0 by injecting right before `</head>`.
  * 2. Normalizes `dvh`/`svh`/`lvh` viewport units to `vh` and enforces 100vh fallback on `.app`.
  * 3. Provides crash-proof per-book `localStorage` isolation + full `window.localStorage` polyfill.
- * 4. Silent Fluid Reflow Zoom Engine (`Fluid Reflow Zoom`): pinch-to-zoom & button zoom (`75%`–`200%`) that updates
+ * 4. Offline Arabic Typography Engine (`MaktabatiFontRegistry`): declares exact `@font-face` rules for the
+ *    7 approved Arabic font families (`Amiri`, `Noto Naskh Arabic`, `Aref Ruqaa`, `Reem Kufi`,
+ *    `IBM Plex Sans Arabic`, `Noto Sans Arabic`, `Noto Kufi Arabic`) using local WOFF2 weights,
+ *    and applies the book's `manifest.json` typography profile if present.
+ * 5. Silent Fluid Reflow Zoom Engine (`Fluid Reflow Zoom`): pinch-to-zoom & button zoom (`75%`–`200%`) that updates
  *    `--reader-font`, `--reader-font-size`, and `--font-scale` so text, cards, quotes, and ornaments reflow
  *    inside the page width without rigid PDF-like horizontal clipping. Never injects any HUD or toast into WebView DOM.
- * 5. Silent Layout Containment (`MaktabatiLayoutGuard`): silently keeps elements fitting within `.page-canvas`
+ * 6. Silent Layout Containment (`MaktabatiLayoutGuard`): silently keeps elements fitting within `.page-canvas`
  *    (`max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere;`) without emitting any warning or toast.
- * 6. Subtle Smooth Fade & Micro-Slide Page Transition: clean 1-finger swipe navigation with a gentle
+ * 7. Subtle Smooth Fade & Micro-Slide Page Transition: clean 1-finger horizontal swipe navigation with a gentle
  *    `180ms cubic-bezier(0.22, 1, 0.36, 1)` micro-slide (`translateX(±10px) -> translateX(0)`) and opacity fade
  *    (`opacity: 0.5 -> 1.0`) only when the page changes, with zero overlays or shapes during finger drag.
  */
@@ -18,61 +26,24 @@ object SandboxHtmlInjector {
 
     private val DVH_UNIT_REGEX = Regex("(\\d+(?:\\.\\d+)?)[dsl]vh\\b", RegexOption.IGNORE_CASE)
 
-    fun buildInjectedSnippet(bookId: String, pageCount: Int): String {
+    fun buildInjectedSnippet(
+        bookId: String,
+        pageCount: Int,
+        typographyProfile: BookTypographyProfile? = null
+    ): String {
         val safePrefix = "book_${bookId.replace(Regex("[^a-zA-Z0-9_]"), "_")}_"
+        val fontFacesCss = MaktabatiFontRegistry.buildOfflineFontFacesCss("https://maktabati.app/assets")
+        val typographyCss = if (typographyProfile != null) {
+            MaktabatiFontRegistry.buildTypographyProfileCss(typographyProfile)
+        } else {
+            ""
+        }
+
         return """
         <style id="maktabati-perf-booster">
-          @font-face {
-            font-family: "Amiri";
-            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
-          @font-face {
-            font-family: "Noto Naskh Arabic";
-            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
-          @font-face {
-            font-family: "Scheherazade New";
-            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
-          @font-face {
-            font-family: "Traditional Arabic";
-            src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
-          @font-face {
-            font-family: "Cairo";
-            src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
-          @font-face {
-            font-family: "Tajawal";
-            src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
-          @font-face {
-            font-family: "Readex Pro";
-            src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-          }
+$fontFacesCss
+$typographyCss
           :root {
-            --reader-font: 1;
             --reader-font-size: 100%;
             --font-scale: 1;
           }
@@ -99,25 +70,18 @@ object SandboxHtmlInjector {
           }
           .book-stage, .stage {
             width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+            -webkit-overflow-scrolling: touch;
           }
-          /* Never clip a page container: long content must remain scrollable and visible. */
           .page-canvas, .page, .book-page, .page-container {
-            max-width: 100%;
-            box-sizing: border-box;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
             position: relative;
-            transform-origin: top center;
+            transform-origin: center center;
           }
-          /* The selected page grows with its text; it is never clipped by a fixed-height page shell. */
-          .page.active, .book-page.active, [data-page].active,
-          #pageInnerContent, #pageBody, .page-body, .page-content {
-            max-height: none !important;
-            overflow-y: visible !important;
-            overflow-x: visible;
-          }
-          html { font-size: calc(16px * var(--reader-font, 1)); }
-          body { font-size: 1rem; overflow-x: hidden; overflow-y: auto; }
           .maktabati-gpu-hint {
             will-change: transform, opacity;
             transform: translateZ(0);
@@ -149,26 +113,31 @@ object SandboxHtmlInjector {
             animation: maktabatiMicroSlidePrev 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
           }
           #pageInnerContent, .page-body, .page-content {
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box !important;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            font-size: calc(1em * var(--font-scale, 1));
+          }
+          #pageInnerContent *, .page-body *, .page-content *, .page-canvas * {
             max-width: 100%;
             box-sizing: border-box;
-            overflow-wrap: break-word;
+            overflow-wrap: anywhere;
           }
-          /* Constrain media, not every descendant: preserve designed grids and page layouts. */
           #pageInnerContent img, .page-body img, .page-content img,
           #pageInnerContent svg, .page-body svg, .page-content svg,
           #pageInnerContent video, .page-body video, .page-content video {
-            max-width: 100%;
-            height: auto;
+            max-width: 100% !important;
+            height: auto !important;
           }
           #pageInnerContent table, .page-body table, .page-content table {
-            max-width: 100%;
-            box-sizing: border-box;
-          }
-          #pageInnerContent pre, .page-body pre, .page-content pre {
-            max-width: 100%;
+            display: block;
+            max-width: 100% !important;
             overflow-x: auto;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
+            box-sizing: border-box !important;
           }
           .quote-box, blockquote, .insight-card, .flip-card, .quiz-card, .quiz-option {
             max-width: 100% !important;
@@ -180,16 +149,16 @@ object SandboxHtmlInjector {
             right: 0;
             bottom: 0;
             left: 0;
+            z-index: 40;
           }
           .bottom-nav-dock, .controls-bar, .page-footer {
             flex-shrink: 0;
-            z-index: 25;
+            z-index: 4;
           }
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV9Initialized) return;
-          window.__maktabatiV9Initialized = true;
+          if (window.__maktabatiV8Initialized) return;
           window.__maktabatiV8Initialized = true;
           window.__maktabatiV7Initialized = true;
           window.__maktabatiV6Initialized = true;
@@ -226,26 +195,7 @@ object SandboxHtmlInjector {
                 const dataPageEls = Array.from(document.querySelectorAll('[data-page]')).filter(function(el) {
                   return /^\d+$/.test((el.getAttribute('data-page') || '').trim());
                 });
-                if (dataPageEls.length > 0) {
-                  /* Ignore nested data-page annotations inside a page and sort by the numeric index. */
-                  const set = new Set(dataPageEls);
-                  const pageRoots = dataPageEls.filter(function(el) {
-                    let parent = el.parentElement;
-                    while (parent && parent !== document.body) {
-                      if (set.has(parent)) return false;
-                      parent = parent.parentElement;
-                    }
-                    return true;
-                  });
-                  const byIndex = new Map();
-                  pageRoots.forEach(function(el) {
-                    const index = Number(el.getAttribute('data-page'));
-                    if (!byIndex.has(index)) byIndex.set(index, el);
-                  });
-                  return Array.from(byIndex.entries()).sort(function(a, b) {
-                    return a[0] - b[0];
-                  }).map(function(entry) { return entry[1]; });
-                }
+                if (dataPageEls.length > 0) return dataPageEls;
                 return Array.from(document.querySelectorAll('article.page, section.page, div.page, .book-page')).filter(function(el) {
                   return el.classList && (el.classList.contains('page') || el.classList.contains('book-page'));
                 });
@@ -503,7 +453,7 @@ object SandboxHtmlInjector {
                 parts.push('<div class="quote-box" style="margin:8px 0;padding:10px 14px;border-right:3px solid #D97706;background:rgba(217,119,6,0.08);border-radius:10px;text-align:center;font-weight:bold;font-size:1.05em;line-height:1.8;">' + (pageObj.ayah || pageObj.verse) + '</div>');
               }
               if (pageObj.hadith) {
-                parts.push('<div class="quote-box" style="margin:8px 0;padding:9px 13px;border-right:3px solid #047857;background:rgba(4,120,87,0.07);border-radius:10px;font-size:0.96em;line-height:1.7;">' + pageObj.hadith + '</div>');
+                parts.push('<div class="quote-box" style="margin:8px 0;padding:9px 13px;border-right:3px solid #B94F7A;background:rgba(185,79,122,0.07);border-radius:10px;font-size:0.96em;line-height:1.7;">' + pageObj.hadith + '</div>');
               }
               if (typeof pageObj.content === 'string' && pageObj.content.trim()) {
                 parts.push('<div style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.content + '</div>');
@@ -547,7 +497,7 @@ object SandboxHtmlInjector {
                   let healedCount = 0;
 
                   const candidates = canvas.querySelectorAll(
-                    'table, img, svg, video, pre, code'
+                    'table, img, svg, video, pre, code, blockquote, .quote-box, .flip-card, .insight-card, .quiz-card, .quiz-option, div, p, section, article, h1, h2, h3, h4'
                   );
                   for (let i = 0; i < candidates.length; i++) {
                     const el = candidates[i];
@@ -581,27 +531,29 @@ object SandboxHtmlInjector {
                 currentZoomPercent = target;
                 const scale = +(target / 100).toFixed(2);
                 const root = document.documentElement;
-                const scroller = document.scrollingElement || document.documentElement;
-                const oldScrollTop = scroller ? scroller.scrollTop : 0;
-                const activePage = getCurrentPageIndex();
-
-                /* One zoom mechanism only: root rem/em reflow. Native WebView textZoom stays at 100%. */
-                root.style.setProperty('--reader-font', String(scale));
+                const currentReaderFont = getComputedStyle(root).getPropertyValue('--reader-font').trim();
+                if (currentReaderFont && currentReaderFont.indexOf('px') !== -1) {
+                  root.style.setProperty('--reader-font', Math.round(21 * scale) + 'px');
+                }
                 root.style.setProperty('--reader-font-size', target + '%');
                 root.style.setProperty('--font-scale', String(scale));
-                root.style.fontSize = 'calc(16px * ' + scale + ')';
 
                 try {
-                  if (typeof state !== 'undefined' && state) state.fontScale = scale;
-                  if (window.state) window.state.fontScale = scale;
+                  if (typeof state !== 'undefined' && state) {
+                    state.fontScale = scale;
+                  }
+                  if (window.state) {
+                    window.state.fontScale = scale;
+                  }
                 } catch (e) {}
 
+                const bodyContainers = document.querySelectorAll('#pageInnerContent, #pageBody, .page-body, .page-content');
+                for (let i = 0; i < bodyContainers.length; i++) {
+                  bodyContainers[i].style.fontSize = 'calc(1.08rem * ' + scale + ')';
+                  bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
+                }
+
                 MaktabatiLayoutGuard.inspectAndHeal();
-                requestAnimationFrame(function() {
-                  try {
-                    if (scroller && getCurrentPageIndex() === activePage) scroller.scrollTop = oldScrollTop;
-                  } catch (e) {}
-                });
 
                 if (!fromNative && window.MaktabatiBridge && window.MaktabatiBridge.onZoomChanged) {
                   window.MaktabatiBridge.onZoomChanged(target);
@@ -836,33 +788,17 @@ object SandboxHtmlInjector {
             // =========================================================================
             // 2. CLEAN TOUCH NAVIGATION (SUBTLE SMOOTH FADE & MICRO-SLIDE)
             //    + 2-FINGER FLUID REFLOW PINCH-TO-ZOOM
+            //    (Horizontal-only page turns; vertical movement is ordinary scrolling)
             // =========================================================================
             const INTERACTIVE_PROTECTED_SELECTOR =
-              'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay';
+              'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay,.panel,#searchPanel,#tocPanel';
 
             function isProtectedInteractiveTarget(tgt) {
               if (!tgt || !tgt.closest) return false;
               return Boolean(tgt.closest(INTERACTIVE_PROTECTED_SELECTOR));
             }
 
-            function getScrollMetrics(el) {
-              let node = el;
-              while (node && node !== document.body && node !== document.documentElement) {
-                if (node.scrollHeight > node.clientHeight + 6) {
-                  return {
-                    top: node.scrollTop <= 4,
-                    bottom: node.scrollTop + node.clientHeight >= node.scrollHeight - 6
-                  };
-                }
-                node = node.parentElement;
-              }
-              const docEl = document.scrollingElement || document.documentElement;
-              const winTop = window.scrollY || docEl.scrollTop || 0;
-              const maxScroll = Math.max(0, (docEl.scrollHeight || 0) - (window.innerHeight || docEl.clientHeight || 0));
-              return { top: winTop <= 4, bottom: winTop >= maxScroll - 6 };
-            }
-
-            let tStartX = 0, tStartY = 0, tStartPage = 0, tAtTop = true, tAtBottom = true, tIgnore = false;
+            let tStartX = 0, tStartY = 0, tStartPage = 0, tIgnore = false;
             let isPinching = false, pinchStartDist = 0, pinchStartZoom = 100;
 
             function getTouchDist(t0, t1) {
@@ -895,9 +831,6 @@ object SandboxHtmlInjector {
               tStartX = e.touches[0].clientX;
               tStartY = e.touches[0].clientY;
               tStartPage = getCurrentPageIndex();
-              const m = getScrollMetrics(tgt);
-              tAtTop = m.top;
-              tAtBottom = m.bottom;
             }, { passive: true });
 
             document.addEventListener('touchmove', function(e) {
@@ -933,34 +866,20 @@ object SandboxHtmlInjector {
               const vw = Math.max(240, window.innerWidth || 360);
               const swipeThreshold = Math.min(vw * 0.22, 64);
 
-              const completedHorizontalSwipe = absX >= swipeThreshold && absX >= absY * 0.8;
-              const completedVerticalSwipe = absY > absX * 1.2 && absY >= 58 && ((dy < 0 && tAtBottom) || (dy > 0 && tAtTop));
-
-              if (!completedHorizontalSwipe && !completedVerticalSwipe) {
+              const completedHorizontalSwipe = absX >= swipeThreshold && absX > absY * 1.25;
+              if (!completedHorizontalSwipe) {
                 return;
               }
 
               setTimeout(function() {
-                if (getCurrentPageIndex() !== tStartPage) {
-                  // Book template handled the swipe itself; apply subtle micro-slide feedback
-                  const dirAttr0 = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
-                  const isRtl0 = dirAttr0 === 'rtl';
-                  const delta0 = completedHorizontalSwipe ? (isRtl0 ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1)) : (dy < 0 ? 1 : -1);
-                  animateSubtlePageTransition(delta0);
-                  return;
-                }
                 const dirAttr = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
                 const isRtl = dirAttr === 'rtl';
-                if (completedHorizontalSwipe) {
-                  const delta = isRtl ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1);
-                  triggerUniversalPageTurn(delta);
-                } else if (completedVerticalSwipe) {
-                  if (dy < 0 && tAtBottom) {
-                    triggerUniversalPageTurn(1);
-                  } else if (dy > 0 && tAtTop) {
-                    triggerUniversalPageTurn(-1);
-                  }
+                const delta = isRtl ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1);
+                if (getCurrentPageIndex() !== tStartPage) {
+                  animateSubtlePageTransition(delta);
+                  return;
                 }
+                triggerUniversalPageTurn(delta);
               }, 16);
             }, { passive: true });
           } catch (e) {}
@@ -983,7 +902,13 @@ object SandboxHtmlInjector {
         return html.substring(0, openStart) + html.substring(closeEnd + closeTag.length)
     }
 
-    fun injectIntoHtml(rawHtml: String, bookId: String, pageCount: Int): String {
+    fun injectIntoHtml(
+        rawHtml: String,
+        bookId: String,
+        pageCount: Int,
+        bookDir: File? = null,
+        typographyProfile: BookTypographyProfile? = null
+    ): String {
         var cleanedHtml = stripElementById(rawHtml, "style", "maktabati-perf-booster")
         cleanedHtml = stripElementById(cleanedHtml, "script", "maktabati-storage-isolation")
 
@@ -996,7 +921,14 @@ object SandboxHtmlInjector {
             cleanedHtml = cleanedHtml.replace(DVH_UNIT_REGEX, "$1vh")
         }
 
-        val snippet = buildInjectedSnippet(bookId, pageCount)
+        val resolvedTypography = typographyProfile
+            ?: bookDir?.let { MaktabatiFontRegistry.parseManifestTypography(File(it, "manifest.json")) }
+
+        val snippet = buildInjectedSnippet(
+            bookId = bookId,
+            pageCount = pageCount,
+            typographyProfile = resolvedTypography
+        )
 
         // Inject right before </head> so <meta charset="utf-8"> and <meta name="viewport"> remain at byte 0
         val targetHeadClose = cleanedHtml.indexOf("</head>", ignoreCase = true)

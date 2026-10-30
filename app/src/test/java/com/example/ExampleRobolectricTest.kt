@@ -524,24 +524,29 @@ class ExampleRobolectricTest {
         val rawHtml = """<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>اختبار الخطوط</title></head><body><div class="page">متن عربي فاخر</div></body></html>"""
         val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fonts_v8", 12)
 
-        assertTrue(injected.contains("__maktabatiV9Initialized"))
+        assertTrue(injected.contains("__maktabatiV8Initialized"))
         assertTrue(injected.contains("@font-face"))
-        assertTrue(injected.contains("https://maktabati.app/fonts/amiri.ttf"))
-        assertTrue(injected.contains("https://maktabati.app/fonts/cairo.ttf"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/amiri/amiri-400.woff2"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/aref-ruqaa/aref-ruqaa-700.woff2"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-700.woff2"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-400.woff2"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-400.woff2"))
+        assertTrue(injected.contains("https://maktabati.app/assets/fonts/noto-kufi-arabic/noto-kufi-arabic-700.woff2"))
         assertTrue(injected.contains("font-family: \"Amiri\""))
         assertTrue(injected.contains("font-family: \"Noto Naskh Arabic\""))
-        assertTrue(injected.contains("font-family: \"Scheherazade New\""))
-        assertTrue(injected.contains("font-family: \"Traditional Arabic\""))
-        assertTrue(injected.contains("font-family: \"Cairo\""))
-        assertTrue(injected.contains("font-family: \"Tajawal\""))
-        assertTrue(injected.contains("font-family: \"Readex Pro\""))
+        assertTrue(injected.contains("font-family: \"Aref Ruqaa\""))
+        assertTrue(injected.contains("font-family: \"Reem Kufi\""))
+        assertTrue(injected.contains("font-family: \"IBM Plex Sans Arabic\""))
+        assertTrue(injected.contains("font-family: \"Noto Sans Arabic\""))
+        assertTrue(injected.contains("font-family: \"Noto Kufi Arabic\""))
 
         // Verify raw font resources exist and can be opened
         context.resources.openRawResource(R.font.amiri).use { stream ->
             assertTrue("R.font.amiri must be non-empty", stream.available() > 1000)
         }
-        context.resources.openRawResource(R.font.cairo).use { stream ->
-            assertTrue("R.font.cairo must be non-empty", stream.available() > 1000)
+        context.resources.openRawResource(R.font.noto_naskh_arabic).use { stream ->
+            assertTrue("R.font.noto_naskh_arabic must be non-empty", stream.available() > 1000)
         }
     }
 
@@ -754,4 +759,124 @@ class ExampleRobolectricTest {
         Unit
     }
 
+    @Test
+    fun testMaktabatiTypographyRegistryAndOfflineWoff2Assets() {
+        val families = com.example.data.typography.MaktabatiFontRegistry.registeredFonts
+        assertEquals(7, families.size)
+
+        val expectedNames = listOf(
+            "Amiri",
+            "Noto Naskh Arabic",
+            "Aref Ruqaa",
+            "Reem Kufi",
+            "IBM Plex Sans Arabic",
+            "Noto Sans Arabic",
+            "Noto Kufi Arabic"
+        )
+        for (name in expectedNames) {
+            assertNotNull("Family $name must be registered", com.example.data.typography.MaktabatiFontRegistry.findFont(name))
+        }
+        assertEquals(null, com.example.data.typography.MaktabatiFontRegistry.findFont("Unknown External Font"))
+        assertEquals(null, com.example.data.typography.MaktabatiFontRegistry.findFont("https://fonts.googleapis.com/css"))
+
+        // Verify all WOFF2 files and OFL.txt licenses exist in app assets with valid wOF2 magic bytes
+        for (family in families) {
+            val licenseBytes = context.assets.open(family.licenseAssetPath).use { it.readBytes() }
+            val licenseText = String(licenseBytes, Charsets.UTF_8)
+            assertTrue("OFL.txt for ${family.familyName} must contain SIL OPEN FONT LICENSE", licenseText.contains("SIL OPEN FONT LICENSE"))
+
+            for (weightAsset in family.weights) {
+                val assetPath = weightAsset.woff2AssetPath
+                val fontBytes = context.assets.open(assetPath).use { it.readBytes() }
+                assertTrue("WOFF2 asset $assetPath for weight ${weightAsset.weight} must be > 10KB", fontBytes.size > 10_000)
+                val magic = String(fontBytes.sliceArray(0..3), Charsets.US_ASCII)
+                assertEquals("WOFF2 asset $assetPath must start with wOF2 header", "wOF2", magic)
+            }
+        }
+
+        // Verify manifest.json parsing & validation
+        val rootManifest = File("../manifest.json").let { if (it.exists()) it else File("manifest.json") }
+        assertTrue("Root manifest.json must exist", rootManifest.exists())
+        val profile = com.example.data.typography.MaktabatiFontRegistry.parseManifestTypography(rootManifest)
+        assertNotNull(profile)
+        assertEquals("Noto Naskh Arabic", profile!!.body)
+        assertEquals("Aref Ruqaa", profile.headings)
+        assertEquals("Reem Kufi", profile.chapterTitles)
+        assertEquals("Amiri", profile.quotes)
+        assertEquals("Noto Sans Arabic", profile.interfaceFont)
+        assertEquals("Noto Sans Arabic", profile.numbers)
+
+        // Verify fallback when manifest specifies an unapproved font
+        val fallbackProfile = com.example.data.typography.MaktabatiFontRegistry.parseManifestTypographyJson(
+            """{"typography":{"body":"NonExistentFont","headings":"Aref Ruqaa"}}"""
+        )
+        assertNotNull(fallbackProfile)
+        assertEquals("Noto Naskh Arabic", fallbackProfile!!.body)
+        assertEquals("Aref Ruqaa", fallbackProfile.headings)
+
+        // Verify WebView offline font interception for WOFF2 and TTF
+        val woff2Res = com.example.data.typography.MaktabatiFontRegistry.interceptFontRequest(
+            context,
+            "https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2"
+        )
+        assertNotNull(woff2Res)
+        assertEquals("font/woff2", woff2Res!!.mimeType)
+    }
+
+    @Test
+    fun testKhaymaFiAlQalbReferenceHtmlAndZipAudit() = runBlocking {
+        val htmlFile = File("../خَيْمَةٌ فِي القَلْب.html").let { if (it.exists()) it else File("خَيْمَةٌ فِي القَلْب.html") }
+        val zipFile = File("../خَيْمَةٌ_فِي_القَلْب.zip").let { if (it.exists()) it else File("خَيْمَةٌ_فِي_القَلْب.zip") }
+
+        assertTrue("Reference HTML must exist", htmlFile.exists())
+        assertTrue("Reference ZIP package must exist", zipFile.exists())
+
+        val html = htmlFile.readText(Charsets.UTF_8)
+
+        // 1. Verify zero green/bluish-green colors
+        val forbiddenGreens = listOf("24,63,58", "36,92,85", "16,35,31", "#047857", "#B8C1BA", "#b8c1ba")
+        for (green in forbiddenGreens) {
+            assertFalse("HTML must not contain green color $green", html.contains(green))
+        }
+
+        // 2. Verify no Aa button in topbar
+        assertFalse("HTML must not contain Aa button", html.contains(">Aa<"))
+
+        // 3. Verify rebuilt search & typography variables
+        assertTrue(html.contains("normalizeArabicWithMap"))
+        assertTrue(html.contains("function executeBookSearch()"))
+        assertTrue(html.contains("applyCalmPageSearchHighlight"))
+        assertTrue(html.contains("searchClearBtn"))
+        assertTrue(html.contains("searchStatus"))
+        assertTrue(html.contains("--font-body:\"Noto Naskh Arabic\""))
+        assertTrue(html.contains("--font-headings:\"Aref Ruqaa\""))
+        assertTrue(html.contains("--font-chapter-titles:\"Reem Kufi\""))
+        assertTrue(html.contains("--font-quotes:\"Amiri\""))
+        assertTrue(html.contains("--font-interface:\"Noto Sans Arabic\""))
+        assertTrue(html.contains("--font-numbers:\"Noto Sans Arabic\""))
+
+        // 4. Verify 105 pages and pink/rose-gold palette
+        val parsed = HtmlBookParser.parse(htmlFile, "خيمة في القلب")
+        assertEquals(105, parsed.pageCount)
+        assertEquals("#FFF1F6", parsed.bgPrimaryHex)
+        assertEquals("#B94F7A", parsed.accentRoseHex)
+        assertEquals("#B88945", parsed.accentGoldHex)
+
+        // 5. Verify ZIP package imports cleanly as a single rich book with 105 pages and typography manifest
+        val inspection = com.example.data.importer.BookImporter.inspectZipFile(context, zipFile)
+        assertTrue(inspection is com.example.data.importer.ZipInspectionResult.SingleBook)
+        val importedBook = (inspection as com.example.data.importer.ZipInspectionResult.SingleBook).book
+        assertEquals(105, importedBook.pageCount)
+
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+        val bookDir = repository.getBookDirectory(importedBook)
+        assertTrue(File(bookDir, "manifest.json").exists())
+        assertTrue(File(bookDir, "assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2").exists())
+
+        bookDir.deleteRecursively()
+        Unit
+    }
+
 }
+
