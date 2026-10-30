@@ -123,6 +123,12 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun ensureLibraryCoversAndPalettes() {
+        viewModelScope.launch {
+            repository.ensureBooksCoversAndTruePalettes()
+        }
+    }
+
     fun toggleDarkTheme() {
         val next = !isDarkTheme.value
         isDarkTheme.value = next

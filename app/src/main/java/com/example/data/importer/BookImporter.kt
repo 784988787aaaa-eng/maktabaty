@@ -408,6 +408,21 @@ object BookImporter {
         val metadata = HtmlBookParser.parseContent(rawHtml, fallbackTitle, quickMode = false)
         val finalTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else metadata.title
 
+        // Generate real cover snapshot if book has an explicit cover image or a designed cover page
+        val snapshotFile = HtmlCoverSnapshotGenerator.getCoverSnapshotFile(bookDir)
+        if (!HtmlCoverSnapshotGenerator.tryExtractExplicitCoverImage(bookDir, rawHtml, snapshotFile)) {
+            if (metadata.hasCoverPage) {
+                HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
+                    htmlContent = rawHtml,
+                    metadata = metadata.copy(title = finalTitle),
+                    targetFile = snapshotFile
+                )
+            }
+        }
+        if (snapshotFile.isFile) {
+            HtmlCoverSnapshotGenerator.notifySnapshotUpdated()
+        }
+
         return Book(
             id = bookId,
             title = finalTitle,
@@ -508,6 +523,26 @@ object BookImporter {
             val metadata = HtmlBookParser.parseContent(rawHtml, fallbackName, quickMode = false)
             val finalTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else metadata.title
 
+            // Generate real cover snapshot if book has an explicit cover image or a designed cover page
+            val snapshotFile = HtmlCoverSnapshotGenerator.getCoverSnapshotFile(targetDir)
+            if (!HtmlCoverSnapshotGenerator.tryExtractExplicitCoverImage(targetDir, rawHtml, snapshotFile)) {
+                if (metadata.hasCoverPage) {
+                    HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
+                        htmlContent = rawHtml,
+                        metadata = metadata.copy(title = finalTitle),
+                        targetFile = snapshotFile
+                    )
+                    HtmlCoverSnapshotGenerator.scheduleOffscreenWebViewCapture(
+                        context = context.applicationContext,
+                        bookDir = targetDir,
+                        entryHtmlFile = destFile
+                    )
+                }
+            }
+            if (snapshotFile.isFile) {
+                HtmlCoverSnapshotGenerator.notifySnapshotUpdated()
+            }
+
             return Book(
                 id = bookId,
                 title = finalTitle,
@@ -586,7 +621,8 @@ object BookImporter {
 
     private fun isIgnoredSystemEntry(name: String): Boolean {
         val lower = name.lowercase()
-        return lower == "__macosx" || lower == ".ds_store" || lower == "thumbs.db" || lower.startsWith("._")
+        return lower == "__macosx" || lower == ".ds_store" || lower == "thumbs.db" ||
+            lower.startsWith("._") || lower == HtmlCoverSnapshotGenerator.COVER_SNAPSHOT_FILENAME
     }
 
     private fun resolveEffectiveArchiveRoot(rootDir: File): File {

@@ -13,59 +13,33 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkAdd
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.ZoomIn
-import androidx.compose.material.icons.filled.ZoomOut
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -80,7 +54,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.data.importer.HtmlBookParser
@@ -89,7 +62,15 @@ import com.example.data.model.Bookmark
 import com.example.data.sandbox.SandboxHtmlInjector
 import com.example.ui.reader.MaktabatiJsBridge
 import com.example.ui.reader.ObservableWebView
+import com.example.ui.reader.ReaderAddBookmarkDialog
+import com.example.ui.reader.ReaderBookmarksBottomSheet
+import com.example.ui.reader.ReaderExtendedBottomBar
+import com.example.ui.reader.ReaderFloatingZoomBadge
+import com.example.ui.reader.ReaderLayoutDistortionBanner
 import com.example.ui.reader.ReaderThemeMode
+import com.example.ui.reader.ReaderThemeSelectorDialog
+import com.example.ui.reader.ReaderTocBottomSheet
+import kotlinx.coroutines.delay
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -156,7 +137,13 @@ fun ReaderScreen(
     val scrollYHolder = remember(book.id) { IntArray(1) { book.scrollY } }
     var currentPage by remember(book.id) { mutableIntStateOf(book.currentPage.coerceAtLeast(1)) }
     var livePageCount by remember(book.id, book.pageCount) { mutableIntStateOf(book.pageCount.coerceAtLeast(1)) }
-    var textZoomPercent by remember(book.id) { mutableIntStateOf(prefs.getInt("textZoomPercent", 100)) }
+    var textZoomPercent by remember(book.id) {
+        mutableIntStateOf(prefs.getInt("textZoomPercent", 100).coerceIn(75, 200))
+    }
+    var showFloatingZoomBadge by remember(book.id) { mutableStateOf(false) }
+    var zoomInteractionTick by remember(book.id) { mutableIntStateOf(0) }
+    var distortionWarningMessage by remember(book.id) { mutableStateOf<String?>(null) }
+
     var readerTheme by remember(book.id) {
         mutableStateOf(
             runCatching { ReaderThemeMode.valueOf(prefs.getString("readerTheme", "ORIGINAL")!!) }
@@ -175,6 +162,33 @@ fun ReaderScreen(
 
     val tocEntries = remember(book.tableOfContentsJson) {
         HtmlBookParser.jsonToToc(book.tableOfContentsJson)
+    }
+
+    fun updateFluidZoom(newZoom: Int) {
+        val clamped = newZoom.coerceIn(75, 200)
+        textZoomPercent = clamped
+        prefs.edit().putInt("textZoomPercent", clamped).apply()
+        showFloatingZoomBadge = true
+        zoomInteractionTick++
+        if (clamped <= 115) {
+            distortionWarningMessage = null
+        }
+    }
+
+    // Auto-hide the floating zoom badge after 2.4 seconds
+    LaunchedEffect(zoomInteractionTick) {
+        if (zoomInteractionTick > 0) {
+            delay(2400)
+            showFloatingZoomBadge = false
+        }
+    }
+
+    // Auto-hide the layout distortion warning after 5.5 seconds
+    LaunchedEffect(distortionWarningMessage) {
+        if (!distortionWarningMessage.isNullOrBlank()) {
+            delay(5500)
+            distortionWarningMessage = null
+        }
     }
 
     // Handle system back button cleanly
@@ -232,6 +246,14 @@ fun ReaderScreen(
             """.trimIndent()
             wv.evaluateJavascript(js, null)
         }
+    }
+
+    fun applyFluidZoomToWebView(wv: WebView, zoomPct: Int) {
+        wv.settings.textZoom = zoomPct
+        wv.evaluateJavascript(
+            "if (typeof window.__maktabatiSetFluidZoom === 'function') window.__maktabatiSetFluidZoom($zoomPct, true);",
+            null
+        )
     }
 
     Box(
@@ -298,14 +320,29 @@ fun ReaderScreen(
                         }
 
                         addJavascriptInterface(
-                            MaktabatiJsBridge(livePageCount) { page, total, prog ->
-                                currentPage = page
-                                if (total > 0 && total != livePageCount) {
-                                    livePageCount = total
+                            MaktabatiJsBridge(
+                                totalBookPages = livePageCount,
+                                onPageProgressChanged = { page, total, prog ->
+                                    currentPage = page
+                                    if (total > 0 && total != livePageCount) {
+                                        livePageCount = total
+                                    }
+                                    currentProgress = prog
+                                    onSaveProgress(prog, scrollYHolder[0], page)
+                                },
+                                onZoomChangedFromJs = { jsZoomPct ->
+                                    val clamped = jsZoomPct.coerceIn(75, 200)
+                                    lastAppliedZoom[0] = clamped
+                                    textZoomPercent = clamped
+                                    prefs.edit().putInt("textZoomPercent", clamped).apply()
+                                    settings.textZoom = clamped
+                                    showFloatingZoomBadge = true
+                                    zoomInteractionTick++
+                                },
+                                onLayoutDistortionDetected = { msg ->
+                                    distortionWarningMessage = msg
                                 }
-                                currentProgress = prog
-                                onSaveProgress(prog, scrollYHolder[0], page)
-                            },
+                            ),
                             "MaktabatiBridge"
                         )
 
@@ -327,7 +364,7 @@ fun ReaderScreen(
                                             // Upgrade legacy book files on background I/O thread if needed
                                             if (mime == "text/html") {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV4Initialized")) {
+                                                if (!raw.contains("__maktabatiV5Initialized")) {
                                                     val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
                                                     targetFile.writeText(upgraded, Charsets.UTF_8)
                                                     return WebResourceResponse(
@@ -371,9 +408,20 @@ fun ReaderScreen(
                                     if (readerTheme != ReaderThemeMode.ORIGINAL) {
                                         applyThemeToWebView(wv, readerTheme)
                                     }
+                                    if (textZoomPercent != 100) {
+                                        applyFluidZoomToWebView(wv, textZoomPercent)
+                                    }
                                     val savedPage = book.currentPage.coerceAtLeast(1)
                                     if (savedPage > 1) {
                                         wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${savedPage - 1});", null)
+                                    } else if (book.scrollY == 0 && readerTheme == ReaderThemeMode.ORIGINAL) {
+                                        // Capture real cover snapshot from the first page of the live WebView
+                                        wv.postDelayed({
+                                            com.example.data.importer.HtmlCoverSnapshotGenerator.captureFromLiveWebView(
+                                                webView = wv,
+                                                bookDir = bookDir
+                                            )
+                                        }, 140L)
                                     }
                                 }
                             }
@@ -424,7 +472,7 @@ fun ReaderScreen(
                 update = { wv ->
                     if (lastAppliedZoom[0] != textZoomPercent) {
                         lastAppliedZoom[0] = textZoomPercent
-                        wv.settings.textZoom = textZoomPercent
+                        applyFluidZoomToWebView(wv, textZoomPercent)
                     }
                     if (lastAppliedTheme[0] != readerTheme) {
                         lastAppliedTheme[0] = readerTheme
@@ -433,6 +481,24 @@ fun ReaderScreen(
                 }
             )
         }
+
+        // Sleek Floating Fluid Reflow Zoom Badge at Top Center
+        ReaderFloatingZoomBadge(
+            visible = showFloatingZoomBadge,
+            zoomPercent = textZoomPercent,
+            onResetToOptimal = { updateFluidZoom(100) },
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+
+        // Smart Layout Distortion Warning Toast Banner at Bottom Center
+        ReaderLayoutDistortionBanner(
+            warningMessage = distortionWarningMessage,
+            onResetToOptimal = { updateFluidZoom(100) },
+            onDismiss = { distortionWarningMessage = null },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = if (showExtendedControls) 168.dp else 48.dp)
+        )
 
         // Smart Auto-Hiding Edge Handle (collapsed by default on the middle side edge, non-intrusive 18.dp x 56.dp)
         Row(
@@ -537,401 +603,102 @@ fun ReaderScreen(
         }
 
         // Expandable Floating Reader Control Bar (Bottom) when user taps the Tune icon
-        AnimatedVisibility(
+        ReaderExtendedBottomBar(
             visible = showExtendedControls,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-                tonalElevation = 8.dp,
-                shadowElevation = 12.dp,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = book.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "${book.author} • صفحة $currentPage من $livePageCount (${(currentProgress * 100).toInt()}%)",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Row {
-                            IconButton(
-                                onClick = { showTocSheet = true },
-                                modifier = Modifier.testTag("reader_toc_button")
-                            ) {
-                                Icon(imageVector = Icons.Default.List, contentDescription = "فهرس الكتاب")
-                            }
-                            IconButton(
-                                onClick = { showBookmarksSheet = true },
-                                modifier = Modifier.testTag("reader_bookmarks_button")
-                            ) {
-                                Icon(imageVector = Icons.Default.Bookmark, contentDescription = "العلامات المرجعية")
-                            }
-                            IconButton(
-                                onClick = { showThemeDialog = true },
-                                modifier = Modifier.testTag("reader_theme_button")
-                            ) {
-                                Icon(imageVector = Icons.Default.ColorLens, contentDescription = "سمة القراءة")
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { if (textZoomPercent > 70) { textZoomPercent -= 10; prefs.edit().putInt("textZoomPercent", textZoomPercent).apply() } }) {
-                                Icon(imageVector = Icons.Default.ZoomOut, contentDescription = "تصغير الخط")
-                            }
-                            Text(
-                                text = "$textZoomPercent%",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            IconButton(onClick = { if (textZoomPercent < 220) { textZoomPercent += 10; prefs.edit().putInt("textZoomPercent", textZoomPercent).apply() } }) {
-                                Icon(imageVector = Icons.Default.ZoomIn, contentDescription = "تكبير الخط")
-                            }
-                        }
-
-                        Button(
-                            onClick = { showAddBookmarkDialog = true },
-                            modifier = Modifier.testTag("add_bookmark_button")
-                        ) {
-                            Icon(imageVector = Icons.Default.BookmarkAdd, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("حفظ علامة", style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${(currentProgress * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+            book = book,
+            currentPage = currentPage,
+            livePageCount = livePageCount,
+            currentProgress = currentProgress,
+            textZoomPercent = textZoomPercent,
+            onZoomChange = { updateFluidZoom(it) },
+            onShowToc = { showTocSheet = true },
+            onShowBookmarks = { showBookmarksSheet = true },
+            onShowTheme = { showThemeDialog = true },
+            onShowAddBookmark = { showAddBookmarkDialog = true },
+            onProgressSliderChange = { newProg ->
+                currentProgress = newProg
+                val targetPage = ((newProg * livePageCount).toInt()).coerceIn(1, livePageCount.coerceAtLeast(1))
+                val delta = targetPage - currentPage
+                currentPage = targetPage
+                webViewRef?.let { wv ->
+                    if (livePageCount > 1) {
+                        wv.evaluateJavascript(
+                            "if (typeof goToPage === 'function') goToPage(${targetPage - 1}); else if (typeof window.__maktabatiTurn === 'function') window.__maktabatiTurn($delta);",
+                            null
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Slider(
-                            value = currentProgress,
-                            onValueChange = { newProg ->
-                                currentProgress = newProg
-                                val targetPage = ((newProg * livePageCount).toInt()).coerceIn(1, livePageCount.coerceAtLeast(1))
-                                val delta = targetPage - currentPage
-                                currentPage = targetPage
-                                webViewRef?.let { wv ->
-                                    if (livePageCount > 1) {
-                                        wv.evaluateJavascript(
-                                            "if (typeof goToPage === 'function') goToPage(${targetPage - 1}); else if (typeof window.__maktabatiTurn === 'function') window.__maktabatiTurn($delta);",
-                                            null
-                                        )
-                                    } else {
-                                        val total = wv.getMaxScroll()
-                                        if (total > 0) {
-                                            val targetY = (newProg * total).toInt()
-                                            wv.scrollTo(0, targetY)
-                                            scrollYHolder[0] = targetY
-                                        }
-                                    }
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("progress_slider")
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    // Theme Selector Dialog
-    if (showThemeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            title = { Text("مظهر وسمة القراءة") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    for (mode in ReaderThemeMode.values()) {
-                        val isSelected = readerTheme == mode
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    readerTheme = mode
-                                    prefs.edit().putString("readerTheme", mode.name).apply()
-                                    showThemeDialog = false
-                                }
-                                .padding(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = mode.label,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                                if (isSelected) {
-                                    Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                }
-                            }
+                    } else {
+                        val total = wv.getMaxScroll()
+                        if (total > 0) {
+                            val targetY = (newProg * total).toInt()
+                            wv.scrollTo(0, targetY)
+                            scrollYHolder[0] = targetY
                         }
                     }
                 }
             },
-            confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text("إغلاق")
-                }
-            }
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+
+    // Theme Selector Dialog
+    if (showThemeDialog) {
+        ReaderThemeSelectorDialog(
+            currentTheme = readerTheme,
+            onSelectTheme = { mode ->
+                readerTheme = mode
+                prefs.edit().putString("readerTheme", mode.name).apply()
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
         )
     }
 
     // Add Bookmark Dialog
     if (showAddBookmarkDialog) {
-        var bmTitle by remember { mutableStateOf("صفحة $currentPage (${(currentProgress * 100).toInt()}%)") }
-        var bmNote by remember { mutableStateOf("") }
-
-        AlertDialog(
-            onDismissRequest = { showAddBookmarkDialog = false },
-            title = { Text("إضافة علامة مرجعية جديدة") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = bmTitle,
-                        onValueChange = { bmTitle = it },
-                        label = { Text("عنوان العلامة") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = bmNote,
-                        onValueChange = { bmNote = it },
-                        label = { Text("ملاحظة أو اقتباس (اختياري)") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+        ReaderAddBookmarkDialog(
+            defaultTitle = "صفحة $currentPage (${(currentProgress * 100).toInt()}%)",
+            onConfirm = { title, note ->
+                onAddBookmark(title, scrollYHolder[0], currentProgress, note)
+                showAddBookmarkDialog = false
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (bmTitle.isNotBlank()) {
-                            onAddBookmark(bmTitle.trim(), scrollYHolder[0], currentProgress, bmNote.trim())
-                            showAddBookmarkDialog = false
-                        }
-                    }
-                ) {
-                    Text("حفظ")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddBookmarkDialog = false }) {
-                    Text("إلغاء")
-                }
-            }
+            onDismiss = { showAddBookmarkDialog = false }
         )
     }
 
     // Table of Contents Sheet
     if (showTocSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showTocSheet = false },
-            sheetState = rememberModalBottomSheetState()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
-            ) {
-                Text(
-                    text = "فهرس صفحات وفصول الكتاب (${tocEntries.size})",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                if (tocEntries.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "لا توجد فصول مفهرسة في هذا الكتاب",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxWidth().height(360.dp)) {
-                        items(tocEntries) { entry ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        showTocSheet = false
-                                        webViewRef?.let { wv ->
-                                            if (entry.href.startsWith("#page-")) {
-                                                val pageNum = entry.href.removePrefix("#page-").toIntOrNull() ?: 1
-                                                currentPage = pageNum
-                                                currentProgress = (pageNum.toFloat() / livePageCount.coerceAtLeast(1)).coerceIn(0f, 1f)
-                                                wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${pageNum - 1}); else window.location.hash = '${entry.href}';", null)
-                                            } else if (entry.href.isNotBlank()) {
-                                                wv.evaluateJavascript("window.location.hash = '${entry.href}';", null)
-                                            }
-                                        }
-                                    }
-                                    .padding(vertical = 4.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        text = entry.title,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
-                        }
+        ReaderTocBottomSheet(
+            tocEntries = tocEntries,
+            onSelectEntry = { entry ->
+                showTocSheet = false
+                webViewRef?.let { wv ->
+                    if (entry.href.startsWith("#page-")) {
+                        val pageNum = entry.href.removePrefix("#page-").toIntOrNull() ?: 1
+                        currentPage = pageNum
+                        currentProgress = (pageNum.toFloat() / livePageCount.coerceAtLeast(1)).coerceIn(0f, 1f)
+                        wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${pageNum - 1}); else window.location.hash = '${entry.href}';", null)
+                    } else if (entry.href.isNotBlank()) {
+                        wv.evaluateJavascript("window.location.hash = '${entry.href}';", null)
                     }
                 }
-            }
-        }
+            },
+            onDismiss = { showTocSheet = false }
+        )
     }
 
     // Bookmarks Sheet
     if (showBookmarksSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBookmarksSheet = false },
-            sheetState = rememberModalBottomSheetState()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "العلامات المرجعية المحفوظة",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    IconButton(onClick = { showAddBookmarkDialog = true }) {
-                        Icon(imageVector = Icons.Default.BookmarkAdd, contentDescription = "إضافة")
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-
-                if (bookmarks.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "لم تقم بحفظ أي علامات مرجعية في هذا الكتاب بعد",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxWidth().height(340.dp)) {
-                        items(bookmarks) { bm ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable {
-                                        showBookmarksSheet = false
-                                        webViewRef?.scrollTo(0, bm.scrollY)
-                                        scrollYHolder[0] = bm.scrollY
-                                        currentProgress = bm.progress
-                                    },
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = bm.title, style = MaterialTheme.typography.titleMedium)
-                                        if (bm.excerpt.isNotBlank()) {
-                                            Text(
-                                                text = bm.excerpt,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                        Text(
-                                            text = "الموضع: ${(bm.progress * 100).toInt()}%",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                    IconButton(onClick = { onDeleteBookmark(bm) }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "حذف العلامة",
-                                            tint = MaterialTheme.colorScheme.error,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        ReaderBookmarksBottomSheet(
+            bookmarks = bookmarks,
+            onSelectBookmark = { bm ->
+                showBookmarksSheet = false
+                webViewRef?.scrollTo(0, bm.scrollY)
+                scrollYHolder[0] = bm.scrollY
+                currentProgress = bm.progress
+            },
+            onDeleteBookmark = onDeleteBookmark,
+            onAddBookmarkClick = { showAddBookmarkDialog = true },
+            onDismiss = { showBookmarksSheet = false }
+        )
     }
 }

@@ -1,13 +1,21 @@
 package com.example.data.sandbox
 
 /**
- * High-speed, non-intrusive preprocessor for standalone HTML/CSS/JS books:
+ * High-speed, non-intrusive preprocessor & runtime engine for standalone HTML/CSS/JS books:
  * 1. Preserves `<meta charset="utf-8">` and `<meta name="viewport">` at byte 0 by injecting right before `</head>`.
- * 2. Normalizes `dvh`/`svh`/`lvh` viewport units to `vh` and enforces 100vh fallback on `.app` so embedded Android
- *    WebViews (including Huawei/Honor/older System WebViews) never collapse `.app` to 0px height.
- * 3. Provides crash-proof per-book `localStorage` isolation + full `window.localStorage` polyfill if origin blocks DOMStorage.
- * 4. Zero-reflow self-healing `BOOK_DATA` renderer + 4-way swipe fallback that stays completely out of the way
- *    when the book's own native JS engine is active.
+ * 2. Normalizes `dvh`/`svh`/`lvh` viewport units to `vh` and enforces 100vh fallback on `.app`.
+ * 3. Provides crash-proof per-book `localStorage` isolation + full `window.localStorage` polyfill.
+ * 4. Fluid Reflow Zoom Engine (`Fluid Reflow Zoom`): pinch-to-zoom & button zoom (`75%`–`200%`) that updates
+ *    `--reader-font`, `--reader-font-size`, and `--font-scale` so text, cards, quotes, and ornaments reflow
+ *    inside the page width without rigid PDF-like horizontal clipping, plus a sleek floating top badge with
+ *    a quick `"100% الوضع المثالي"` reset button.
+ * 5. Layout Distortion Guard (`MaktabatiLayoutGuard`): auto-heals elements wider than `.page-canvas`
+ *    (`el.scrollWidth > canvas.clientWidth + 8`) and shows a Smart Warning Toast Banner when reaching maximum
+ *    harmonious zoom.
+ * 6. 4-Corner Interactive Page-Curl Physics Engine (`MaktabatiPageCurlEngine`): 60fps physical paper curl from
+ *    any of the 4 corners (Top-Right, Bottom-Right, Top-Left, Bottom-Left) or edges with backside fold gradient,
+ *    dynamic crease/drop shadow, spring-back or quarter-width completion, Web Audio API natural paper flip sound,
+ *    and interactive element protection (`input`, `textarea`, `select`, `button`, `.flip-card`, `.quiz-option`).
  */
 object SandboxHtmlInjector {
 
@@ -17,38 +25,81 @@ object SandboxHtmlInjector {
         val safePrefix = "book_${bookId.replace(Regex("[^a-zA-Z0-9_]"), "_")}_"
         return """
         <style id="maktabati-perf-booster">
+          :root {
+            --reader-font: 1;
+            --reader-font-size: 100%;
+            --font-scale: 1;
+          }
           html, body {
             width: 100%;
+            max-width: 100% !important;
             height: 100%;
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
             -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: 100%;
           }
           .app {
             width: 100%;
+            max-width: 100% !important;
             height: 100vh;
             min-height: 100vh;
             max-height: 100vh;
-            box-sizing: border-box;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
           }
           .book-stage, .stage {
             width: 100%;
-            box-sizing: border-box;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
             -webkit-overflow-scrolling: touch;
           }
           .page-canvas, .page, .book-page, .page-container {
-            box-sizing: border-box;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+            position: relative;
+            transform-origin: center center;
           }
           .maktabati-gpu-hint {
             will-change: transform, opacity;
             transform: translateZ(0);
           }
           #pageInnerContent, .page-body, .page-content {
+            max-width: 100% !important;
+            overflow-x: hidden !important;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            box-sizing: border-box !important;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            font-size: calc(1em * var(--reader-font, 1));
+          }
+          #pageInnerContent *, .page-body *, .page-content *, .page-canvas * {
+            max-width: 100%;
             box-sizing: border-box;
+            overflow-wrap: anywhere;
+          }
+          #pageInnerContent img, .page-body img, .page-content img,
+          #pageInnerContent svg, .page-body svg, .page-content svg,
+          #pageInnerContent video, .page-body video, .page-content video {
+            max-width: 100% !important;
+            height: auto !important;
+          }
+          #pageInnerContent table, .page-body table, .page-content table {
+            display: block;
+            max-width: 100% !important;
+            overflow-x: auto;
+            box-sizing: border-box !important;
+          }
+          .quote-box, blockquote, .insight-card, .flip-card, .quiz-card, .quiz-option {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow-wrap: anywhere !important;
           }
           .overlay {
             top: 0;
@@ -60,10 +111,147 @@ object SandboxHtmlInjector {
             flex-shrink: 0;
             z-index: 25;
           }
+
+          /* Floating Fluid Reflow Zoom Badge (Top) */
+          #maktabati-zoom-badge {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-16px);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(20, 18, 24, 0.90);
+            color: #FFFDF9;
+            border: 1px solid rgba(217, 155, 67, 0.55);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            direction: rtl;
+          }
+          #maktabati-zoom-badge.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+          }
+          #maktabati-zoom-badge button {
+            border: 0;
+            border-radius: 999px;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, #D97706, #B45309);
+            color: #FFFFFF;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+          }
+
+          /* Smart Layout Distortion Warning Toast Banner (Bottom) */
+          #maktabati-distortion-toast {
+            position: fixed;
+            bottom: 58px;
+            left: 12px;
+            right: 12px;
+            max-width: 520px;
+            margin: 0 auto;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: rgba(28, 20, 17, 0.95);
+            color: #FEF3C7;
+            border: 1.5px solid #F59E0B;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 12.5px;
+            line-height: 1.5;
+            direction: rtl;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+          }
+          #maktabati-distortion-toast.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+          }
+          #maktabati-distortion-toast button {
+            flex-shrink: 0;
+            border: 0;
+            border-radius: 10px;
+            padding: 6px 12px;
+            background: #F59E0B;
+            color: #1C1411;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+          }
+
+          /* 4-Corner Interactive Page-Curl Physics Overlay */
+          #maktabati-page-curl-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 9990;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.12s ease;
+          }
+          #maktabati-page-curl-overlay.active {
+            opacity: 1;
+          }
+          #maktabati-curl-shadow {
+            position: absolute;
+            pointer-events: none;
+            will-change: transform, opacity, width, height;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.16) 45%, rgba(0,0,0,0) 78%);
+            filter: blur(6px);
+          }
+          #maktabati-curl-backside {
+            position: absolute;
+            pointer-events: none;
+            will-change: transform, width, height, border-radius;
+            background: linear-gradient(
+              135deg,
+              rgba(255, 253, 248, 0.98) 0%,
+              rgba(244, 235, 218, 0.97) 48%,
+              rgba(222, 206, 180, 0.94) 82%,
+              rgba(255, 255, 255, 0.96) 100%
+            );
+            border: 1px solid rgba(196, 145, 72, 0.42);
+            box-shadow:
+              -8px 8px 22px rgba(0, 0, 0, 0.28),
+              inset 0 0 18px rgba(196, 145, 72, 0.16);
+          }
+          [data-theme="night"] #maktabati-curl-backside,
+          [data-theme="dark"] #maktabati-curl-backside {
+            background: linear-gradient(
+              135deg,
+              rgba(38, 34, 48, 0.98) 0%,
+              rgba(28, 24, 36, 0.96) 55%,
+              rgba(18, 15, 24, 0.94) 85%,
+              rgba(55, 48, 68, 0.95) 100%
+            );
+            border-color: rgba(226, 176, 94, 0.35);
+          }
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV4Initialized) return;
+          if (window.__maktabatiV5Initialized) return;
+          window.__maktabatiV5Initialized = true;
           window.__maktabatiV4Initialized = true;
           window.__maktabatiV3Initialized = true;
           try {
@@ -213,6 +401,14 @@ object SandboxHtmlInjector {
               }
             }
 
+            function getActivePageCanvas() {
+              return document.getElementById('pageCanvas')
+                || document.getElementById('pageInnerContent')
+                || document.getElementById('pageContent')
+                || document.querySelector('.page-canvas, .page.active, .book-page.active, .page-body, .app')
+                || document.body;
+            }
+
             function buildPageHtml(pageObj, idx) {
               if (pageHtmlCache[idx]) return pageHtmlCache[idx];
               if (!pageObj) return '';
@@ -222,35 +418,35 @@ object SandboxHtmlInjector {
               const sub = pageObj.subtitle || '';
 
               if (badge) {
-                parts.push('<div style="display:inline-block;align-self:center;padding:3px 12px;border-radius:99px;font-size:12px;font-weight:bold;opacity:0.88;border:1px solid currentColor;margin-bottom:8px;">' + badge + '</div>');
+                parts.push('<div style="display:inline-block;align-self:center;padding:3px 12px;border-radius:99px;font-size:0.8em;font-weight:bold;opacity:0.88;border:1px solid currentColor;margin-bottom:8px;">' + badge + '</div>');
               }
               if (heading) {
-                parts.push('<h2 style="margin:0 0 8px 0;line-height:1.45;text-align:center;font-size:21px;">' + heading + '</h2>');
+                parts.push('<h2 style="margin:0 0 8px 0;line-height:1.45;text-align:center;font-size:1.32em;">' + heading + '</h2>');
               }
               if (sub && sub !== heading) {
-                parts.push('<div style="text-align:center;opacity:0.8;font-size:14px;margin-bottom:10px;">' + sub + '</div>');
+                parts.push('<div style="text-align:center;opacity:0.8;font-size:0.92em;margin-bottom:10px;">' + sub + '</div>');
               }
               if (pageObj.ayah || pageObj.verse) {
-                parts.push('<div style="margin:8px 0;padding:10px 14px;border-right:3px solid #D97706;background:rgba(217,119,6,0.08);border-radius:10px;text-align:center;font-weight:bold;font-size:16px;line-height:1.8;">' + (pageObj.ayah || pageObj.verse) + '</div>');
+                parts.push('<div class="quote-box" style="margin:8px 0;padding:10px 14px;border-right:3px solid #D97706;background:rgba(217,119,6,0.08);border-radius:10px;text-align:center;font-weight:bold;font-size:1.05em;line-height:1.8;">' + (pageObj.ayah || pageObj.verse) + '</div>');
               }
               if (pageObj.hadith) {
-                parts.push('<div style="margin:8px 0;padding:9px 13px;border-right:3px solid #047857;background:rgba(4,120,87,0.07);border-radius:10px;font-size:14.5px;line-height:1.7;">' + pageObj.hadith + '</div>');
+                parts.push('<div class="quote-box" style="margin:8px 0;padding:9px 13px;border-right:3px solid #047857;background:rgba(4,120,87,0.07);border-radius:10px;font-size:0.96em;line-height:1.7;">' + pageObj.hadith + '</div>');
               }
               if (typeof pageObj.content === 'string' && pageObj.content.trim()) {
-                parts.push('<div style="line-height:1.85;font-size:15.5px;text-align:justify;">' + pageObj.content + '</div>');
+                parts.push('<div style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.content + '</div>');
               } else if (typeof pageObj.html === 'string' && pageObj.html.trim()) {
-                parts.push('<div style="line-height:1.85;font-size:15.5px;">' + pageObj.html + '</div>');
+                parts.push('<div style="line-height:1.85;font-size:1em;">' + pageObj.html + '</div>');
               } else if (typeof pageObj.body === 'string' && pageObj.body.trim()) {
-                parts.push('<p style="line-height:1.85;font-size:15.5px;text-align:justify;">' + pageObj.body + '</p>');
+                parts.push('<p style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.body + '</p>');
               } else if (typeof pageObj.text === 'string' && pageObj.text.trim()) {
-                parts.push('<p style="line-height:1.85;font-size:15.5px;text-align:justify;">' + pageObj.text + '</p>');
+                parts.push('<p style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.text + '</p>');
               }
               if (Array.isArray(pageObj.paragraphs)) {
                 pageObj.paragraphs.forEach(function(p) {
                   if (typeof p === 'string' && p.trim()) {
-                    parts.push('<p style="line-height:1.85;font-size:15.5px;margin:0 0 10px 0;text-align:justify;">' + p + '</p>');
+                    parts.push('<p style="line-height:1.85;font-size:1em;margin:0 0 10px 0;text-align:justify;">' + p + '</p>');
                   } else if (p && typeof p.text === 'string') {
-                    parts.push('<p style="line-height:1.85;font-size:15.5px;margin:0 0 10px 0;text-align:justify;">' + p.text + '</p>');
+                    parts.push('<p style="line-height:1.85;font-size:1em;margin:0 0 10px 0;text-align:justify;">' + p.text + '</p>');
                   }
                 });
               }
@@ -263,6 +459,170 @@ object SandboxHtmlInjector {
               return built;
             }
 
+            // =========================================================================
+            // 1. FLUID REFLOW ZOOM ENGINE & 2. LAYOUT DISTORTION GUARD (MaktabatiLayoutGuard)
+            // =========================================================================
+            let currentZoomPercent = 100;
+            let zoomBadgeTimer = null;
+            let distortionToastTimer = null;
+            const DISTORTION_WARNING_TEXT = "تنبيه: وصلتَ لأقصى حجم يحفظ جمال وتناسق عناصر هذا الكتاب — اضغط (100%) للعودة للعرض المثالي";
+
+            function ensureHudElements() {
+              if (!document.body) return;
+              if (!document.getElementById('maktabati-zoom-badge')) {
+                const badge = document.createElement('div');
+                badge.id = 'maktabati-zoom-badge';
+                badge.innerHTML =
+                  '<span id="maktabati-zoom-label">100%</span>' +
+                  '<button type="button" id="maktabati-zoom-reset-btn">100% الوضع المثالي</button>';
+                document.body.appendChild(badge);
+                const resetBtn = document.getElementById('maktabati-zoom-reset-btn');
+                if (resetBtn) {
+                  resetBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    window.__maktabatiSetFluidZoom(100, false);
+                  });
+                }
+              }
+              if (!document.getElementById('maktabati-distortion-toast')) {
+                const toast = document.createElement('div');
+                toast.id = 'maktabati-distortion-toast';
+                toast.innerHTML =
+                  '<span>' + DISTORTION_WARNING_TEXT + '</span>' +
+                  '<button type="button" id="maktabati-toast-reset-btn">100%</button>';
+                document.body.appendChild(toast);
+                const toastBtn = document.getElementById('maktabati-toast-reset-btn');
+                if (toastBtn) {
+                  toastBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    toast.classList.remove('visible');
+                    window.__maktabatiSetFluidZoom(100, false);
+                  });
+                }
+              }
+            }
+
+            function showZoomBadge(percent) {
+              ensureHudElements();
+              const badge = document.getElementById('maktabati-zoom-badge');
+              const label = document.getElementById('maktabati-zoom-label');
+              if (!badge || !label) return;
+              label.textContent = percent + '%';
+              badge.classList.add('visible');
+              if (zoomBadgeTimer) clearTimeout(zoomBadgeTimer);
+              zoomBadgeTimer = setTimeout(function() {
+                badge.classList.remove('visible');
+              }, 2200);
+            }
+
+            const MaktabatiLayoutGuard = {
+              showDistortionToast: function() {
+                ensureHudElements();
+                const toast = document.getElementById('maktabati-distortion-toast');
+                if (toast) {
+                  toast.classList.add('visible');
+                  if (distortionToastTimer) clearTimeout(distortionToastTimer);
+                  distortionToastTimer = setTimeout(function() {
+                    toast.classList.remove('visible');
+                  }, 5200);
+                }
+                if (window.MaktabatiBridge && window.MaktabatiBridge.onLayoutDistortionWarning) {
+                  window.MaktabatiBridge.onLayoutDistortionWarning(DISTORTION_WARNING_TEXT);
+                }
+              },
+              hideDistortionToast: function() {
+                const toast = document.getElementById('maktabati-distortion-toast');
+                if (toast) toast.classList.remove('visible');
+              },
+              inspectAndHeal: function(zoomPct) {
+                try {
+                  const canvas = getActivePageCanvas();
+                  if (!canvas) return { healedCount: 0, distorted: false };
+                  const canvasWidth = canvas.clientWidth || window.innerWidth || 360;
+                  let healedCount = 0;
+                  let unhealedOverflowCount = 0;
+
+                  const candidates = canvas.querySelectorAll(
+                    'table, img, svg, video, pre, code, blockquote, .quote-box, .flip-card, .insight-card, .quiz-card, .quiz-option, div, p, section, article, h1, h2, h3, h4'
+                  );
+                  for (let i = 0; i < candidates.length; i++) {
+                    const el = candidates[i];
+                    if (!el || el.id === 'maktabati-zoom-badge' || el.id === 'maktabati-distortion-toast') continue;
+                    if (el.scrollWidth > canvasWidth + 8) {
+                      el.style.setProperty('max-width', '100%', 'important');
+                      el.style.setProperty('box-sizing', 'border-box', 'important');
+                      el.style.setProperty('overflow-wrap', 'anywhere', 'important');
+                      el.style.setProperty('word-break', 'break-word', 'important');
+                      if (el.style.width && el.style.width.indexOf('px') !== -1) {
+                        el.style.setProperty('width', '100%', 'important');
+                        el.style.setProperty('min-width', '0', 'important');
+                      }
+                      healedCount++;
+                      if (el.scrollWidth > canvasWidth + 14) {
+                        unhealedOverflowCount++;
+                      }
+                    }
+                  }
+
+                  const activeZoom = typeof zoomPct === 'number' ? zoomPct : currentZoomPercent;
+                  const isCrowdedAtHighZoom = activeZoom >= 170 || (activeZoom >= 145 && unhealedOverflowCount > 0);
+                  if (isCrowdedAtHighZoom) {
+                    MaktabatiLayoutGuard.showDistortionToast();
+                    return { healedCount: healedCount, distorted: true };
+                  } else if (activeZoom <= 115) {
+                    MaktabatiLayoutGuard.hideDistortionToast();
+                  }
+                  return { healedCount: healedCount, distorted: false };
+                } catch (e) {
+                  return { healedCount: 0, distorted: false };
+                }
+              }
+            };
+            window.MaktabatiLayoutGuard = MaktabatiLayoutGuard;
+
+            window.__maktabatiSetFluidZoom = function(percent, fromNative) {
+              try {
+                let target = Math.round(Number(percent) || 100);
+                if (target < 75) target = 75;
+                if (target > 200) target = 200;
+
+                // Check if zooming up past safe layout limit causes crowding/distortion
+                if (target > 165) {
+                  MaktabatiLayoutGuard.showDistortionToast();
+                  target = Math.min(target, 165);
+                }
+
+                currentZoomPercent = target;
+                const scale = +(target / 100).toFixed(2);
+                const root = document.documentElement;
+                root.style.setProperty('--reader-font', String(scale));
+                root.style.setProperty('--reader-font-size', target + '%');
+                root.style.setProperty('--font-scale', String(scale));
+
+                try {
+                  if (typeof state !== 'undefined' && state) {
+                    state.fontScale = scale;
+                  }
+                  if (window.state) {
+                    window.state.fontScale = scale;
+                  }
+                } catch (e) {}
+
+                const bodyContainers = document.querySelectorAll('#pageInnerContent, #pageBody, .page-body, .page-content');
+                for (let i = 0; i < bodyContainers.length; i++) {
+                  bodyContainers[i].style.fontSize = 'calc(1.08rem * ' + scale + ')';
+                  bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
+                }
+
+                showZoomBadge(target);
+                MaktabatiLayoutGuard.inspectAndHeal(target);
+
+                if (!fromNative && window.MaktabatiBridge && window.MaktabatiBridge.onZoomChanged) {
+                  window.MaktabatiBridge.onZoomChanged(target);
+                }
+              } catch (e) {}
+            };
+
             // Zero-reflow check: only acts if the book template left its container completely empty
             function healBlankPageIfNeeded() {
               try {
@@ -272,6 +632,7 @@ object SandboxHtmlInjector {
                   || document.querySelector('.page-canvas, .page.active .page-body, .page.active, .book-page.active');
 
                 if (container && (container.childElementCount > 0 || (container.textContent || '').trim().length > 0)) {
+                  MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent);
                   return;
                 }
 
@@ -304,6 +665,7 @@ object SandboxHtmlInjector {
                 if (counterEl && !(counterEl.textContent || '').trim()) {
                   counterEl.textContent = (idx + 1) + ' / ' + pages.length;
                 }
+                MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent);
                 if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
                   window.MaktabatiBridge.onPageChanged(idx + 1, pages.length);
                 }
@@ -322,6 +684,7 @@ object SandboxHtmlInjector {
               }
               const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
               if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
+              MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent);
               if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
                 window.MaktabatiBridge.onPageChanged(nextIdx + 1, pages.length);
               }
@@ -329,9 +692,11 @@ object SandboxHtmlInjector {
 
             if (document.readyState === 'loading') {
               document.addEventListener('DOMContentLoaded', function() {
+                ensureHudElements();
                 setTimeout(healBlankPageIfNeeded, 20);
               });
             } else {
+              ensureHudElements();
               setTimeout(healBlankPageIfNeeded, 20);
             }
 
@@ -340,18 +705,22 @@ object SandboxHtmlInjector {
                 const beforePage = getCurrentPageIndex();
                 if (delta > 0 && typeof window.nextPage === 'function') {
                   window.nextPage();
+                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
                   return true;
                 }
                 if (delta < 0 && typeof window.prevPage === 'function') {
                   window.prevPage();
+                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
                   return true;
                 }
                 if (typeof window.changePage === 'function') {
                   window.changePage(delta);
+                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
                   return true;
                 }
                 if (typeof window.goToPage === 'function') {
                   window.goToPage(beforePage + delta);
+                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
                   return true;
                 }
                 const btnSelector = delta > 0
@@ -360,6 +729,7 @@ object SandboxHtmlInjector {
                 const btn = document.querySelector(btnSelector);
                 if (btn && !btn.disabled) {
                   btn.click();
+                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
                   return true;
                 }
                 window.__maktabatiTurn(delta);
@@ -368,7 +738,71 @@ object SandboxHtmlInjector {
               return false;
             }
 
-            let tStartX = 0, tStartY = 0, tStartPage = 0, tAtTop = true, tAtBottom = true, tIgnore = false;
+            // =========================================================================
+            // 3. 4-CORNER INTERACTIVE PAGE-CURL PHYSICS ENGINE (MaktabatiPageCurlEngine)
+            //    + 2-FINGER FLUID REFLOW PINCH-TO-ZOOM
+            // =========================================================================
+            let audioCtx = null;
+            function playPaperFlipSound() {
+              try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                if (!audioCtx) audioCtx = new AudioContextClass();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const duration = 0.11;
+                const sampleRate = audioCtx.sampleRate || 44100;
+                const frameCount = Math.floor(sampleRate * duration);
+                const buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < frameCount; i++) {
+                  const env = Math.sin((i / frameCount) * Math.PI);
+                  data[i] = (Math.random() * 2 - 1) * env * 0.22;
+                }
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(920, audioCtx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + duration);
+                filter.Q.value = 1.4;
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 0.025);
+                gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start();
+              } catch (e) {}
+            }
+
+            function ensureCurlOverlay() {
+              if (!document.body) return null;
+              let overlay = document.getElementById('maktabati-page-curl-overlay');
+              if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'maktabati-page-curl-overlay';
+                overlay.innerHTML =
+                  '<div id="maktabati-curl-shadow"></div>' +
+                  '<div id="maktabati-curl-backside"></div>';
+                document.body.appendChild(overlay);
+              }
+              return overlay;
+            }
+
+            const INTERACTIVE_PROTECTED_SELECTOR =
+              'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay,#maktabati-zoom-badge,#maktabati-distortion-toast';
+
+            function isProtectedInteractiveTarget(tgt) {
+              if (!tgt || !tgt.closest) return false;
+              return Boolean(tgt.closest(INTERACTIVE_PROTECTED_SELECTOR));
+            }
+
             function getScrollMetrics(el) {
               let node = el;
               while (node && node !== document.body && node !== document.documentElement) {
@@ -386,12 +820,174 @@ object SandboxHtmlInjector {
               return { top: winTop <= 4, bottom: winTop >= maxScroll - 6 };
             }
 
+            const MaktabatiPageCurlEngine = {
+              activeCorner: 'NONE', // 'TOP_RIGHT', 'BOTTOM_RIGHT', 'TOP_LEFT', 'BOTTOM_LEFT'
+              startX: 0,
+              startY: 0,
+              curX: 0,
+              curY: 0,
+              isDragging: false,
+              rafId: null,
+
+              detectCorner: function(x, y, vw, vh) {
+                const isRight = x >= vw * 0.5;
+                const isTop = y < vh * 0.5;
+                if (isRight && isTop) return 'TOP_RIGHT';
+                if (isRight && !isTop) return 'BOTTOM_RIGHT';
+                if (!isRight && isTop) return 'TOP_LEFT';
+                return 'BOTTOM_LEFT';
+              },
+
+              renderFrame: function() {
+                MaktabatiPageCurlEngine.rafId = null;
+                if (!MaktabatiPageCurlEngine.isDragging) return;
+                const overlay = ensureCurlOverlay();
+                if (!overlay) return;
+                const backside = document.getElementById('maktabati-curl-backside');
+                const shadow = document.getElementById('maktabati-curl-shadow');
+                if (!backside || !shadow) return;
+
+                const vw = Math.max(280, window.innerWidth || 360);
+                const vh = Math.max(400, window.innerHeight || 640);
+                const dx = MaktabatiPageCurlEngine.curX - MaktabatiPageCurlEngine.startX;
+                const dy = MaktabatiPageCurlEngine.curY - MaktabatiPageCurlEngine.startY;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+
+                if (absDx < 10 && absDy < 10) {
+                  overlay.classList.remove('active');
+                  return;
+                }
+
+                overlay.classList.add('active');
+                const corner = MaktabatiPageCurlEngine.activeCorner;
+                const isTopCorner = corner === 'TOP_RIGHT' || corner === 'TOP_LEFT';
+                const isRightCorner = corner === 'TOP_RIGHT' || corner === 'BOTTOM_RIGHT';
+
+                const curlProgress = Math.min(1, Math.hypot(dx, dy) / (vw * 0.72));
+                const foldSize = Math.max(24, Math.min(vw * 0.65, curlProgress * vw * 0.58));
+                const angleRad = Math.atan2(dy, dx);
+                const angleDeg = (angleRad * 180 / Math.PI);
+                const clampedTilt = Math.max(-28, Math.min(28, (dy / vh) * 42 * (isTopCorner ? 1 : -1)));
+
+                backside.style.transition = 'none';
+                shadow.style.transition = 'none';
+                backside.style.width = foldSize + 'px';
+                backside.style.height = (foldSize * 1.12) + 'px';
+
+                shadow.style.width = (foldSize * 1.35) + 'px';
+                shadow.style.height = (foldSize * 1.45) + 'px';
+                shadow.style.opacity = String(Math.min(0.85, 0.25 + curlProgress * 0.65));
+
+                // Anchor curl geometry specifically to the grabbed corner (TR, BR, TL, BL)
+                backside.style.top = isTopCorner ? '0px' : 'auto';
+                backside.style.bottom = isTopCorner ? 'auto' : '0px';
+                backside.style.right = isRightCorner ? '0px' : 'auto';
+                backside.style.left = isRightCorner ? 'auto' : '0px';
+
+                shadow.style.top = isTopCorner ? '0px' : 'auto';
+                shadow.style.bottom = isTopCorner ? 'auto' : '0px';
+                shadow.style.right = isRightCorner ? '0px' : 'auto';
+                shadow.style.left = isRightCorner ? 'auto' : '0px';
+
+                if (corner === 'TOP_RIGHT') {
+                  backside.style.borderRadius = '0 0 0 90%';
+                  backside.style.transformOrigin = 'top right';
+                  backside.style.transform = 'translate3d(' + (-foldSize * 0.18) + 'px, ' + (foldSize * 0.12) + 'px, 0) rotate(' + (clampedTilt - 8) + 'deg)';
+                } else if (corner === 'BOTTOM_RIGHT') {
+                  backside.style.borderRadius = '90% 0 0 0';
+                  backside.style.transformOrigin = 'bottom right';
+                  backside.style.transform = 'translate3d(' + (-foldSize * 0.18) + 'px, ' + (-foldSize * 0.12) + 'px, 0) rotate(' + (clampedTilt + 8) + 'deg)';
+                } else if (corner === 'TOP_LEFT') {
+                  backside.style.borderRadius = '0 0 90% 0';
+                  backside.style.transformOrigin = 'top left';
+                  backside.style.transform = 'translate3d(' + (foldSize * 0.18) + 'px, ' + (foldSize * 0.12) + 'px, 0) rotate(' + (-clampedTilt + 8) + 'deg)';
+                } else {
+                  backside.style.borderRadius = '0 90% 0 0';
+                  backside.style.transformOrigin = 'bottom left';
+                  backside.style.transform = 'translate3d(' + (foldSize * 0.18) + 'px, ' + (-foldSize * 0.12) + 'px, 0) rotate(' + (-clampedTilt - 8) + 'deg)';
+                }
+
+                const pageCard = getActivePageCanvas();
+                if (pageCard && pageCard !== document.body) {
+                  const rotY = (dx / vw) * 14;
+                  const rotX = isTopCorner ? -(Math.abs(dx) / vw) * 4 : (Math.abs(dx) / vw) * 4;
+                  pageCard.style.transition = 'none';
+                  pageCard.style.transform = 'perspective(1200px) rotateY(' + rotY.toFixed(2) + 'deg) rotateX(' + rotX.toFixed(2) + 'deg)';
+                }
+              },
+
+              releaseCurl: function(completed) {
+                MaktabatiPageCurlEngine.isDragging = false;
+                if (MaktabatiPageCurlEngine.rafId) {
+                  cancelAnimationFrame(MaktabatiPageCurlEngine.rafId);
+                  MaktabatiPageCurlEngine.rafId = null;
+                }
+                const overlay = document.getElementById('maktabati-page-curl-overlay');
+                const backside = document.getElementById('maktabati-curl-backside');
+                const shadow = document.getElementById('maktabati-curl-shadow');
+                const pageCard = getActivePageCanvas();
+
+                if (pageCard && pageCard !== document.body) {
+                  pageCard.style.transition = 'transform 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
+                  pageCard.style.transform = 'none';
+                }
+
+                if (!overlay || !backside || !shadow) return;
+                backside.style.transition = 'all 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
+                shadow.style.transition = 'all 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
+
+                if (completed) {
+                  playPaperFlipSound();
+                  const vw = Math.max(280, window.innerWidth || 360);
+                  backside.style.width = (vw * 0.95) + 'px';
+                  backside.style.height = (vw * 0.95) + 'px';
+                  shadow.style.opacity = '0';
+                } else {
+                  backside.style.width = '0px';
+                  backside.style.height = '0px';
+                  shadow.style.opacity = '0';
+                }
+
+                setTimeout(function() {
+                  if (overlay) overlay.classList.remove('active');
+                }, 220);
+              },
+
+              playPaperFlipSound: playPaperFlipSound
+            };
+            window.MaktabatiPageCurlEngine = MaktabatiPageCurlEngine;
+
+            let tStartX = 0, tStartY = 0, tStartPage = 0, tAtTop = true, tAtBottom = true, tIgnore = false;
+            let isPinching = false, pinchStartDist = 0, pinchStartZoom = 100;
+
+            function getTouchDist(t0, t1) {
+              const dx = t0.clientX - t1.clientX;
+              const dy = t0.clientY - t1.clientY;
+              return Math.hypot(dx, dy);
+            }
+
             document.addEventListener('touchstart', function(e) {
-              if (!e.touches || e.touches.length !== 1) { tIgnore = true; return; }
-              const tgt = e.target;
-              if (tgt && tgt.closest && tgt.closest('button,a,input,textarea,select,label,.toc-drawer,.drawer,.modal,.overlay')) {
-                tIgnore = true; return;
+              if (!e.touches) return;
+
+              // 2-Finger Pinch-to-Zoom (Fluid Reflow Zoom)
+              if (e.touches.length >= 2) {
+                tIgnore = true;
+                isPinching = true;
+                MaktabatiPageCurlEngine.releaseCurl(false);
+                pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+                pinchStartZoom = currentZoomPercent;
+                return;
               }
+
+              isPinching = false;
+              if (e.touches.length !== 1) { tIgnore = true; return; }
+              const tgt = e.target;
+              if (isProtectedInteractiveTarget(tgt)) {
+                tIgnore = true;
+                return;
+              }
+
               tIgnore = false;
               tStartX = e.touches[0].clientX;
               tStartY = e.touches[0].clientY;
@@ -399,14 +995,69 @@ object SandboxHtmlInjector {
               const m = getScrollMetrics(tgt);
               tAtTop = m.top;
               tAtBottom = m.bottom;
+
+              const vw = window.innerWidth || 360;
+              const vh = window.innerHeight || 640;
+              MaktabatiPageCurlEngine.activeCorner = MaktabatiPageCurlEngine.detectCorner(tStartX, tStartY, vw, vh);
+              MaktabatiPageCurlEngine.startX = tStartX;
+              MaktabatiPageCurlEngine.startY = tStartY;
+              MaktabatiPageCurlEngine.curX = tStartX;
+              MaktabatiPageCurlEngine.curY = tStartY;
+              MaktabatiPageCurlEngine.isDragging = true;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function(e) {
+              if (!e.touches) return;
+
+              if (isPinching && e.touches.length >= 2) {
+                const dist = getTouchDist(e.touches[0], e.touches[1]);
+                if (pinchStartDist > 20) {
+                  const ratio = dist / pinchStartDist;
+                  const nextZoom = Math.round(pinchStartZoom * ratio);
+                  if (Math.abs(nextZoom - currentZoomPercent) >= 2) {
+                    window.__maktabatiSetFluidZoom(nextZoom, false);
+                  }
+                }
+                return;
+              }
+
+              if (tIgnore || !MaktabatiPageCurlEngine.isDragging || e.touches.length !== 1) return;
+              MaktabatiPageCurlEngine.curX = e.touches[0].clientX;
+              MaktabatiPageCurlEngine.curY = e.touches[0].clientY;
+              if (!MaktabatiPageCurlEngine.rafId) {
+                MaktabatiPageCurlEngine.rafId = requestAnimationFrame(MaktabatiPageCurlEngine.renderFrame);
+              }
             }, { passive: true });
 
             document.addEventListener('touchend', function(e) {
-              if (tIgnore || !e.changedTouches || e.changedTouches.length !== 1) return;
+              if (isPinching) {
+                if (!e.touches || e.touches.length < 2) {
+                  isPinching = false;
+                }
+                return;
+              }
+
+              if (tIgnore || !e.changedTouches || e.changedTouches.length !== 1) {
+                MaktabatiPageCurlEngine.releaseCurl(false);
+                return;
+              }
+
               const dx = e.changedTouches[0].clientX - tStartX;
               const dy = e.changedTouches[0].clientY - tStartY;
               const absX = Math.abs(dx), absY = Math.abs(dy);
-              if (absX < 48 && absY < 55) return;
+              const vw = Math.max(240, window.innerWidth || 360);
+              const quarterWidth = vw * 0.25;
+
+              const completedHorizontalCurl = absX >= Math.min(quarterWidth, 72) && absX >= absY * 0.75;
+              const completedVerticalSwipe = absY > absX * 1.2 && absY >= 58 && ((dy < 0 && tAtBottom) || (dy > 0 && tAtTop));
+
+              if (!completedHorizontalCurl && !completedVerticalSwipe) {
+                // Spring-back to original position
+                MaktabatiPageCurlEngine.releaseCurl(false);
+                return;
+              }
+
+              MaktabatiPageCurlEngine.releaseCurl(true);
 
               setTimeout(function() {
                 if (getCurrentPageIndex() !== tStartPage) {
@@ -414,10 +1065,10 @@ object SandboxHtmlInjector {
                 }
                 const dirAttr = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
                 const isRtl = dirAttr === 'rtl';
-                if (absX > absY * 1.15 && absX >= 48) {
+                if (completedHorizontalCurl) {
                   const delta = isRtl ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1);
                   triggerUniversalPageTurn(delta);
-                } else if (absY > absX * 1.15 && absY >= 55) {
+                } else if (completedVerticalSwipe) {
                   if (dy < 0 && tAtBottom) {
                     triggerUniversalPageTurn(1);
                   } else if (dy > 0 && tAtTop) {

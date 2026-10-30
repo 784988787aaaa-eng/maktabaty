@@ -1,45 +1,27 @@
 # الدليل الهندسي والإنتاجي الشامل لصناعة الكتب الرقمية التفاعلية الفاخرة
-## (`BOOK_PRODUCTION_MASTER_GUIDE.md` — معيار منصة «مكتبتي»)
+## (`BOOK_PRODUCTION_MASTER_GUIDE.md` — معيار منصة «مكتبتي» V5.0)
 
-> **الإصدار الهندسي:** `V4.0 Master Production Specification`  
-> **المنصة المستهدفة:** تطبيق قارئ ومكتبة الكتب الرقمية التفاعلية **«مكتبتي» (Maktabati)** على نظام أندرويد والمتصفحات الحديثة  
+> **الإصدار الهندسي:** `V5.0 Fluid Reflow & 4-Corner Page-Curl Specification`  
+> **المنصة المستهدفة:** تطبيق قارئ ومكتبة الكتب الرقمية التفاعلية **«مكتبتي» (Maktabati)** على الهواتف الذكية والأجهزة اللوحية  
 > **إشراف وتصميم المعمارية:** م/ منصور قطينه (`774004399`)
 
 ---
 
-## ١. الفلسفة الهندسية للكتاب التفاعلي المستقل (Self-Contained Interactive Book)
+## ١. الفلسفة الهندسية للكتاب التفاعلي المتدفق (Anti-PDF Fluid Interactive Book)
 
-صُممت منصة **«مكتبتي»** لتشغيل جيل جديد من الكتب الرقمية العربية والعالمية، حيث يكون كل كتاب عبارة عن **ملف `.html` واحد مستقل بذاته بنسبة ١٠٠٪ (Single-File Self-Contained HTML5 Application)** يجمع بين:
-1. **فخامة المخطوطات والطبعات الملكية** (زخارف SVG متجهية مدمجة، ترويسات مذهّبة، إطارات هندسية، وتباين لوني مريح للعين).
-2. **سلاسة التطبيقات الأصلية (60fps Native Feel)** بتقليب صفحات فوري باللمس والسحب دون أي تمرير عمودي مزعج داخل الصفحة.
-3. **العمل الكامل دون اتصال بالإنترنت (100% Offline-Ready)** دون الاعتماد على أي ملفات خارجية قد تنقطع أو تفشل في التحميل.
+صُممت منصة **«مكتبتي»** للقضاء نهائياً على جمود ملفات الـ PDF التقليدية التي تخرج نصوصها وعناصرها خارج الشاشة عند التكبير. في معيار **«مكتبتي V5.0»**، يعمل كل كتاب كـ **تطبيق HTML5/CSS3/JS تفاعلي متجاوب بنسبة ١٠٠٪** (ملف `.html` مستقل أو حزمة `.zip` غنية بالصور والصوتيات) يجمع بين:
+1. **التدفق المتجاوب الذكي (`Fluid Reflow Zoom`):** عند التكبير أو التصغير بإصبعين (`Pinch-to-Zoom`) أو عبر أزرار (`+` / `-` / `100%`)، تعيد جميع النصوص والعناوين والبطاقات التفاعلية والاقتباسات والزخارف ترتيب وتكييف نفسها تلقائياً داخل عرض الورقة (`max-width: 100%; overflow-x: hidden;`) دون أي قصّ أفقي.
+2. **حارس تناسق الصفحة (`MaktabatiLayoutGuard`):** فاحص تلقائي يصلح أي عنصر أعرض من بطاقة الصفحة، وينبّه القارئ برسالة ذكية (`Smart Toast Banner`) عند الوصول لأقصى تكبير يحفظ جمال القالب مع زر فوري للعودة إلى `100% الوضع المثالي`.
+3. **انحناء الورقة الفيزيائي من الزوايا الأربع (`4-Corner Page-Curl Engine`):** استجابة حية (60fps) لحركة إصبع القارئ من أي زاوية من الزوايا الأربع (العلوية اليمنى، السفلية اليمنى، العلوية اليسرى، السفلية اليسرى) مع الوجه الخلفي للورقة والظلال المتحركة وصوت تقليب الورق الطبيعي المولّد عبر `Web Audio API`.
 
 ---
 
-## ٢. القواعد المعمارية الصارمة للتوافق الفوري مع محرك «مكتبتي»
+## ٢. المواصفات القياسية المضادة لجمود الـ PDF (Anti-PDF Fluid Reflow Rules)
 
-عند استيراد أي ملف `.html` إلى تطبيق **«مكتبتي»**، يقوم المحرك الذكي (`HtmlBookParser` + `SandboxHtmlInjector`) بقراءة وتحليل الملف في أجزاء من الثانية. لضمان ظهور غلاف الكتاب وألوانه وفهرسه وأرقام صفحاته بدقة تامة وفتحه كالبرق، التزم بالقواعد التالية:
+لضمان عمل الكتاب بتناسق تام مع محرك `Fluid Reflow Zoom` وحارس `MaktabatiLayoutGuard` ومحرك انحناء الورقة `MaktabatiPageCurlEngine`، التزم بالقواعد الهندسية الصارمة التالية:
 
-### أ. ترويسة الترميز في أول الملف (`<meta charset="utf-8">`)
-يجب أن يبدأ الملف دائماً بـ `<!DOCTYPE html>` ويوضع وسم `<meta charset="utf-8">` كأول عنصر داخل `<head>` مباشرةً قبل أي وسم `<title>` أو `<style>` لضمان قراءة الأحرف العربية والتشكيل بسرعة البرق دون إعادة تحليل (Re-parse).
-
-```html
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>عنوان الكتاب</title>
-```
-
-### ب. متغيرات الهوية البصرية لغلاف الكتاب (`:root` CSS Variables)
-يستخرج تطبيق **«مكتبتي»** ألوان الغلاف الثلاثي الأبعاد والزخارف في شاشة المكتبة تلقائياً من متغيرات `:root` داخل قسم `<style>`:
-
-| المتغير في `:root` | وظيفته في مكتبتي | مثال لوني مقترح |
-| :--- | :--- | :--- |
-| `--bg-primary` | اللون الأساسي لخلفية غلاف الكتاب في المكتبة وخلفية القارئ | `#1A1412` أو `#FBF7F0` |
-| `--accent-gold` | لون الإطارات المذهّبة، الزخارف، وشارة عدد الصفحات | `#C49148` أو `#D97706` |
-| `--accent-rose` | لون التدرج الثانوي للغلاف، أزرار التفاعل، وعلامات الفصول | `#9E3B5A` أو `#0F766E` |
+### أ. متغيرات المقياس الديناميكي والهوية البصرية في `:root`
+يجب تعريف متغيرات المقياس (`--reader-font`, `--reader-font-size`, `--font-scale`) إلى جانب ألوان الهوية البصرية لغلاف الكتاب:
 
 ```css
 :root {
@@ -49,165 +31,244 @@
   --text-muted: #6E5A53;
   --accent-rose: #9E3B5A;
   --accent-gold: #C49148;
-  --border-ornate: rgba(196, 145, 72, 0.34);
+  --border-ornate: rgba(196, 145, 72, 0.35);
+
+  /* متغيرات محرك التكبير المتجاوب Fluid Reflow Zoom */
+  --reader-font: 1;
+  --reader-font-size: 100%;
+  --font-scale: 1;
 }
 ```
 
-### ج. وحدات قياس الشاشة (`vh` و `100%` بدلاً من `dvh` فقط)
-لضمان فتح الكتاب في التو واللحظة (`<15ms`) على جميع إصدارات محرك `Android System WebView` دون أي انكماش في الارتفاع، اعتمد دائماً الجمع بين `100vh` و `100%` على حاوية التطبيق الرئيسية `.app`:
+### ب. الوحدات النسبية المرنة ومنع الأبعاد الصلبة (Zero Rigid Pixel Widths)
+- **يُمنع منعاً باتاً** إعطاء عرض ثابت بالبكسل (`width: 500px` أو `min-width: 420px`) لأي بطاقة أو جدول أو صورة أو صندوق اقتباس.
+- استخدم دائماً الوحدات النسبية المرنة (`em`, `rem`, `clamp()`, `%`, `100dvh` مع بديل `100vh`):
+  - حجم خط متن الصفحة: `font-size: calc(clamp(1.02rem, 2.8vw, 1.22rem) * var(--reader-font, 1));`
+  - حجم العناوين الرئيسية: `font-size: calc(clamp(1.25rem, 4vw, 1.6rem) * var(--reader-font, 1));`
+  - حجم البطاقات والصناديق التفاعلية: `width: 100%; max-width: 100%; padding: clamp(0.65em, 2.5vw, 1.15em); box-sizing: border-box; overflow-wrap: anywhere;`
 
-```css
-html, body {
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
-}
+### ج. التوافق مع محرك انحناء الزوايا الأربع وحماية العناصر التفاعلية
+- امنح العناصر التفاعلية داخل الصفحة الأصناف القياسية المعتمدة في محرك «مكتبتي» حتى يحميها المحرك تلقائياً من تداخل سحب الصفحة:
+  - البطاقات القابلة للقلب: `.flip-card`
+  - خيارات الاختبارات التفاعلية: `.quiz-option`
+  - حقول إدخال اسم القارئ والتدوين: `input`, `textarea`, `select`, `button`
 
-.app {
-  width: 100%;
-  height: 100vh;
-  max-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 8px 10px;
-  box-sizing: border-box;
-}
+---
+
+## ٣. الأمر الهندسي الشامل الجاهز للنسخ (Master Universal Copy-Paste Prompt)
+
+انسخ هذا الأمر وأرفق معه أي ملف نصي (`.txt`) في أي نموذج ذكاء اصطناعي لإنتاج كتاب تفاعلي متكامل وفق معيار **«مكتبتي V5.0»**:
+
+```text
+أنت مصمم ومبرمج كتب رقمية تفاعلية فاخرة بصيغة HTML5/CSS3/JS في ملف واحد مستقل (Self-Contained Interactive Book) مخصص للعمل داخل تطبيق قارئ الكتب "مكتبتي" على الهواتف الذكية.
+
+المهمة:
+اقرأ ملف النص المرفق (.txt) بالكامل، وحوّله إلى كتاب رقمي تفاعلي فاخر وموزون الصفحات بصيغة .html وفق القواعد الهندسية الصارمة التالية:
+
+1. الأمانة النصية الكاملة وتقسيم الصفحات الذكي (Zero-Omission Smart Pagination):
+- استخرج تلقائياً: عنوان الكتاب، العنوان الفرعي، اسم المؤلف، الإهداء، الفصول، والخاتمة.
+- ممنوع الحذف أو التلخيص: أدرج كامل نصوص وفقرات الملف المرفق بالتتابع داخل مصفوفة BOOK_DATA.pages.
+- قسّم النص إلى صفحات موزونة (70 إلى 105 كلمات في الصفحة الواحدة) تنتهي دائماً بنهاية جملة تامة.
+
+2. التصميم المتجاوب المضاد لجمود الـ PDF (Fluid Reflow Zoom Standard):
+- عرّف في :root المتغيرات: --bg-primary, --bg-card, --text-main, --text-muted, --accent-rose, --accent-gold, --reader-font: 1, --reader-font-size: 100%, --font-scale: 1.
+- استخدم الوحدات المرنة (em, rem, clamp(), %, 100vh/100dvh) مع max-width: 100%; box-sizing: border-box; overflow-x: hidden; overflow-wrap: anywhere; حتى تعيد النصوص والبطاقات والزخارف ترتيب نفسها بانسيابية عند التكبير من 75% إلى 200%.
+
+3. التفاعلات الحية المدمجة داخل الكتاب (Live Interactive Components):
+- حقل تخصيص اسم القارئ/القارئة في بداية الكتاب يحفظ الاسم في localStorage ويخاطب القارئ باسمه في فصول الكتاب.
+- بطاقات قابلة للقلب (.flip-card) للخلاصات والفوائد تتقلب عند اللمس.
+- مساحة تدوين وتأمل شخصي (textarea) لكل فصل تُحفظ تلقائياً في localStorage.
+- سؤال أو اختبار تفاعلي (.quiz-option) في نهاية كل فصل مع تغذية راجعة فورية.
+- دعم الدوال القياسية window.goToPage(index) و window.nextPage() و window.prevPage().
 ```
 
 ---
 
-## ٣. هيكل البيانات القياسي (`BOOK_DATA`) واستخراج الفهرس الذكي
+## ٤. قوالب الأوامر المخصصة لكل فئة مستهدفة (Audience-Specific Copy-Paste Prompts)
 
-يدعم محرك **«مكتبتي»** كلاً من الكتب المبنية بمصفوفة بيانات جافاسكريبت (`BOOK_DATA`) والكتب المبنية بعناصر DOM مباشرة (`.page`). ويُعد نمط `BOOK_DATA` هو المعيار الهندسي الأفضل والأسرع للكتب التي تتراوح بين **١٠ إلى ٢٠٠ صفحة** لأنه يحافظ على خفة شجرة DOM وسرعة الفتح الفورية:
+فيما يلي القوالب الهندسية العشرة المخصصة لكل فئة مستهدفة، مع لوحات الألوان (`:root`)، والخطوط، والتفاعلات المصممة نفسياً وبصرياً لكل فئة:
 
-```javascript
-const STORAGE_KEY = "maktabati_book_unique_slug_v1";
+---
 
-const BOOK_DATA = {
-  title: "عنوان الكتاب الرئيسي",
-  subtitle: "العنوان الفرعي الوصفي للكتاب",
-  author: "اسم المؤلف أو المحقق",
-  description: "نبذة موجزة عن موضوع الكتاب ورسالته تظهر في بطاقة تفاصيل الكتاب داخل مكتبتي.",
-  pages: [
-    {
-      type: "cover",
-      chapterTitle: "الغلاف",
-      title: "عنوان الكتاب الرئيسي",
-      subtitle: "العنوان الفرعي الوصفي للكتاب",
-      author: "اسم المؤلف"
-    },
-    {
-      type: "dedication",
-      chapterTitle: "الإهداء",
-      title: "إهداء",
-      content: `<p>نص الإهداء...</p>`
-    },
-    {
-      type: "chapter",
-      chapterNumber: "الفصل الأول",
-      chapterTitle: "الفصل الأول: مدخل إلى الحكمة",
-      sectionTitle: "المبحث الأول",
-      title: "عنوان الصفحة أو المبحث",
-      content: `
-        <p>الفقرة الأولى من النص المشكول أو المحقق...</p>
-        <blockquote class="quote-box">اقتباس مميز أو بيت شعر أو قاعدة مهمة.</blockquote>
-      `
-    }
-  ]
-};
+### ١. فئة الشباب (`Youth / Young Men Prompt`)
+- **الطابع البصري:** حيوي، عصري، كحلي عميق مع فيروزي مشرق وذهبي مضيء.
+- **الأمر الجاهز للنسخ:**
+
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (الشباب) بهوية بصرية حماسية عصرية:
+- لوحة الألوان في :root:
+  --bg-primary: #0F172A; --bg-card: #1E293B; --text-main: #F8FAFC; --text-muted: #94A3B8; --accent-rose: #0EA5E9; --accent-gold: #F59E0B; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Cairo", "Tajawal", "Amiri", sans-serif؛ مع التزام كامل بمعيار Fluid Reflow (وحدات rem و em و clamp() ومنع أي عرض ثابت بالبكسل).
+- التفاعلات:
+  1) حقل إدخال اسم الشاب القارئ في الصفحة الافتتاحية ("أهلاً بك يا بطل: ...") يُحفظ في localStorage.
+  2) بطاقات تحدي اليوم قابلة للقلب (.flip-card) تعرض الفكرة على الوجه الأول والخطوة العملية على الوجه الخلفي.
+  3) صندوق خطة العمل الشخصي (textarea محفوظة) + اختبار تفاعلي سريع (.quiz-option) بنهاية كل فصل.
 ```
 
-### الحقول المعتمدة لاستخراج الفهرس التلقائي (`Table of Contents`)
-يتعرف محلل «مكتبتي» (`HtmlBookParser`) تلقائياً على عناوين الفصول والمباحث داخل `BOOK_DATA.pages` عبر أي من المفاتيح التالية:
-- `title`
-- `chapterTitle`
-- `sectionTitle`
-- `chapterTag`
-- `heading`
+---
 
-كما يتعرف على أزرار الفهرس التفاعلية في HTML عبر خاصية `data-page="رقم_الصفحة_يبدأ_من_0_أو_1"`.
+### ٢. فئة الفتيات (`Young Women / Girls Prompt`)
+- **الطابع البصري:** وردي لؤلؤي ناعم، بنفسجي حالم، وزخارف زهرية رقيقة.
+- **الأمر الجاهز للنسخ:**
+
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (الفتيات) بهوية بصرية أنيقة وملهمة:
+- لوحة الألوان في :root:
+  --bg-primary: #FDF2F8; --bg-card: #FFFFFF; --text-main: #3B0764; --text-muted: #7E22CE; --accent-rose: #EC4899; --accent-gold: #D97706; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Tajawal", "Amiri", serif؛ مع وحدات مرنة (em, rem, clamp) تعيد ترتيب العناصر بنعومة عند التكبير والتصغير دون أي قصّ أفقي.
+- التفاعلات:
+  1) ترحيب شخصي باسم القارئة ("صديقتي الغالية ...") يُحفظ في localStorage.
+  2) بطاقات إشراقة ملهمة قابلة للقلب (.flip-card) وزخارف SVG ناعمة.
+  3) ركن "مذكرتي اللطيفة" لتدوين المشاعر والأفكار (textarea محفوظة) + سؤال تفاعلي لطيف (.quiz-option).
+```
 
 ---
 
-## ٤. هندسة الشاشة والبطاقة الورقية (Zero-Scroll Single-Screen Layout)
+### ٣. فئة النساء (`Women General Prompt`)
+- **الطابع البصري:** ملكي دافئ يجمع بين العنابي المخملي والذهبي الوردي والكريمي الفاخر.
+- **الأمر الجاهز للنسخ:**
 
-يجب أن تتكون شاشة الكتاب التفاعلي من **ثلاث طبقات متناسقة فقط** داخل `.app` بحيث لا تحتاج الصفحة أبداً إلى تمرير عمودي (`No Vertical Scrollbar`) في الوضع الافتراضي:
-
-1. **الشريط العلوي الرشيق (`.top-bar` — بارتفاع `40px–44px`):**
-   - يعرض اسم الكتاب أو الفصل الحالي في اليمين.
-   - يحتوي في اليسار على أزرار مدمجة:
-     - فهرس الفصول (`☰`)
-     - البحث الفوري في النص (`🔍`)
-     - تكبير وتصغير الخط (`A+` / `A-`)
-     - تبديل السمة اللونية (`☀/🌙` ورقي كريمي / ليلي كحلي / داكن)
-     - حفظ علامة مرجعية (`🔖`)
-
-2. **البطاقة الورقية الوسطى (`.page-canvas` — تأخذ المساحة المتبقية `flex: 1`):**
-   - إطار فاخر بزوايا ناعمة (`border-radius: 18px`) وحدود ذهبية رقيقة (`1px solid var(--border-ornate)`).
-   - رأس بطاقة علوي رشيق يعرض: اسم الفصل الحالي + رقم الصفحة (`صفحة ١٢ من ٨٥`).
-   - جسم الصفحة النصي (`.page-body`) بخط عربي واضح (`Amiri`, `Scheherazade New`, `Noto Naskh Arabic`, `Geeza Pro`, `serif`) مع `line-height: 1.85` ومحاذاة مضبوطة.
-   - ذيل بطاقة سفلي يعرض شريط التقدم المئوي الدقيق (`Progress Bar`).
-
-3. **شريط التنقل السفلي المدمج (`.bottom-nav-dock` — بارتفاع `44px–48px`):**
-   - زر **«السابق»** (يمين في العربية RTL).
-   - عداد الصفحة التفاعلي في المنتصف (`12 / 85`) — عند النقر عليه يفتح نافذة القفز السريع لأي صفحة.
-   - زر **«التالي»** (يسار في العربية RTL).
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (النساء) بطابع ملكي دافئ:
+- لوحة الألوان في :root:
+  --bg-primary: #FAF5F0; --bg-card: #FFFDFB; --text-main: #2D161E; --text-muted: #6E4756; --accent-rose: #9E3B5A; --accent-gold: #C49148; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Amiri", "Noto Naskh Arabic", serif؛ بتصميم متدفق متجاوب (Fluid Reflow Zoom) يتكيف مع أي حجم خط من 75% إلى 200%.
+- التفاعلات:
+  1) تخصيص اسم القارئة في البطاقة الترحيبية وحفظه في localStorage.
+  2) بطاقات حكمة وإلهام قابلة للقلب (.flip-card) + صناديق اقتباس مذهّبة (.quote-box).
+  3) مساحة تأملات خاصة للقارئة + تقييم ذاتي تفاعلي (.quiz-option) في ختام كل فصل.
+```
 
 ---
 
-## ٥. ميزان تقسيم النصوص الذكي (Smart Pagination & Zero-Omission Rules)
+### ٤. فئة العازبات (`Single Women Prompt`)
+- **الطابع البصري:** بنفسجي خزامى راقٍ (`Lavender & Rose Gold`) يبعث على التفاؤل وبناء الذات والاستعداد الواعي للمستقبل.
+- **الأمر الجاهز للنسخ:**
 
-عند تحويل أي كتاب أو مخطوطة نصية (`.txt` / `.docx` / `.md`) إلى كتاب HTML تفاعلي لمنصة «مكتبتي»، التزم بالميزان الهندسي التالي:
-
-1. **الأمانة النصية الكاملة (Zero-Omission Policy):**
-   - يُمنع منعاً باتاً حذف أو تلخيص أو اختصار أي فقرة من النص الأصلي.
-   - يُمنع كتابة عبارات مثل `// باقي الصفحات...` أو `...إلخ`؛ يجب إدراج جميع الفقرات كاملةً مقسمةً على صفحات متتالية.
-2. **الكثافة المثالية للصفحة الواحدة (70 إلى 110 كلمات):**
-   - لا تكدّس أكثر من **١١٠ كلمات** (أو **٥٥٠–٦٥٠ حرفاً**) في الصفحة الواحدة حتى تظل الصفحة مريحة للعين وتظهر بالكامل داخل `.page-canvas` دون الحاجة إلى شريط تمرير.
-   - إذا كان الفصل طويلاً، قسّمه إلى عدة صفحات متتالية تحمل نفس `chapterTitle` مع ترقيم متسلسل أو عناوين فرعية (`sectionTitle`).
-3. **عدم بتر الجمل (Sentence Integrity):**
-   - تنتهي كل صفحة دائماً بنهاية جملة تامة المعنى (`.` أو `؟` أو `!` أو نهاية فقرة/بيت شعري)، ولا تُقطع الجملة الواحدة بين صفحتين.
-4. **تنويع القوالب البصرية داخل الصفحات:**
-   - استخدم صناديق الاقتباس (`.quote-box`) للأحاديث والحكم والأبيات الشعرية.
-   - استخدم الفواصل الزخرفية (`.ornament-divider`) بين الخواطر والفقرات المفصلية.
-   - استخدم بطاقات الفوائد (`.insight-card`) للخلاصات والنقاط المركزة.
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (العازبات) بهوية بصرية تبعث على السكينة والطموح:
+- لوحة الألوان في :root:
+  --bg-primary: #F8F5FF; --bg-card: #FFFFFF; --text-main: #2E1065; --text-muted: #6B21A8; --accent-rose: #C026D3; --accent-gold: #D97706; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Amiri", "Tajawal", serif؛ مع التزام صارم بالوحدات النسبية المرنة (em, rem, clamp) ومنع جمود الـ PDF.
+- التفاعلات:
+  1) حقل اسم القارئة لتخصيص الرسائل التوجيهية داخل الفصول.
+  2) بطاقات "خطوة نحو مستقبلي" القابلة للقلب (.flip-card) + قائمة أهداف شخصية تفاعلية.
+  3) دفتر تدوين الطموحات والدعوات (محفوظ في localStorage) + أسئلة وعي ذاتي (.quiz-option).
+```
 
 ---
 
-## ٦. التوافق مع ميزات محرك «مكتبتي» المتقدمة
+### ٥. فئة المتزوجات (`Married Women Prompt`)
+- **الطابع البصري:** مودة وسكينة، عاجي دافئ مع ياقوتي عميق وذهبي هادئ.
+- **الأمر الجاهز للنسخ:**
 
-يوفر تطبيق **«مكتبتي»** طبقة تعزيز تلقائية (`SandboxHtmlInjector`) تعمل بانسجام مع كتابك، ولكي يستفيد كتابك منها بأقصى درجة:
-
-1. **عزل التخزين المحلي (`localStorage` Isolation):**
-   - استخدم `localStorage.getItem(STORAGE_KEY)` و `localStorage.setItem(STORAGE_KEY, JSON.stringify(state))` لحفظ رقم الصفحة الحالية (`currentPage`)، حجم الخط (`fontScale`)، والسمة (`theme`)، والعلامات المرجعية (`bookmarks`).
-   - يقوم تطبيق «مكتبتي» تلقائياً بعزل مفتاح التخزين لكل كتاب بمعرّفه الخاص حتى لا تتداخل بيانات كتابين مختلفين.
-2. **دعم التقليب بالسحب ولوحة المفاتيح (`Swipe & Arrow Keys`):**
-   - اربط دالة التقليب بأزرار الأسهم (`ArrowLeft` للتالي في العربية، `ArrowRight` للسابق في العربية) ولمسات السحب الأفقية (`touchstart` / `touchend`).
-3. **الدوال العامة القياسية (اختياري ومستحسن):**
-   - عرّف في نطاق `window` الدوال التالية ليتمكن القارئ من استدعائها مباشرة عند القفز من الفهرس:
-     - `window.goToPage(index)` (للانتقال المباشر إلى صفحة محددة)
-     - `window.nextPage()` (للانتقال للصفحة التالية)
-     - `window.prevPage()` (للرجوع للصفحة السابقة)
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (المتزوجات) بهوية بصرية دافئة تفيض بالمودة والسكينة:
+- لوحة الألوان في :root:
+  --bg-primary: #FFF9F5; --bg-card: #FFFFFF; --text-main: #3B1219; --text-muted: #7F3A47; --accent-rose: #BE123C; --accent-gold: #B45309; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Amiri", "Scheherazade New", serif؛ مع تصميم متجاوب يعيد ترتيب البطاقات والنصوص بانسيابية عند التكبير والتصغير.
+- التفاعلات:
+  1) تخصيص اسم الزوجة القارئة في مقدمة الكتاب.
+  2) بطاقات "همسة مودة" و"مفتاح السكينة الأسرية" القابلة للقلب (.flip-card).
+  3) مفكرة "تطبيقات عملية في بيتي" (textarea محفوظة في localStorage) + مواقف زوجية تفاعلية (.quiz-option).
+```
 
 ---
 
-## ٧. القالب المرجعي الكامل الجاهز للإنتاج (`Production Master Template`)
+### ٦. فئة الرجال (`Men Prompt`)
+- **الطابع البصري:** وقار وفخامة كلاسيكية، بني جلدي عتيق أو كحلي داكن مع ذهبي نحاسي وورق كريمي.
+- **الأمر الجاهز للنسخ:**
 
-يمكنك نسخ هذا القالب الهندسي المتكامل واستخدامه كأساس لأي كتاب تفاعلي جديد؛ فهو يضم الغلاف، الفهرس، البحث الفوري، العلامات المرجعية، التحكم بحجم الخط، الوضع الليلي/الورقي، وحفظ التقدم التلقائي:
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (الرجال) بطابع فخم يتسم بالوقار والرصانة:
+- لوحة الألوان في :root:
+  --bg-primary: #F5F2EB; --bg-card: #FCF9F2; --text-main: #1C1917; --text-muted: #57534E; --accent-rose: #1E3A8A; --accent-gold: #B45309; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Amiri", "Noto Naskh Arabic", serif؛ مع وحدات نسبية مرنة (em, rem, clamp) وتوافق كامل مع محرك انحناء الورقة من الزوايا الأربع.
+- التفاعلات:
+  1) حقل اسم القارئ الكريم لحفظه ومخاطبته في الخلاصات القيادية.
+  2) بطاقات "خلاصة الحكمة والقيادة" القابلة للقلب (.flip-card) + اقتباسات مؤطرة (.quote-box).
+  3) سجل القرارات والملاحظات العملية (محفوظ في localStorage) + اختبارات مواقف عملية (.quiz-option).
+```
+
+---
+
+### ٧. فئة الملتزمين والكتب الإسلامية (`Committed & Islamic Books Prompt`)
+- **الطابع البصري:** روحاني مهيب على طراز المصاحف والمخطوطات الأندلسية (زمردي إسلامي، ذهبي مملوكي، ورق مخطوطات عاجي).
+- **الأمر الجاهز للنسخ:**
+
+```text
+صمّم الملف النصي المرفق ككتاب إسلامي رقمي تفاعلي فاخر بصيغة HTML واحد لمنصة "مكتبتي" بهوية المخطوطات الإسلامية الملكية:
+- لوحة الألوان في :root:
+  --bg-primary: #F8F4E8; --bg-card: #FFFDF7; --text-main: #1B241E; --text-muted: #4A5D50; --accent-rose: #065F46; --accent-gold: #B47B26; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Amiri", "Scheherazade New", "Traditional Arabic", serif؛ مع إبراز الآيات القرآنية في صناديق مذهّبة والأحاديث النبوية في إطارات زمردية تتدفق بمرونة تامة عند أي تكبير.
+- التفاعلات:
+  1) حقل اسم القارئ/القارئة في استفتاح الكتاب مع دعاء مخصص باسمه.
+  2) بطاقات "فقه العمل بالعلم" و"لطائف التدبر" القابلة للقلب (.flip-card).
+  3) سجل "محاسبة النفس والعمل اليومي" (محفوظ في localStorage) + أسئلة مراجعة الفوائد الشرعية (.quiz-option).
+```
+
+---
+
+### ٨. فئة المراهقون (`Teens Prompt`)
+- **الطابع البصري:** تفاعلي مشوّق بألوان نابضة ومتدرجة، فقاعات حوارية، وتحديات نقاط.
+- **الأمر الجاهز للنسخ:**
+
+```text
+صمّم الملف النصي المرفق ككتاب رقمي تفاعلي مشوّق بصيغة HTML واحد لمنصة "مكتبتي" موجّه لفئة (المراهقين):
+- لوحة الألوان في :root:
+  --bg-primary: #EEF2FF; --bg-card: #FFFFFF; --text-main: #1E1B4B; --text-muted: #4338CA; --accent-rose: #4F46E5; --accent-gold: #F59E0B; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Tajawal", "Cairo", sans-serif؛ مع وحدات مرنة (em, rem, clamp) تمنع أي خروج للعناصر عن حدود الصفحة.
+- التفاعلات:
+  1) بطاقة "ملف البطل/البطلة" لإدخال اسم القارئ وحفظه في localStorage.
+  2) بطاقات أسرار واكتشافات قابلة للقلب (.flip-card) + شارات إنجاز عند إنهاء الفصول.
+  3) تحديات أسئلة تفاعلية (.quiz-option) مع عداد نقاط فوري ومساحة كتابة أفكار إبداعية.
+```
+
+---
+
+### ٩. الكتب التعليمية والأكاديمية (`Educational & Academic Books Prompt`)
+- **الطابع البصري:** منهجي واضح عالي التباين، أزرق أكاديمي مع أخضر معرفي لتسهيل الفهم والاستذكار.
+- **الأمر الجاهز للنسخ:**
+
+```text
+صمّم الملف النصي المرفق ككتاب تعليمي تفاعلي بصيغة HTML واحد لمنصة "مكتبتي" يدعم الفهم العميق والمراجعة الذكية:
+- لوحة الألوان في :root:
+  --bg-primary: #F8FAFC; --bg-card: #FFFFFF; --text-main: #0F172A; --text-muted: #475569; --accent-rose: #0284C7; --accent-gold: #059669; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Noto Naskh Arabic", "Tajawal", sans-serif؛ مع جداول وصناديق مفاهيم مرنة (max-width: 100%; overflow-wrap: anywhere;) تتكيف مع محرك Fluid Reflow Zoom.
+- التفاعلات:
+  1) تسجيل اسم الطالب/المتعلم في بداية الكتاب ومتابعة نسبة إتقانه.
+  2) بطاقات استذكار سريعة (Flashcards - .flip-card) للمصطلحات والقواعد الأساسية (السؤال على الوجه الأول والجواب على الوجه الخلفي).
+  3) ملخص نقاط ذكي + اختبار تقييمي تفاعلي (.quiz-option) في نهاية كل وحدة دراسية مع تصحيح فوري، ودفتر ملاحظات دراسية محفوظ في localStorage.
+```
+
+---
+
+### ١٠. كتب بناء الذات وتطوير الشخصية (`Self-Development & Growth Books Prompt`)
+- **الطابع البصري:** ملهم، صافٍ، يجمع بين الأخضر الزيتوني الهادئ والذهبي الدافئ والورق العاجي.
+- **الأمر الجاهز للنسخ:**
+
+```text
+صمّم الملف النصي المرفق ككتاب تفاعلي لبناء الذات وتطوير الشخصية بصيغة HTML واحد لمنصة "مكتبتي":
+- لوحة الألوان في :root:
+  --bg-primary: #F7F8F4; --bg-card: #FFFFFF; --text-main: #1E2621; --text-muted: #526358; --accent-rose: #0F766E; --accent-gold: #D97706; --reader-font: 1; --reader-font-size: 100%;
+- الخطوط: "Amiri", "Tajawal", serif؛ بتصميم متدفق متجاوب (Fluid Reflow) يضمن إعادة ترتيب جميع البطاقات والتمارين بجمال عند أي تكبير.
+- التفاعلات:
+  1) ميثاق البداية الشخصي باسم القارئ/القارئة يُحفظ في localStorage.
+  2) بطاقات "تحويل القناعات" القابلة للقلب (.flip-card: العادة القديمة على الوجه الأول والعادة الإيجابية البديلة على الوجه الخلفي).
+  3) تمارين كتابية للتطبيق العملي ومتتبع عادات (محفوظة في localStorage) + مقياس وعي تفاعلي (.quiz-option) في ختام كل فصل.
+```
+
+---
+
+## ٥. القالب المرجعي المتوافق مع `Fluid Reflow Zoom` و `4-Corner Page-Curl`
 
 ```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>عنوان الكتاب الفاخر</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عنوان الكتاب التفاعلي الفاخر</title>
   <style>
     :root {
       --bg-primary: #FBF7F0;
@@ -217,23 +278,17 @@ const BOOK_DATA = {
       --accent-rose: #9E3B5A;
       --accent-gold: #C49148;
       --border-ornate: rgba(196, 145, 72, 0.35);
+      --reader-font: 1;
+      --reader-font-size: 100%;
       --font-scale: 1;
-    }
-
-    [data-theme="night"] {
-      --bg-primary: #121016;
-      --bg-card: #1B1822;
-      --text-main: #F5EFE6;
-      --text-muted: #B8A99A;
-      --accent-rose: #D96B8A;
-      --accent-gold: #E2B05E;
-      --border-ornate: rgba(226, 176, 94, 0.28);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -241,12 +296,10 @@ const BOOK_DATA = {
       width: 100%;
       height: 100%;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
       background: var(--bg-primary);
       color: var(--text-main);
-      font-family: "Amiri", "Traditional Arabic", "Noto Naskh Arabic", "Geeza Pro", serif;
-      user-select: none;
-      -webkit-user-select: none;
+      font-family: "Amiri", "Noto Naskh Arabic", serif;
     }
 
     .app {
@@ -258,49 +311,8 @@ const BOOK_DATA = {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 8px 10px;
+      padding: clamp(6px, 2vw, 12px);
       gap: 6px;
-    }
-
-    .top-bar {
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-ornate);
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-
-    .top-bar-title {
-      font-size: 0.92rem;
-      font-weight: 700;
-      color: var(--accent-rose);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 48%;
-    }
-
-    .top-bar-actions {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .icon-btn {
-      height: 30px;
-      min-width: 30px;
-      padding: 0 7px;
-      border-radius: 8px;
-      border: 1px solid var(--border-ornate);
-      background: transparent;
-      color: var(--text-main);
-      font-size: 0.82rem;
-      font-weight: 700;
-      cursor: pointer;
     }
 
     .page-canvas {
@@ -309,228 +321,48 @@ const BOOK_DATA = {
       background: var(--bg-card);
       border: 1.5px solid var(--border-ornate);
       border-radius: 18px;
-      padding: 14px 16px;
+      padding: clamp(12px, 3.5vw, 20px);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.05);
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px dashed var(--border-ornate);
-      padding-bottom: 6px;
-      margin-bottom: 8px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      flex-shrink: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .page-body {
       flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      font-size: calc(1.14rem * var(--font-scale));
+      font-size: calc(clamp(1.05rem, 2.8vw, 1.2rem) * var(--reader-font, 1));
       line-height: 1.88;
       text-align: justify;
-      padding: 4px 2px;
     }
 
-    .page-body h1, .page-body h2 {
-      color: var(--accent-rose);
-      text-align: center;
-      margin-bottom: 10px;
-      line-height: 1.45;
-    }
-
-    .page-body p {
-      margin-bottom: 10px;
-    }
-
-    .quote-box {
-      border-right: 3px solid var(--accent-gold);
-      background: rgba(196, 145, 72, 0.08);
-      padding: 10px 12px;
-      border-radius: 10px;
-      margin: 8px 0;
-      font-style: italic;
-    }
-
-    .bottom-nav-dock {
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-ornate);
+    .flip-card {
+      width: 100%;
+      padding: 0.9em 1.1em;
       border-radius: 12px;
-      flex-shrink: 0;
-    }
-
-    .nav-btn {
-      height: 32px;
-      padding: 0 14px;
-      border-radius: 9px;
-      border: 1px solid var(--border-ornate);
-      background: var(--accent-rose);
-      color: #FFFFFF;
-      font-weight: 700;
-      font-size: 0.85rem;
+      border: 1px solid var(--accent-gold);
+      background: rgba(196, 145, 72, 0.08);
       cursor: pointer;
+      margin: 0.6em 0;
     }
 
-    .nav-btn:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
-
-    .page-counter {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--accent-gold);
+    .quiz-option {
+      display: block;
+      width: 100%;
+      text-align: right;
+      padding: 0.7em 1em;
+      margin: 0.4em 0;
+      border-radius: 10px;
+      border: 1px solid var(--border-ornate);
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-size: 0.95em;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="app" id="appRoot">
-    <header class="top-bar">
-      <div class="top-bar-title" id="topBarTitle">عنوان الكتاب</div>
-      <div class="top-bar-actions">
-        <button class="icon-btn" id="fontDecBtn" title="تصغير الخط">A-</button>
-        <button class="icon-btn" id="fontIncBtn" title="تكبير الخط">A+</button>
-        <button class="icon-btn" id="themeBtn" title="الوضع الليلي">🌙</button>
-      </div>
-    </header>
-
-    <main class="page-canvas" id="pageCanvas">
-      <div class="page-header">
-        <span id="chapterLabel">المقدمة</span>
-        <span id="pageHeaderNum">صفحة ١</span>
-      </div>
-      <article class="page-body" id="pageBody"></article>
-    </main>
-
-    <footer class="bottom-nav-dock">
-      <button class="nav-btn" id="prevBtn">السابق</button>
-      <span class="page-counter" id="pageCounter">1 / 1</span>
-      <button class="nav-btn" id="nextBtn">التالي</button>
-    </footer>
-  </div>
-
-  <script>
-    const STORAGE_KEY = "maktabati_template_book_v1";
-    const BOOK_DATA = {
-      title: "عنوان الكتاب الفاخر",
-      subtitle: "طبعة رقمية تفاعلية",
-      author: "اسم المؤلف",
-      pages: [
-        {
-          chapterTitle: "الغلاف",
-          title: "عنوان الكتاب الفاخر",
-          content: "<p style='text-align:center'>طبعة رقمية تفاعلية موزونة الصفحات لمنصة مكتبتي</p>"
-        },
-        {
-          chapterTitle: "الفصل الأول",
-          title: "مدخل الكتاب",
-          content: "<p>هنا يوضع نص الصفحة الأولى بالتشكيل الكامل والعناية البصرية الفائقة.</p>"
-        }
-      ]
-    };
-
-    let state = { currentPage: 0, fontScale: 1, theme: "paper" };
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (saved) state = Object.assign(state, saved);
-    } catch (_) {}
-
-    function saveState() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
-    }
-
-    function applyThemeAndFont() {
-      document.documentElement.setAttribute("data-theme", state.theme);
-      document.documentElement.style.setProperty("--font-scale", String(state.fontScale));
-    }
-
-    function renderPage() {
-      const total = BOOK_DATA.pages.length;
-      state.currentPage = Math.max(0, Math.min(total - 1, state.currentPage));
-      const p = BOOK_DATA.pages[state.currentPage];
-
-      document.getElementById("topBarTitle").textContent = BOOK_DATA.title;
-      document.getElementById("chapterLabel").textContent = p.chapterTitle || BOOK_DATA.title;
-      document.getElementById("pageHeaderNum").textContent = "صفحة " + (state.currentPage + 1);
-      document.getElementById("pageBody").innerHTML =
-        (p.title ? "<h2>" + p.title + "</h2>" : "") + (p.content || "");
-      document.getElementById("pageCounter").textContent = (state.currentPage + 1) + " / " + total;
-      document.getElementById("prevBtn").disabled = state.currentPage <= 0;
-      document.getElementById("nextBtn").disabled = state.currentPage >= total - 1;
-      saveState();
-    }
-
-    window.goToPage = function(index) {
-      state.currentPage = Number(index) || 0;
-      renderPage();
-    };
-    window.nextPage = function() {
-      if (state.currentPage < BOOK_DATA.pages.length - 1) {
-        state.currentPage++;
-        renderPage();
-      }
-    };
-    window.prevPage = function() {
-      if (state.currentPage > 0) {
-        state.currentPage--;
-        renderPage();
-      }
-    };
-
-    document.getElementById("prevBtn").addEventListener("click", window.prevPage);
-    document.getElementById("nextBtn").addEventListener("click", window.nextPage);
-    document.getElementById("fontIncBtn").addEventListener("click", function() {
-      state.fontScale = Math.min(1.35, +(state.fontScale + 0.08).toFixed(2));
-      applyThemeAndFont();
-      saveState();
-    });
-    document.getElementById("fontDecBtn").addEventListener("click", function() {
-      state.fontScale = Math.max(0.82, +(state.fontScale - 0.08).toFixed(2));
-      applyThemeAndFont();
-      saveState();
-    });
-    document.getElementById("themeBtn").addEventListener("click", function() {
-      state.theme = state.theme === "night" ? "paper" : "night";
-      applyThemeAndFont();
-      saveState();
-    });
-
-    document.addEventListener("keydown", function(e) {
-      if (e.key === "ArrowLeft") window.nextPage();
-      else if (e.key === "ArrowRight") window.prevPage();
-    });
-
-    applyThemeAndFont();
-    renderPage();
-  </script>
+  <!-- محتوى الكتاب التفاعلي -->
 </body>
 </html>
 ```
-
----
-
-## ٨. قائمة الفحص النهائية قبل تصدير الكتاب (`Pre-Flight Checklist`)
-
-قبل استيراد الكتاب إلى تطبيق **«مكتبتي»**، تحقق من النقاط الست التالية:
-- [x] `<meta charset="utf-8">` موجود في أول سطور `<head>`.
-- [x] متغيرات `:root` الثلاثة (`--bg-primary`, `--accent-gold`, `--accent-rose`) معرّفة بوضوح بصيغة Hex (`#RRGGBB`).
-- [x] استخدام `100vh` و `100%` لتنسيق الشاشة الرئيسية `.app` بدلاً من الاعتماد المنفرد على `dvh`.
-- [x] كامل النص الأصلي مدرج بأمانة دون أي حذف أو اختصار (`Zero-Omission`).
-- [x] كل صفحة تحتوي على نص موزون (`70–110` كلمات) ينتهي بنهاية جملة تامة.
-- [x] حفظ واسترجاع الصفحة الحالية وحجم الخط والوضع اللوني عبر `localStorage`.

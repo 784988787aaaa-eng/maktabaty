@@ -70,6 +70,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -120,6 +121,12 @@ fun LibraryScreen(
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val pendingMultiBookProposal by viewModel.pendingMultiBookProposal.collectAsStateWithLifecycle()
     val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
+
+    LaunchedEffect(allRawBooks.size) {
+        if (allRawBooks.isNotEmpty()) {
+            viewModel.ensureLibraryCoversAndPalettes()
+        }
+    }
 
     var isSearchActive by remember { mutableStateOf(false) }
     var showCreateShelfDialog by remember { mutableStateOf(false) }

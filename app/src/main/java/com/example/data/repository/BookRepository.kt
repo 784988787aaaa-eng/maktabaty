@@ -77,16 +77,22 @@ class BookRepository(
             }
         }
 
-        // Auto-heal any legacy user-imported books on disk only if they haven't been upgraded to V4 yet
+        // Auto-heal any legacy user-imported books on disk and ensure true palettes & real cover snapshots
+        ensureBooksCoversAndTruePalettes()
+    }
+
+    suspend fun ensureBooksCoversAndTruePalettes() = withContext(Dispatchers.IO) {
+        val booksRoot = File(context.filesDir, "books")
         val remainingBooks = bookDao.getAllBooks().first()
         for (userBook in remainingBooks) {
             if (!SampleBooksProvider.isDefaultOrSampleBookId(userBook.id)) {
-                val entryFile = File(File(booksRoot, userBook.folderPath), userBook.entryHtmlPath)
+                val bookDir = File(booksRoot, userBook.folderPath)
+                val entryFile = File(bookDir, userBook.entryHtmlPath)
                 if (entryFile.isFile) {
                     runCatching {
                         val raw = entryFile.readText(Charsets.UTF_8)
-                        if (!raw.contains("__maktabatiV4Initialized")) {
-                            val meta = HtmlBookParser.parseContent(raw, userBook.title)
+                        val meta = HtmlBookParser.parseContent(raw, userBook.title)
+                        if (!raw.contains("__maktabatiV5Initialized")) {
                             val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, meta.pageCount)
                             entryFile.writeText(healedHtml, Charsets.UTF_8)
                             if (meta.pageCount != userBook.pageCount || meta.tableOfContents.isNotEmpty()) {
@@ -96,6 +102,36 @@ class BookRepository(
                                     tocJson = HtmlBookParser.tocToJson(meta.tableOfContents)
                                 )
                             }
+                        }
+
+                        // Refresh true palette if legacy default colors were stored previously
+                        if (userBook.bgPrimaryHex != meta.bgPrimaryHex ||
+                            userBook.accentRoseHex != meta.accentRoseHex ||
+                            userBook.accentGoldHex != meta.accentGoldHex ||
+                            userBook.coverGradientStart != meta.coverGradientStart ||
+                            userBook.coverGradientEnd != meta.coverGradientEnd
+                        ) {
+                            bookDao.updateBookMetadataAndStyle(
+                                id = userBook.id,
+                                title = userBook.title,
+                                subtitle = userBook.subtitle,
+                                author = userBook.author,
+                                coverGradientStart = meta.coverGradientStart,
+                                coverGradientEnd = meta.coverGradientEnd,
+                                bgPrimaryHex = meta.bgPrimaryHex,
+                                accentGoldHex = meta.accentGoldHex,
+                                accentRoseHex = meta.accentRoseHex
+                            )
+                        }
+
+                        // Generate cover_snapshot.png if not present yet and book has a cover page or cover image
+                        if (!com.example.data.importer.HtmlCoverSnapshotGenerator.hasSavedCoverSnapshot(bookDir)) {
+                            com.example.data.importer.HtmlCoverSnapshotGenerator.ensureCoverSnapshotForBook(
+                                context = context,
+                                bookDir = bookDir,
+                                entryHtmlFile = entryFile,
+                                fallbackTitle = userBook.title
+                            )
                         }
                     }
                 }
@@ -247,7 +283,13 @@ class BookRepository(
         accentRoseHex: String
     ) = withContext(Dispatchers.IO) {
         val startColor = HtmlBookParser.parseHexToColorLong(bgPrimaryHex, 0xFF1E293B)
-        val endColor = HtmlBookParser.parseHexToColorLong(accentRoseHex, 0xFF0F172A)
+        val roseColor = HtmlBookParser.parseHexToColorLong(accentRoseHex, 0xFF5B3A29)
+        val isLight = HtmlBookParser.computeColorLuminance(startColor) > 0.48f
+        val endColor = if (isLight) {
+            HtmlBookParser.blendColorLongs(startColor, roseColor, 0.15f)
+        } else {
+            HtmlBookParser.blendColorLongs(startColor, roseColor, 0.45f)
+        }
         bookDao.updateBookMetadataAndStyle(
             id = bookId,
             title = title,
@@ -352,7 +394,7 @@ class BookRepository(
     private fun zipDirectoryContents(sourceDir: File, targetZipFile: File) {
         ZipOutputStream(BufferedOutputStream(FileOutputStream(targetZipFile))).use { zos ->
             sourceDir.walkTopDown().forEach { file ->
-                if (file.isFile) {
+                if (file.isFile && file.name != com.example.data.importer.HtmlCoverSnapshotGenerator.COVER_SNAPSHOT_FILENAME) {
                     val relPath = file.relativeTo(sourceDir).path.replace("\\", "/")
                     val entry = ZipEntry(relPath)
                     zos.putNextEntry(entry)

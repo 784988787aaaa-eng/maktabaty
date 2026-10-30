@@ -444,9 +444,208 @@ class ExampleRobolectricTest {
         Unit
     }
 
+    @Test
+    fun testFluidReflowZoomAndLayoutDistortionGuardAnd4CornerPageCurlEngine() {
+        val rawHtml = """<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كتاب تفاعلي</title></head><body><main class="page-canvas" id="pageCanvas"><div class="page-body">نص متدفق</div></main></body></html>"""
+        val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fluid_v5", 40)
+
+        // 1. Verify Fluid Reflow Zoom Engine
+        assertTrue(injected.contains("--reader-font"))
+        assertTrue(injected.contains("--reader-font-size"))
+        assertTrue(injected.contains("__maktabatiSetFluidZoom"))
+        assertTrue(injected.contains("overflow-x: hidden !important"))
+        assertTrue(injected.contains("max-width: 100% !important"))
+        assertTrue(injected.contains("100% الوضع المثالي"))
+
+        // 2. Verify MaktabatiLayoutGuard & Smart Warning Toast
+        assertTrue(injected.contains("MaktabatiLayoutGuard"))
+        assertTrue(injected.contains("inspectAndHeal"))
+        assertTrue(injected.contains("el.scrollWidth > canvasWidth + 8"))
+        assertTrue(injected.contains("تنبيه: وصلتَ لأقصى حجم يحفظ جمال وتناسق عناصر هذا الكتاب — اضغط (100%) للعودة للعرض المثالي"))
+
+        // 3. Verify 4-Corner Interactive Page-Curl Physics Engine
+        assertTrue(injected.contains("MaktabatiPageCurlEngine"))
+        assertTrue(injected.contains("TOP_RIGHT"))
+        assertTrue(injected.contains("BOTTOM_RIGHT"))
+        assertTrue(injected.contains("TOP_LEFT"))
+        assertTrue(injected.contains("BOTTOM_LEFT"))
+        assertTrue(injected.contains("maktabati-curl-backside"))
+        assertTrue(injected.contains("maktabati-curl-shadow"))
+        assertTrue(injected.contains("playPaperFlipSound"))
+        assertTrue(injected.contains(".flip-card"))
+        assertTrue(injected.contains(".quiz-option"))
+    }
+
+    @Test
+    fun testBookProductionMasterGuideExistsAndContainsAllPrompts() {
+        val rootGuide = File("../BOOK_PRODUCTION_MASTER_GUIDE.md").let {
+            if (it.exists()) it else File("BOOK_PRODUCTION_MASTER_GUIDE.md")
+        }
+        assertTrue("BOOK_PRODUCTION_MASTER_GUIDE.md must exist in project root", rootGuide.exists())
+        val content = rootGuide.readText(Charsets.UTF_8)
+
+        assertTrue(content.contains("Fluid Reflow Zoom"))
+        assertTrue(content.contains("4-Corner Page-Curl"))
+        assertTrue(content.contains("--reader-font"))
+        assertTrue(content.contains("الشباب"))
+        assertTrue(content.contains("الفتيات"))
+        assertTrue(content.contains("النساء"))
+        assertTrue(content.contains("العازبات"))
+        assertTrue(content.contains("المتزوجات"))
+        assertTrue(content.contains("الرجال"))
+        assertTrue(content.contains("الكتب الإسلامية"))
+        assertTrue(content.contains("المراهقون"))
+        assertTrue(content.contains("الكتب التعليمية"))
+        assertTrue(content.contains("بناء الذات"))
+    }
+
+    @Test
+    fun testTruePaletteExtractorLightAndAlternativeCssVariables() {
+        // 1. Light/Creamy book using --paper-bg, --primary, --gold
+        val creamyBookHtml = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="utf-8">
+                <title>كتاب الصباح الكريمي</title>
+                <style>
+                    :root {
+                        --paper-bg: #FAF2EE;
+                        --primary: #7C3F4E;
+                        --gold: #C69249;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="cover-page">
+                    <h1 class="cover-title">كتاب الصباح الكريمي</h1>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val creamyMeta = HtmlBookParser.parseContent(creamyBookHtml, "افتراضي")
+        assertEquals("#FAF2EE", creamyMeta.bgPrimaryHex)
+        assertEquals("#7C3F4E", creamyMeta.accentRoseHex)
+        assertEquals("#C69249", creamyMeta.accentGoldHex)
+        assertTrue("Book with .cover-page must detect hasCoverPage = true", creamyMeta.hasCoverPage)
+        assertTrue(
+            "Light cover gradient end must stay light and never be darkened to navy",
+            HtmlBookParser.computeColorLuminance(creamyMeta.coverGradientEnd) > 0.48f
+        )
+
+        // 2. Alternative CSS variables (--bg, --brand, --ornament)
+        val altVarsHtml = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <style>
+                    :root {
+                        --bg: #FDF8F5;
+                        --brand: #3E5C47;
+                        --ornament: #B8860B;
+                    }
+                </style>
+            </head>
+            <body>
+                <article><p>محتوى بدون غلاف مخصص</p></article>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val altMeta = HtmlBookParser.parseContent(altVarsHtml, "كتاب بديل")
+        assertEquals("#FDF8F5", altMeta.bgPrimaryHex)
+        assertEquals("#3E5C47", altMeta.accentRoseHex)
+        assertEquals("#B8860B", altMeta.accentGoldHex)
+        assertTrue("Must not force crimson #E11D48", altMeta.accentRoseHex != "#E11D48")
+        assertTrue("Plain article without cover classes/types must detect hasCoverPage = false", !altMeta.hasCoverPage)
+
+        // 3. Fallback to body background-color, h1 color, and SVG stroke/fill
+        val bodyAndSvgHtml = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <style>
+                    body { background-color: #FBF7F0; }
+                    h1 { color: #2C4A3E; }
+                </style>
+            </head>
+            <body>
+                <div data-page="0">
+                    <svg viewBox="0 0 100 100"><path stroke="#D4AF37" fill="none" d="M10 10 H 90"/></svg>
+                    <h1>عنوان بالغلاف</h1>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val svgMeta = HtmlBookParser.parseContent(bodyAndSvgHtml, "كتاب SVG")
+        assertEquals("#FBF7F0", svgMeta.bgPrimaryHex)
+        assertEquals("#2C4A3E", svgMeta.accentRoseHex)
+        assertEquals("#D4AF37", svgMeta.accentGoldHex)
+        assertTrue("data-page=0 must detect hasCoverPage = true", svgMeta.hasCoverPage)
+    }
+
+    @Test
+    fun testCoverSnapshotGeneratorCreatesSnapshotOnlyWhenCoverExists() = kotlinx.coroutines.runBlocking {
+        val tempRoot = File(context.cacheDir, "test_cover_snapshots").apply {
+            deleteRecursively()
+            mkdirs()
+        }
+
+        // Case 1: Book with a designed cover page -> generates cover_snapshot.png
+        val bookWithCoverDir = File(tempRoot, "book_with_cover").apply { mkdirs() }
+        val coverHtmlFile = File(bookWithCoverDir, "index.html")
+        coverHtmlFile.writeText(
+            """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <title>خيمة في القلب</title>
+                <style>:root { --paper-bg: #FAF2EE; --primary: #6D2E46; --gold: #C59B27; }</style>
+            </head>
+            <body>
+                <div class="cover-page"><h1 class="cover-title">خيمة في القلب</h1></div>
+            </body>
+            </html>
+            """.trimIndent(),
+            Charsets.UTF_8
+        )
+
+        val generated = com.example.data.importer.HtmlCoverSnapshotGenerator.ensureCoverSnapshotForBook(
+            context = context,
+            bookDir = bookWithCoverDir,
+            entryHtmlFile = coverHtmlFile,
+            fallbackTitle = "خيمة في القلب"
+        )
+        assertTrue("Should generate cover_snapshot.png for book with cover page", generated)
+        assertTrue(File(bookWithCoverDir, "cover_snapshot.png").exists())
+
+        // Case 2: Book without any cover page or cover image -> does NOT generate cover_snapshot.png
+        val bookWithoutCoverDir = File(tempRoot, "book_no_cover").apply { mkdirs() }
+        val noCoverHtmlFile = File(bookWithoutCoverDir, "index.html")
+        noCoverHtmlFile.writeText(
+            """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head><title>مذكرة نصية</title></head>
+            <body><p>فقرة نصية عادية بدون صفحة غلاف.</p></body>
+            </html>
+            """.trimIndent(),
+            Charsets.UTF_8
+        )
+
+        val generatedNoCover = com.example.data.importer.HtmlCoverSnapshotGenerator.ensureCoverSnapshotForBook(
+            context = context,
+            bookDir = bookWithoutCoverDir,
+            entryHtmlFile = noCoverHtmlFile,
+            fallbackTitle = "مذكرة نصية"
+        )
+        assertTrue("Should NOT generate cover_snapshot.png when book has no cover page", !generatedNoCover)
+        assertTrue(!File(bookWithoutCoverDir, "cover_snapshot.png").exists())
+
+        tempRoot.deleteRecursively()
+        Unit
+    }
+
 }
-
-
-
-
-

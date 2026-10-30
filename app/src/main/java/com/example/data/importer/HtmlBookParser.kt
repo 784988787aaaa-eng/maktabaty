@@ -21,7 +21,16 @@ data class ParsedHtmlMetadata(
     val coverGradientEnd: Long,
     val hasExternalCss: Boolean,
     val hasExternalJs: Boolean,
-    val tableOfContents: List<TocEntry>
+    val tableOfContents: List<TocEntry>,
+    val hasCoverPage: Boolean = true
+)
+
+data class TrueBookPalette(
+    val bgPrimaryHex: String,
+    val accentRoseHex: String,
+    val accentGoldHex: String,
+    val coverGradientStart: Long,
+    val coverGradientEnd: Long
 )
 
 object HtmlBookParser {
@@ -49,10 +58,65 @@ object HtmlBookParser {
     private val ARRAY_START_REGEX = Regex("[\"']?(?:pages|chapters|slides)[\"']?\\s*:\\s*\\[")
     private val STRIP_TAGS_REGEX = Regex("<.*?>")
 
-    // CSS :root Variable Patterns
-    private val ACCENT_ROSE_PATTERN = Pattern.compile("--(?:accent-rose|accent-peach)\\s*:\\s*(#[0-9a-fA-F]{3,8})")
-    private val ACCENT_GOLD_PATTERN = Pattern.compile("--accent-gold\\s*:\\s*(#[0-9a-fA-F]{3,8})")
-    private val BG_PRIMARY_PATTERN = Pattern.compile("--(?:bg-primary|bg-secondary)\\s*:\\s*(#[0-9a-fA-F]{3,8})")
+    // Ordered CSS variable candidates for True Palette Extraction
+    private val BG_VAR_NAMES = listOf(
+        "bg-primary",
+        "paper-bg",
+        "card-bg",
+        "bg-secondary",
+        "bg",
+        "surface",
+        "background"
+    )
+
+    private val PRIMARY_ROSE_VAR_NAMES = listOf(
+        "accent-rose",
+        "primary",
+        "accent",
+        "brand",
+        "rose",
+        "main-color",
+        "heading-color"
+    )
+
+    private val SECONDARY_GOLD_VAR_NAMES = listOf(
+        "accent-gold",
+        "gold",
+        "secondary",
+        "border-color",
+        "ornament",
+        "accent-peach",
+        "accent-rose-light"
+    )
+
+    private val BODY_OR_CANVAS_BG_REGEX = Regex(
+        """(?:body|\.page-canvas|\.cover-page|\.page|html)\s*\{[^}]*?\bbackground(?:-color)?\s*:\s*(#[0-9a-fA-F]{3,8})\b""",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+    )
+
+    private val H1_OR_TITLE_COLOR_REGEX = Regex(
+        """(?:h1|\.cover-title|\.book-title)\s*\{[^}]*?(?<![-\w])color\s*:\s*(#[0-9a-fA-F]{3,8})\b""",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+    )
+
+    private val SVG_STROKE_OR_FILL_REGEX = Regex(
+        """<(?:svg|path|circle|rect|polygon|g)\b[^>]*?\b(?:stroke|fill)\s*=\s*["'](#[0-9a-fA-F]{3,8})["']""",
+        RegexOption.IGNORE_CASE
+    )
+
+    private val STYLE_BLOCK_REGEX = Regex(
+        """<style\b[^>]*>(.*?)</style>""",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+    )
+
+    private val ANY_HEX_COLOR_REGEX = Regex("""#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b""")
+
+    // Cover Detection Regexes
+    private val COVER_TYPE_JS_REGEX = Regex("""(?<![a-zA-Z0-9_])type\s*:\s*["'`]cover["'`]""", RegexOption.IGNORE_CASE)
+    private val COVER_DOM_CLASS_REGEX = Regex("""class\s*=\s*["'][^"']*\b(?:cover|cover-page|layout-cover|cover-title|book-cover)\b[^"']*["']""", RegexOption.IGNORE_CASE)
+    private val COVER_DATA_PAGE_ZERO_REGEX = Regex("""\bdata-page\s*=\s*["']0["']""", RegexOption.IGNORE_CASE)
+    private val COVER_IMG_TAG_REGEX = Regex("""<img\b[^>]*class\s*=\s*["'][^"']*cover[^"']*["'][^>]*>""", RegexOption.IGNORE_CASE)
+    private val OG_IMAGE_META_REGEX = Regex("""<meta\b[^>]*property\s*=\s*["']og:image["'][^>]*content\s*=\s*["']([^"']+)["']""", RegexOption.IGNORE_CASE)
 
     fun isValidHtmlContent(content: String): Boolean {
         val trimmed = content.trim()
@@ -94,6 +158,150 @@ object HtmlBookParser {
 
     fun parseQuickHeader(content: String, fallbackTitle: String): ParsedHtmlMetadata {
         return parseContent(content, fallbackTitle, quickMode = true)
+    }
+
+    fun normalizeHexColor(raw: String): String? {
+        val cleaned = raw.trim().removePrefix("#")
+        return when (cleaned.length) {
+            3 -> {
+                val r = cleaned[0]
+                val g = cleaned[1]
+                val b = cleaned[2]
+                "#$r$r$g$g$b$b".uppercase()
+            }
+            6 -> "#${cleaned.uppercase()}"
+            8 -> "#${cleaned.substring(cleaned.length - 6).uppercase()}"
+            else -> null
+        }
+    }
+
+    private fun findCssVarHex(sample: String, varNames: List<String>): String? {
+        for (name in varNames) {
+            val regex = Regex("""--${Regex.escape(name)}\s*:\s*(#[0-9a-fA-F]{3,8})\b""", RegexOption.IGNORE_CASE)
+            val match = regex.find(sample)?.groupValues?.get(1)
+            if (match != null) {
+                val normalized = normalizeHexColor(match)
+                if (normalized != null) return normalized
+            }
+        }
+        return null
+    }
+
+    fun computeColorLuminance(colorLong: Long): Float {
+        val r = ((colorLong shr 16) and 0xFF) / 255f
+        val g = ((colorLong shr 8) and 0xFF) / 255f
+        val b = (colorLong and 0xFF) / 255f
+        return 0.2126f * r + 0.7152f * g + 0.0722f * b
+    }
+
+    fun blendColorLongs(c1: Long, c2: Long, ratioC2: Float): Long {
+        val t = ratioC2.coerceIn(0f, 1f)
+        val r1 = (c1 shr 16) and 0xFF
+        val g1 = (c1 shr 8) and 0xFF
+        val b1 = c1 and 0xFF
+        val r2 = (c2 shr 16) and 0xFF
+        val g2 = (c2 shr 8) and 0xFF
+        val b2 = c2 and 0xFF
+        val r = (r1 * (1f - t) + r2 * t).toLong().coerceIn(0L, 255L)
+        val g = (g1 * (1f - t) + g2 * t).toLong().coerceIn(0L, 255L)
+        val b = (b1 * (1f - t) + b2 * t).toLong().coerceIn(0L, 255L)
+        return (0xFFL shl 24) or (r shl 16) or (g shl 8) or b
+    }
+
+    /**
+     * Extracts the true color palette from `:root`, `body`, `.page-canvas`, `h1`, `<style>`, and `<svg>`
+     * without forcing default crimson (`#E11D48`) or darkening light/creamy backgrounds.
+     */
+    fun extractTruePalette(content: String): TrueBookPalette {
+        val sample = if (content.length > 45000) content.substring(0, 45000) else content
+        val styleContent = STYLE_BLOCK_REGEX.findAll(sample).joinToString("\n") { it.groupValues[1] }.ifBlank { sample }
+
+        // 1. Background Color (bgPrimaryHex)
+        var bgHex = findCssVarHex(styleContent, BG_VAR_NAMES)
+            ?: findCssVarHex(sample, BG_VAR_NAMES)
+            ?: BODY_OR_CANVAS_BG_REGEX.find(styleContent)?.groupValues?.get(1)?.let { normalizeHexColor(it) }
+            ?: BODY_OR_CANVAS_BG_REGEX.find(sample)?.groupValues?.get(1)?.let { normalizeHexColor(it) }
+
+        // 2. Primary / Rose / Heading Color (accentRoseHex)
+        var roseHex = findCssVarHex(styleContent, PRIMARY_ROSE_VAR_NAMES)
+            ?: findCssVarHex(sample, PRIMARY_ROSE_VAR_NAMES)
+            ?: H1_OR_TITLE_COLOR_REGEX.find(styleContent)?.groupValues?.get(1)?.let { normalizeHexColor(it) }
+            ?: H1_OR_TITLE_COLOR_REGEX.find(sample)?.groupValues?.get(1)?.let { normalizeHexColor(it) }
+
+        // 3. Secondary / Gold / Ornament Color (accentGoldHex)
+        var goldHex = findCssVarHex(styleContent, SECONDARY_GOLD_VAR_NAMES)
+            ?: findCssVarHex(sample, SECONDARY_GOLD_VAR_NAMES)
+
+        // 4. Fallback to SVG stroke/fill or <style> hex colors if any slot is still missing
+        if (bgHex == null || roseHex == null || goldHex == null) {
+            val svgColors = SVG_STROKE_OR_FILL_REGEX.findAll(sample)
+                .mapNotNull { normalizeHexColor(it.groupValues[1]) }
+                .filter { it != "#FFFFFF" && it != "#000000" && it != "#NONE" }
+                .distinct()
+                .toList()
+
+            val styleColors = ANY_HEX_COLOR_REGEX.findAll(styleContent)
+                .mapNotNull { normalizeHexColor(it.value) }
+                .distinct()
+                .toList()
+
+            if (bgHex == null) {
+                bgHex = styleColors.firstOrNull { hex ->
+                    val lum = computeColorLuminance(parseHexToColorLong(hex, 0xFFFAF6F0))
+                    lum > 0.80f || lum < 0.22f
+                } ?: "#1E293B"
+            }
+
+            if (roseHex == null) {
+                val candidateFromSvgOrStyle = (svgColors + styleColors).firstOrNull { hex ->
+                    hex != bgHex && hex != "#FFFFFF" && hex != "#000000"
+                }
+                roseHex = candidateFromSvgOrStyle ?: "#5B3A29"
+            }
+
+            if (goldHex == null) {
+                val candidateGold = (svgColors + styleColors).firstOrNull { hex ->
+                    hex != bgHex && hex != roseHex && hex != "#FFFFFF" && hex != "#000000"
+                }
+                goldHex = candidateGold ?: "#D97706"
+            }
+        }
+
+        val finalBgHex = bgHex ?: "#1E293B"
+        val finalRoseHex = roseHex ?: "#5B3A29"
+        val finalGoldHex = goldHex ?: "#D97706"
+
+        val startColor = parseHexToColorLong(finalBgHex, 0xFF1E293B)
+        val roseLong = parseHexToColorLong(finalRoseHex, 0xFF5B3A29)
+        val isLightBg = computeColorLuminance(startColor) > 0.48f
+
+        // Never darken light/creamy covers with dark navy 0xFF0F172A!
+        val endColor = if (isLightBg) {
+            blendColorLongs(startColor, roseLong, 0.15f)
+        } else {
+            blendColorLongs(startColor, roseLong, 0.45f)
+        }
+
+        return TrueBookPalette(
+            bgPrimaryHex = finalBgHex,
+            accentRoseHex = finalRoseHex,
+            accentGoldHex = finalGoldHex,
+            coverGradientStart = startColor,
+            coverGradientEnd = endColor
+        )
+    }
+
+    fun detectHasCoverPage(content: String, headSample: String, bdHeaderSlice: String): Boolean {
+        val earlySlice = if (content.length > 35000) content.substring(0, 35000) else content
+        if (bdHeaderSlice.isNotEmpty() && COVER_TYPE_JS_REGEX.containsMatchIn(bdHeaderSlice)) return true
+        if (COVER_TYPE_JS_REGEX.containsMatchIn(earlySlice)) return true
+        if (COVER_DOM_CLASS_REGEX.containsMatchIn(earlySlice)) return true
+        if (COVER_DATA_PAGE_ZERO_REGEX.containsMatchIn(earlySlice)) return true
+        if (COVER_IMG_TAG_REGEX.containsMatchIn(earlySlice)) return true
+        if (OG_IMAGE_META_REGEX.containsMatchIn(headSample)) return true
+        val firstChunk = if (content.length > 12000) content.substring(0, 12000) else content
+        if (firstChunk.contains("الغلاف")) return true
+        return false
     }
 
     fun parseContent(content: String, fallbackTitle: String, quickMode: Boolean = false): ParsedHtmlMetadata {
@@ -238,13 +446,9 @@ object HtmlBookParser {
             }
         }
 
-        // 5. Extract CSS :root Colors (--accent-rose, --accent-gold, --bg-primary)
-        val accentRoseHex = extractCssVar(headSample, ACCENT_ROSE_PATTERN) ?: "#E11D48"
-        val accentGoldHex = extractCssVar(headSample, ACCENT_GOLD_PATTERN) ?: "#D97706"
-        val bgPrimaryHex = extractCssVar(headSample, BG_PRIMARY_PATTERN) ?: "#1E293B"
-
-        val startColor = parseHexToColorLong(bgPrimaryHex, 0xFF1E293B)
-        val endColor = parseHexToColorLong(accentRoseHex, darkenColorLong(startColor))
+        // 5. Extract True Palette (preserving light/creamy and dark themes accurately)
+        val palette = extractTruePalette(content)
+        val hasCoverPage = detectHasCoverPage(content, headSample, bdHeaderSlice)
 
         val hasExternalCss = CSS_LINK_PATTERN.matcher(headSample).find() || STYLE_TAG_PATTERN.matcher(headSample).find()
         val hasExternalJs = bdStartIdx >= 0 || SCRIPT_PATTERN.matcher(headSample).find()
@@ -257,14 +461,15 @@ object HtmlBookParser {
             language = language,
             isRtl = isRtl,
             pageCount = pageCount,
-            accentRoseHex = accentRoseHex,
-            accentGoldHex = accentGoldHex,
-            bgPrimaryHex = bgPrimaryHex,
-            coverGradientStart = startColor,
-            coverGradientEnd = endColor,
+            accentRoseHex = palette.accentRoseHex,
+            accentGoldHex = palette.accentGoldHex,
+            bgPrimaryHex = palette.bgPrimaryHex,
+            coverGradientStart = palette.coverGradientStart,
+            coverGradientEnd = palette.coverGradientEnd,
             hasExternalCss = hasExternalCss,
             hasExternalJs = hasExternalJs,
-            tableOfContents = tocList
+            tableOfContents = tocList,
+            hasCoverPage = hasCoverPage
         )
     }
 

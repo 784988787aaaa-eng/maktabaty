@@ -6,7 +6,9 @@ import android.webkit.JavascriptInterface
 
 class MaktabatiJsBridge(
     private val totalBookPages: Int,
-    private val onPageProgressChanged: (page: Int, totalPages: Int, progress: Float) -> Unit
+    private val onPageProgressChanged: (page: Int, totalPages: Int, progress: Float) -> Unit,
+    private val onZoomChangedFromJs: ((zoomPercent: Int) -> Unit)? = null,
+    private val onLayoutDistortionDetected: ((warningMessage: String) -> Unit)? = null
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -17,6 +19,21 @@ class MaktabatiJsBridge(
         val prog = if (total <= 1) 1f else (clampedPage.toFloat() / total.toFloat()).coerceIn(0f, 1f)
         mainHandler.post {
             onPageProgressChanged(clampedPage, total, prog)
+        }
+    }
+
+    @JavascriptInterface
+    fun onZoomChanged(zoomPercent: Int) {
+        val clamped = zoomPercent.coerceIn(75, 200)
+        mainHandler.post {
+            onZoomChangedFromJs?.invoke(clamped)
+        }
+    }
+
+    @JavascriptInterface
+    fun onLayoutDistortionWarning(message: String) {
+        mainHandler.post {
+            onLayoutDistortionDetected?.invoke(message)
         }
     }
 }

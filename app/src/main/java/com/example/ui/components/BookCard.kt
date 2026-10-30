@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,8 +56,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.example.ui.theme.RoyalIndigo
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -64,8 +70,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.importer.HtmlBookParser
+import com.example.data.importer.HtmlCoverSnapshotGenerator
 import com.example.data.model.Book
+import com.example.ui.theme.RoyalIndigo
+import java.io.File
 
 fun getBookIcon(name: String): ImageVector {
     return when (name) {
@@ -86,20 +96,6 @@ fun parseSafeColor(hex: String, fallback: Color): Color {
     }
 }
 
-fun ensureRichCoverBase(bg: Color, rose: Color): Color {
-    val lum = 0.299f * bg.red + 0.587f * bg.green + 0.114f * bg.blue
-    return if (lum > 0.52f) {
-        Color(
-            red = (rose.red * 0.46f).coerceIn(0f, 1f),
-            green = (rose.green * 0.42f).coerceIn(0f, 1f),
-            blue = (rose.blue * 0.48f).coerceIn(0f, 1f),
-            alpha = 1f
-        )
-    } else {
-        bg
-    }
-}
-
 @Composable
 fun BookGridItem(
     book: Book,
@@ -112,13 +108,56 @@ fun BookGridItem(
     scaleFactor: Float = 1f,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val snapshotVersion by HtmlCoverSnapshotGenerator.snapshotVersion.collectAsStateWithLifecycle()
+    val coverBitmap = remember(book.id, book.folderPath, snapshotVersion) {
+        val snapshotFile = File(File(context.filesDir, "books/${book.folderPath}"), "cover_snapshot.png")
+        if (snapshotFile.isFile && snapshotFile.length() > 128L) {
+            runCatching { BitmapFactory.decodeFile(snapshotFile.absolutePath)?.asImageBitmap() }.getOrNull()
+        } else {
+            null
+        }
+    }
+
     var menuExpanded by remember { mutableStateOf(false) }
     val s = scaleFactor.coerceIn(0.68f, 1.25f)
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
-    val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFFE11D48))
-    val rawBgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
-    val bgColor = ensureRichCoverBase(rawBgColor, roseColor)
-    val endGradientColor = ensureRichCoverBase(Color(book.coverGradientEnd), roseColor)
+    val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFF5B3A29))
+    val bgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
+
+    // Respect true light/creamy vs dark cover palettes without darkening light backgrounds
+    val isLightCover = bgColor.luminance() > 0.48f
+    val coverGradientColors = if (isLightCover) {
+        listOf(
+            bgColor,
+            lerp(bgColor, roseColor, 0.08f),
+            lerp(bgColor, roseColor, 0.15f)
+        )
+    } else {
+        listOf(
+            bgColor,
+            lerp(bgColor, roseColor, 0.42f),
+            lerp(bgColor, roseColor, 0.65f)
+        )
+    }
+
+    val coverTitleColor = if (isLightCover) {
+        if (roseColor.luminance() < 0.58f) roseColor else Color(0xFF2D1A22)
+    } else {
+        Color.White
+    }
+    val coverSubtitleColor = if (isLightCover) {
+        Color(0xFF2D1A22).copy(alpha = 0.78f)
+    } else {
+        Color.White.copy(alpha = 0.82f)
+    }
+    val coverFrameColor = if (isLightCover) {
+        roseColor.copy(alpha = 0.38f)
+    } else {
+        goldColor.copy(alpha = 0.45f)
+    }
+    val coverEmblemColor = if (isLightCover) roseColor else goldColor
+
     val bookDirection = if (book.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     val langLabel = if (book.language == "en" || !book.isRtl) "EN" else "عربي"
     val pagesLabel = if (book.isRtl) "${book.pageCount} صفحة" else "${book.pageCount} Pages"
@@ -157,16 +196,94 @@ fun BookGridItem(
                             .fillMaxWidth()
                             .aspectRatio(0.68f)
                             .background(
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        bgColor,
-                                        roseColor.copy(alpha = 0.88f),
-                                        endGradientColor
-                                    )
-                                )
+                                Brush.linearGradient(colors = coverGradientColors)
                             )
                     ) {
-                        // 3D Book Spine Crease & Binding Highlight on start edge
+                        // 1. Real Cover Snapshot Image (if book has a cover page / cover_snapshot.png)
+                        if (coverBitmap != null) {
+                            Image(
+                                bitmap = coverBitmap,
+                                contentDescription = book.title,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .testTag("book_cover_snapshot_${book.id}")
+                            )
+                        } else {
+                            // 2. Fallback Generated Cover (only when book has no cover snapshot)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(
+                                        start = (12f * s).dp,
+                                        end = (9f * s).dp,
+                                        top = (9f * s).dp,
+                                        bottom = (10f * s).dp
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = coverFrameColor,
+                                        shape = RoundedCornerShape((7f * s).dp)
+                                    )
+                            )
+
+                            // Center Luxury Cover Medallion, Title, Subtitle, Author
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .padding(start = (16f * s).dp, end = (12f * s).dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = coverEmblemColor.copy(alpha = 0.14f),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp,
+                                        coverEmblemColor.copy(alpha = 0.55f)
+                                    ),
+                                    modifier = Modifier.size((36f * s).dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = getBookIcon(book.coverIcon),
+                                            contentDescription = null,
+                                            tint = coverEmblemColor,
+                                            modifier = Modifier.size((19f * s).dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height((7f * s).dp))
+
+                                Text(
+                                    text = book.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = coverTitleColor,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = (13.5f * s).sp,
+                                    lineHeight = (17.5f * s).sp
+                                )
+
+                                if (book.subtitle.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height((3f * s).dp))
+                                    Text(
+                                        text = book.subtitle,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = coverSubtitleColor,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = (9.5f * s).sp,
+                                        lineHeight = (13f * s).sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // 3D Book Spine Crease & Binding Highlight on start edge (preserved on both real & generated covers)
                         Row(
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
@@ -176,7 +293,9 @@ fun BookGridItem(
                                 modifier = Modifier
                                     .width((7f * s).dp)
                                     .fillMaxHeight()
-                                    .background(Color.Black.copy(alpha = 0.35f))
+                                    .background(
+                                        Color.Black.copy(alpha = if (isLightCover) 0.18f else 0.35f)
+                                    )
                             )
                             Box(
                                 modifier = Modifier
@@ -186,24 +305,7 @@ fun BookGridItem(
                             )
                         }
 
-                        // Decorative Gold Foil Inner Frame
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = (12f * s).dp,
-                                    end = (9f * s).dp,
-                                    top = (9f * s).dp,
-                                    bottom = (10f * s).dp
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = goldColor.copy(alpha = 0.45f),
-                                    shape = RoundedCornerShape((7f * s).dp)
-                                )
-                        )
-
-                        // Top Row: Favorite Star & Language Badge (عربي / EN)
+                        // Top Row: Language Badge (عربي / EN) & Favorite Star
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -241,60 +343,14 @@ fun BookGridItem(
                                 Icon(
                                     imageVector = if (book.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                                     contentDescription = "تفضيل",
-                                    tint = if (book.isFavorite) Color(0xFFFBBF24) else Color.White.copy(alpha = 0.75f),
+                                    tint = if (book.isFavorite) {
+                                        Color(0xFFFBBF24)
+                                    } else if (isLightCover && coverBitmap == null) {
+                                        coverTitleColor.copy(alpha = 0.75f)
+                                    } else {
+                                        Color.White.copy(alpha = 0.85f)
+                                    },
                                     modifier = Modifier.size((16f * s).dp)
-                                )
-                            }
-                        }
-
-                        // Center Luxury Cover Medallion, Title, Subtitle, Author
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(start = (16f * s).dp, end = (12f * s).dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = goldColor.copy(alpha = 0.16f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, goldColor.copy(alpha = 0.65f)),
-                                modifier = Modifier.size((36f * s).dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = getBookIcon(book.coverIcon),
-                                        contentDescription = null,
-                                        tint = goldColor,
-                                        modifier = Modifier.size((19f * s).dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height((7f * s).dp))
-
-                            Text(
-                                text = book.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                fontSize = (13.5f * s).sp,
-                                lineHeight = (17.5f * s).sp
-                            )
-
-                            if (book.subtitle.isNotBlank()) {
-                                Spacer(modifier = Modifier.height((3f * s).dp))
-                                Text(
-                                    text = book.subtitle,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = (9.5f * s).sp,
-                                    lineHeight = (13f * s).sp
                                 )
                             }
                         }
@@ -317,12 +373,12 @@ fun BookGridItem(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
-                                    color = Color.Black.copy(alpha = 0.4f),
+                                    color = Color.Black.copy(alpha = 0.45f),
                                     shape = RoundedCornerShape((4f * s).dp)
                                 ) {
                                     Text(
                                         text = pagesLabel,
-                                        color = Color.White.copy(alpha = 0.92f),
+                                        color = Color.White.copy(alpha = 0.94f),
                                         fontSize = (9.5f * s).sp,
                                         fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(
@@ -332,12 +388,21 @@ fun BookGridItem(
                                     )
                                 }
 
-                                Text(
-                                    text = "${(book.readingProgress * 100).toInt()}%",
-                                    color = goldColor,
-                                    fontSize = (10f * s).sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Surface(
+                                    color = Color.Black.copy(alpha = 0.38f),
+                                    shape = RoundedCornerShape((4f * s).dp)
+                                ) {
+                                    Text(
+                                        text = "${(book.readingProgress * 100).toInt()}%",
+                                        color = goldColor,
+                                        fontSize = (10f * s).sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(
+                                            horizontal = (4.5f * s).dp,
+                                            vertical = (1f * s).dp
+                                        )
+                                    )
+                                }
                             }
 
                             LinearProgressIndicator(
@@ -346,7 +411,7 @@ fun BookGridItem(
                                     .fillMaxWidth()
                                     .height((4.5f * s).dp),
                                 color = goldColor,
-                                trackColor = Color.Black.copy(alpha = 0.45f)
+                                trackColor = Color.Black.copy(alpha = 0.35f)
                             )
                         }
                     }
@@ -498,10 +563,35 @@ fun BookListItem(
     onDeleteClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val snapshotVersion by HtmlCoverSnapshotGenerator.snapshotVersion.collectAsStateWithLifecycle()
+    val coverBitmap = remember(book.id, book.folderPath, snapshotVersion) {
+        val snapshotFile = File(File(context.filesDir, "books/${book.folderPath}"), "cover_snapshot.png")
+        if (snapshotFile.isFile && snapshotFile.length() > 128L) {
+            runCatching { BitmapFactory.decodeFile(snapshotFile.absolutePath)?.asImageBitmap() }.getOrNull()
+        } else {
+            null
+        }
+    }
+
     var menuExpanded by remember { mutableStateOf(false) }
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
-    val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFFE11D48))
+    val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFF5B3A29))
     val bgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
+    val isLightCover = bgColor.luminance() > 0.48f
+    val coverGradientColors = if (isLightCover) {
+        listOf(
+            bgColor,
+            lerp(bgColor, roseColor, 0.08f),
+            lerp(bgColor, roseColor, 0.15f)
+        )
+    } else {
+        listOf(
+            bgColor,
+            lerp(bgColor, roseColor, 0.42f),
+            lerp(bgColor, roseColor, 0.65f)
+        )
+    }
     val langLabel = if (book.language == "en" || !book.isRtl) "EN" else "عربي"
     val pagesLabel = if (book.isRtl) "${book.pageCount} صفحة" else "${book.pageCount} Pages"
 
@@ -526,19 +616,39 @@ fun BookListItem(
                 modifier = Modifier
                     .size(width = 62.dp, height = 88.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(bgColor, roseColor, Color(book.coverGradientEnd))
-                        )
-                    )
-                    .border(1.dp, goldColor.copy(alpha = 0.6f), RoundedCornerShape(8.dp)),
+                    .background(Brush.linearGradient(coverGradientColors))
+                    .border(
+                        1.dp,
+                        if (isLightCover) roseColor.copy(alpha = 0.4f) else goldColor.copy(alpha = 0.6f),
+                        RoundedCornerShape(8.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = getBookIcon(book.coverIcon),
-                    contentDescription = null,
-                    tint = goldColor,
-                    modifier = Modifier.size(26.dp)
+                if (coverBitmap != null) {
+                    Image(
+                        bitmap = coverBitmap,
+                        contentDescription = book.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("book_cover_snapshot_${book.id}")
+                    )
+                } else {
+                    Icon(
+                        imageVector = getBookIcon(book.coverIcon),
+                        contentDescription = null,
+                        tint = if (isLightCover) roseColor else goldColor,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+
+                // Subtle 3D Spine Strip on start edge
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .background(Color.Black.copy(alpha = if (isLightCover) 0.16f else 0.3f))
                 )
             }
 
