@@ -171,7 +171,7 @@ object HtmlBookParser {
                 .maxDepth(3)
                 .filter { f ->
                     f.isFile &&
-                        f.length() in 1..(2 * 1024 * 1024) &&
+                        f.length() in 1..(25 * 1024 * 1024) &&
                         (f.extension.equals("css", ignoreCase = true) || f.extension.equals("js", ignoreCase = true))
                 }
                 .forEach { file ->
@@ -190,15 +190,7 @@ object HtmlBookParser {
 
     fun parse(entryHtmlFile: File, fallbackTitle: String): ParsedHtmlMetadata {
         val content = try {
-            if (entryHtmlFile.length() > 5 * 1024 * 1024) {
-                entryHtmlFile.bufferedReader(Charsets.UTF_8).use { reader ->
-                    val buffer = CharArray(5 * 1024 * 1024)
-                    val read = reader.read(buffer)
-                    if (read > 0) String(buffer, 0, read) else ""
-                }
-            } else {
-                entryHtmlFile.readText(Charsets.UTF_8)
-            }
+            entryHtmlFile.readText(Charsets.UTF_8)
         } catch (e: Exception) {
             ""
         }
@@ -497,7 +489,7 @@ object HtmlBookParser {
         if (!quickMode && tocList.isEmpty()) {
             val headingMatcher = HEADING_PATTERN.matcher(content)
             var count = 0
-            while (headingMatcher.find() && count < 1000) {
+            while (headingMatcher.find()) {
                 val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
                 val id = headingMatcher.group(2)
                 val headingText = headingMatcher.group(3)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
@@ -673,20 +665,18 @@ object HtmlBookParser {
                     objectDepth--
                     if (bracketDepth == 1 && objectDepth == 0 && currentObjectStart != -1) {
                         topLevelObjectCount++
-                        if (tocOut.size < 1000) {
-                            val sliceEnd = minOf(i + 1, currentObjectStart + 450)
-                            val objSlice = content.substring(currentObjectStart, sliceEnd)
-                            val pageTitleMatch = KEY_TITLE_REGEX.find(objSlice)
-                            val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim() ?: "صفحة $topLevelObjectCount"
-                            if (pageTitle.isNotBlank()) {
-                                tocOut.add(
-                                    TocEntry(
-                                        title = pageTitle,
-                                        href = "#page-$topLevelObjectCount",
-                                        level = 1
-                                    )
+                        val sliceEnd = minOf(i + 1, currentObjectStart + 450)
+                        val objSlice = content.substring(currentObjectStart, sliceEnd)
+                        val pageTitleMatch = KEY_TITLE_REGEX.find(objSlice)
+                        val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim() ?: "صفحة $topLevelObjectCount"
+                        if (pageTitle.isNotBlank()) {
+                            tocOut.add(
+                                TocEntry(
+                                    title = pageTitle,
+                                    href = "#page-$topLevelObjectCount",
+                                    level = 1
                                 )
-                            }
+                            )
                         }
                         currentObjectStart = -1
                     }

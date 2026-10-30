@@ -553,6 +553,7 @@ class ExampleRobolectricTest {
         assertTrue("BOOK_PRODUCTION_MASTER_GUIDE.md must exist in project root", rootGuide.exists())
         val content = rootGuide.readText(Charsets.UTF_8)
 
+        assertTrue(content.contains("MASTER SYSTEM PROMPT"))
         assertTrue(content.contains("Fluid Reflow Zoom"))
         assertTrue(content.contains("4-Corner Page-Curl"))
         assertTrue(content.contains("--reader-font"))
@@ -561,6 +562,7 @@ class ExampleRobolectricTest {
         assertTrue(content.contains("https://maktabati.app/fonts/cairo.ttf"))
         assertTrue(content.contains("chapter-opener"))
         assertTrue(content.contains("wisdom-pearl"))
+        assertTrue(content.contains("data-reader-name"))
         assertTrue(content.contains("الشباب"))
         assertTrue(content.contains("الفتيات"))
         assertTrue(content.contains("النساء"))
@@ -571,6 +573,36 @@ class ExampleRobolectricTest {
         assertTrue(content.contains("المراهقون"))
         assertTrue(content.contains("الكتب التعليمية"))
         assertTrue(content.contains("بناء الذات"))
+    }
+
+    @Test
+    fun testUnlimitedPageCountParsingForTwoThousandPageBook() {
+        val pagesBuilder = StringBuilder()
+        val totalPages = 2000
+        for (i in 1..totalPages) {
+            if (i > 1) pagesBuilder.append(",")
+            pagesBuilder.append("""{title:"صفحة رقم $i",content:"<p>محتوى الصفحة $i</p>"}""")
+        }
+        val hugeBookHtml = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head><meta charset="utf-8"><title>موسوعة الألفي صفحة</title></head>
+            <body>
+                <script>
+                    const BOOK_DATA = {
+                        title: "موسوعة الألفي صفحة",
+                        author: "م/ منصور قطينه",
+                        pages: [$pagesBuilder]
+                    };
+                </script>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val parsed = HtmlBookParser.parseContent(hugeBookHtml, "موسوعة")
+        assertEquals(2000, parsed.pageCount)
+        assertEquals(2000, parsed.tableOfContents.size)
+        assertEquals("صفحة رقم 2000", parsed.tableOfContents.last().title)
     }
 
     @Test
