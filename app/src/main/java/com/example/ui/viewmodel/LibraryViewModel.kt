@@ -66,6 +66,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     val gridCardWidthDp = MutableStateFlow(
         preferences.getFloat("gridCardWidthDp", 112f).coerceIn(82f, 175f)
     )
+    val userTypographyPreferences = MutableStateFlow(
+        com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(preferences)
+    )
 
     val importState = MutableStateFlow<ImportState>(ImportState.Idle)
 
@@ -133,6 +136,11 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         val next = !isDarkTheme.value
         isDarkTheme.value = next
         preferences.edit().putBoolean("isDarkTheme", next).apply()
+    }
+
+    fun updateUserTypographyPreferences(newPrefs: com.example.data.typography.UserTypographyPreferences) {
+        userTypographyPreferences.value = newPrefs
+        com.example.data.typography.MaktabatiFontRegistry.saveUserTypographyPreferences(preferences, newPrefs)
     }
 
     fun scaleGridCardWidth(zoomFactor: Float) {

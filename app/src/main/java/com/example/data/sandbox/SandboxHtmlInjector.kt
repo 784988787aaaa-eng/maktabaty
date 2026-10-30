@@ -25,6 +25,10 @@ import java.io.File
 object SandboxHtmlInjector {
 
     private val DVH_UNIT_REGEX = Regex("(\\d+(?:\\.\\d+)?)[dsl]vh\\b", RegexOption.IGNORE_CASE)
+    private val VIEWPORT_META_REGEX = Regex("<meta\\b[^>]*name=[\"']viewport[\"'][^>]*>", RegexOption.IGNORE_CASE)
+    private val PINCH_ZOOM_CSS_REGEX = Regex("touch-action\\s*:\\s*pan-y\\s+pinch-zoom", RegexOption.IGNORE_CASE)
+    private const val LOCKED_VIEWPORT_META =
+        """<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>"""
 
     fun buildInjectedSnippet(
         bookId: String,
@@ -55,9 +59,16 @@ $typographyCss
             margin: 0;
             padding: 0;
             overflow-x: hidden !important;
+            overscroll-behavior-x: none !important;
+            touch-action: pan-y !important;
             box-sizing: border-box !important;
             -webkit-tap-highlight-color: transparent;
             -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+          }
+          .app, #bookStage, .book-stage, .stage, .page-canvas, .page, .book-page, .page-container, .panel, .overlay {
+            touch-action: pan-y !important;
+            overscroll-behavior-x: none !important;
           }
           .app {
             width: 100%;
@@ -67,6 +78,14 @@ $typographyCss
             max-height: 100vh;
             overflow-x: hidden !important;
             box-sizing: border-box !important;
+          }
+          .top-bar, .running-header, .bottom-nav-dock, .controls-bar, .page-footer {
+            flex-shrink: 0;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            touch-action: manipulation !important;
+            -webkit-text-size-adjust: none !important;
+            text-size-adjust: none !important;
           }
           .book-stage, .stage {
             width: 100%;
@@ -158,7 +177,8 @@ $typographyCss
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV8Initialized) return;
+          if (window.__maktabatiV9Initialized) return;
+          window.__maktabatiV9Initialized = true;
           window.__maktabatiV8Initialized = true;
           window.__maktabatiV7Initialized = true;
           window.__maktabatiV6Initialized = true;
@@ -166,6 +186,24 @@ $typographyCss
           window.__maktabatiV4Initialized = true;
           window.__maktabatiV3Initialized = true;
           try {
+            // Lock viewport meta so browser never performs image-like visual-viewport zoom/panning
+            (function enforceViewportLock() {
+              try {
+                let vp = document.querySelector('meta[name="viewport"]');
+                if (!vp && document.head) {
+                  vp = document.createElement('meta');
+                  vp.setAttribute('name', 'viewport');
+                  document.head.appendChild(vp);
+                }
+                if (vp) {
+                  vp.setAttribute(
+                    'content',
+                    'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'
+                  );
+                }
+              } catch (e) {}
+            })();
+
             const P = "$safePrefix", TOTAL = ${pageCount.coerceAtLeast(1)};
             const memStore = {};
             const key = function(k) { k = String(k); return k.indexOf(P) === 0 ? k : P + k; };
@@ -531,10 +569,7 @@ $typographyCss
                 currentZoomPercent = target;
                 const scale = +(target / 100).toFixed(2);
                 const root = document.documentElement;
-                const currentReaderFont = getComputedStyle(root).getPropertyValue('--reader-font').trim();
-                if (currentReaderFont && currentReaderFont.indexOf('px') !== -1) {
-                  root.style.setProperty('--reader-font', Math.round(21 * scale) + 'px');
-                }
+                root.style.setProperty('--reader-font', Math.round(21 * scale) + 'px');
                 root.style.setProperty('--reader-font-size', target + '%');
                 root.style.setProperty('--font-scale', String(scale));
 
@@ -547,11 +582,33 @@ $typographyCss
                   }
                 } catch (e) {}
 
+                // Scale reading content containers only (never scale .top-bar, .running-header, or .bottom-nav-dock)
+                const pageContainers = document.querySelectorAll('.page, .book-page');
+                for (let i = 0; i < pageContainers.length; i++) {
+                  pageContainers[i].style.fontSize = Math.round(21 * scale) + 'px';
+                  pageContainers[i].style.lineHeight = scale > 1.25 ? '2.05' : '1.98';
+                }
+
                 const bodyContainers = document.querySelectorAll('#pageInnerContent, #pageBody, .page-body, .page-content');
                 for (let i = 0; i < bodyContainers.length; i++) {
                   bodyContainers[i].style.fontSize = 'calc(1.08rem * ' + scale + ')';
                   bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
                 }
+
+                // Fallback for simple HTML books that have no .page or .page-body wrapper
+                if (pageContainers.length === 0 && bodyContainers.length === 0 && document.body) {
+                  const fallbackBlocks = document.body.querySelectorAll('main, article, section, p, li, blockquote, h1, h2, h3');
+                  for (let i = 0; i < fallbackBlocks.length; i++) {
+                    const el = fallbackBlocks[i];
+                    if (el.closest('.top-bar, .running-header, .bottom-nav-dock, .controls-bar, .page-footer, .overlay')) continue;
+                    el.style.zoom = String(scale);
+                  }
+                }
+
+                // Keep horizontal scroll strictly at 0
+                if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+                if (document.documentElement) document.documentElement.scrollLeft = 0;
+                if (document.body) document.body.scrollLeft = 0;
 
                 MaktabatiLayoutGuard.inspectAndHeal();
 
@@ -810,7 +867,7 @@ $typographyCss
             document.addEventListener('touchstart', function(e) {
               if (!e.touches) return;
 
-              // 2-Finger Pinch-to-Zoom (Fluid Reflow Zoom)
+              // 2-Finger Pinch-to-Zoom (Fluid Reflow Zoom on Text & Content Only)
               if (e.touches.length >= 2) {
                 tIgnore = true;
                 isPinching = true;
@@ -836,15 +893,34 @@ $typographyCss
             document.addEventListener('touchmove', function(e) {
               if (!e.touches) return;
 
-              if (isPinching && e.touches.length >= 2) {
-                const dist = getTouchDist(e.touches[0], e.touches[1]);
-                if (pinchStartDist > 20) {
-                  const ratio = dist / pinchStartDist;
-                  const nextZoom = Math.round(pinchStartZoom * ratio);
-                  if (Math.abs(nextZoom - currentZoomPercent) >= 2) {
-                    window.__maktabatiSetFluidZoom(nextZoom, false);
+              if (e.touches.length >= 2 || isPinching) {
+                if (e.cancelable) {
+                  e.preventDefault();
+                }
+                if (e.touches.length >= 2) {
+                  const dist = getTouchDist(e.touches[0], e.touches[1]);
+                  if (pinchStartDist > 20) {
+                    const ratio = dist / pinchStartDist;
+                    const nextZoom = Math.round(pinchStartZoom * ratio);
+                    if (Math.abs(nextZoom - currentZoomPercent) >= 2) {
+                      window.__maktabatiSetFluidZoom(nextZoom, false);
+                    }
                   }
                 }
+              }
+            }, { passive: false });
+
+            document.addEventListener('gesturestart', function(e) {
+              if (e.cancelable) e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('gesturechange', function(e) {
+              if (e.cancelable) e.preventDefault();
+            }, { passive: false });
+
+            window.addEventListener('scroll', function() {
+              if (window.scrollX !== 0) {
+                window.scrollTo(0, window.scrollY);
               }
             }, { passive: true });
 
@@ -912,13 +988,23 @@ $typographyCss
         var cleanedHtml = stripElementById(rawHtml, "style", "maktabati-perf-booster")
         cleanedHtml = stripElementById(cleanedHtml, "script", "maktabati-storage-isolation")
 
-        // Normalize dvh/svh/lvh units inside <style> blocks to standard vh so all Android System WebViews render 100% height
+        // Normalize dvh/svh/lvh units, lock viewport meta against image-zoom, and strip pinch-zoom from touch-action
         val headEndIdx = cleanedHtml.indexOf("</head>", ignoreCase = true)
         if (headEndIdx > 0) {
-            val headPart = cleanedHtml.substring(0, headEndIdx).replace(DVH_UNIT_REGEX, "$1vh")
+            var headPart = cleanedHtml.substring(0, headEndIdx)
+                .replace(DVH_UNIT_REGEX, "$1vh")
+                .replace(PINCH_ZOOM_CSS_REGEX, "touch-action:pan-y")
+            headPart = if (VIEWPORT_META_REGEX.containsMatchIn(headPart)) {
+                headPart.replace(VIEWPORT_META_REGEX, LOCKED_VIEWPORT_META)
+            } else {
+                headPart + "\n" + LOCKED_VIEWPORT_META
+            }
             cleanedHtml = headPart + cleanedHtml.substring(headEndIdx)
         } else {
-            cleanedHtml = cleanedHtml.replace(DVH_UNIT_REGEX, "$1vh")
+            cleanedHtml = cleanedHtml
+                .replace(DVH_UNIT_REGEX, "$1vh")
+                .replace(PINCH_ZOOM_CSS_REGEX, "touch-action:pan-y")
+                .replace(VIEWPORT_META_REGEX, LOCKED_VIEWPORT_META)
         }
 
         val resolvedTypography = typographyProfile

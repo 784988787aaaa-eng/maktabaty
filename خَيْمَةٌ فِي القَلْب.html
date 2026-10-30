@@ -3,7 +3,7 @@
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" name="viewport"/>
+<meta content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
 <meta content="#FFF1F6" name="theme-color"/>
 <meta content="light dark" name="color-scheme"/>
 <meta content="إصدارات مكتبتي الفاخرة — حواريّةٌ في بناءِ الذات" name="author"/>
@@ -25,9 +25,9 @@
  color-scheme:light;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-html,body,.app{touch-action:pan-y pinch-zoom}
+html,body,.app{touch-action:pan-y}
 button,input,select{touch-action:manipulation}
-#bookStage,.panel{touch-action:pan-y pinch-zoom}
+#bookStage,.panel{touch-action:pan-y}
 html,body{margin:0;padding:0;width:100%;min-height:100%;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);}
 body{overflow:hidden}
 button,input,select{font:inherit}
@@ -431,7 +431,8 @@ mark.page-search-highlight{background:linear-gradient(135deg,rgba(249,223,233,.9
 </style>
 <script id="maktabati-storage-isolation">
 (function(){
-  if (window.__maktabatiV8Initialized) return;
+  if (window.__maktabatiV9Initialized) return;
+  window.__maktabatiV9Initialized = true;
   window.__maktabatiV8Initialized = true;
   window.__maktabatiV7Initialized = true;
   window.__maktabatiV6Initialized = true;
@@ -804,7 +805,7 @@ mark.page-search-highlight{background:linear-gradient(135deg,rgba(249,223,233,.9
         currentZoomPercent = target;
         const scale = +(target / 100).toFixed(2);
         const root = document.documentElement;
-        root.style.setProperty('--reader-font', String(scale));
+        root.style.setProperty('--reader-font', Math.round(21 * scale) + 'px');
         root.style.setProperty('--reader-font-size', target + '%');
         root.style.setProperty('--font-scale', String(scale));
 
@@ -817,11 +818,21 @@ mark.page-search-highlight{background:linear-gradient(135deg,rgba(249,223,233,.9
           }
         } catch (e) {}
 
+        const pageContainers = document.querySelectorAll('.page, .book-page');
+        for (let i = 0; i < pageContainers.length; i++) {
+          pageContainers[i].style.fontSize = Math.round(21 * scale) + 'px';
+          pageContainers[i].style.lineHeight = scale > 1.25 ? '2.05' : '1.98';
+        }
+
         const bodyContainers = document.querySelectorAll('#pageInnerContent, #pageBody, .page-body, .page-content');
         for (let i = 0; i < bodyContainers.length; i++) {
           bodyContainers[i].style.fontSize = 'calc(1.08rem * ' + scale + ')';
           bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
         }
+
+        if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+        if (document.documentElement) document.documentElement.scrollLeft = 0;
+        if (document.body) document.body.scrollLeft = 0;
 
         MaktabatiLayoutGuard.inspectAndHeal();
 
@@ -1105,17 +1116,22 @@ mark.page-search-highlight{background:linear-gradient(135deg,rgba(249,223,233,.9
     document.addEventListener('touchmove', function(e) {
       if (!e.touches) return;
 
-      if (isPinching && e.touches.length >= 2) {
-        const dist = getTouchDist(e.touches[0], e.touches[1]);
-        if (pinchStartDist > 20) {
-          const ratio = dist / pinchStartDist;
-          const nextZoom = Math.round(pinchStartZoom * ratio);
-          if (Math.abs(nextZoom - currentZoomPercent) >= 2) {
-            window.__maktabatiSetFluidZoom(nextZoom, false);
+      if (e.touches.length >= 2 || isPinching) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        if (e.touches.length >= 2) {
+          const dist = getTouchDist(e.touches[0], e.touches[1]);
+          if (pinchStartDist > 20) {
+            const ratio = dist / pinchStartDist;
+            const nextZoom = Math.round(pinchStartZoom * ratio);
+            if (Math.abs(nextZoom - currentZoomPercent) >= 2) {
+              window.__maktabatiSetFluidZoom(nextZoom, false);
+            }
           }
         }
       }
-    }, { passive: true });
+    }, { passive: false });
 
     document.addEventListener('touchend', function(e) {
       if (isPinching) {

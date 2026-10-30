@@ -878,5 +878,67 @@ class ExampleRobolectricTest {
         Unit
     }
 
+    @Test
+    fun testViewportAntiImageZoomLockAndUserTypographyPreferencesStudio() {
+        // 1. Verify viewport anti-image-zoom lock on any book HTML
+        val zoomableBookHtml = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes">
+                <style>html,body,.app{touch-action:pan-y pinch-zoom}</style>
+            </head>
+            <body><div class="page"><p>نص القراءة</p></div></body>
+            </html>
+        """.trimIndent()
+
+        val injected = SandboxHtmlInjector.injectIntoHtml(zoomableBookHtml, "book_no_image_zoom", 10)
+        assertTrue(injected.contains("__maktabatiV9Initialized"))
+        assertTrue(injected.contains("user-scalable=no"))
+        assertTrue(injected.contains("maximum-scale=1"))
+        assertFalse(injected.contains("user-scalable=yes"))
+        assertFalse(injected.contains("maximum-scale=5"))
+        assertFalse(injected.contains("touch-action:pan-y pinch-zoom"))
+        assertTrue(injected.contains("touch-action: pan-y !important"))
+        assertTrue(injected.contains("e.preventDefault()"))
+
+        // 2. Verify UserTypographyPreferences persistence & live override JS
+        val prefs = context.getSharedPreferences("test_typo_prefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+
+        val defaultPrefs = com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(prefs)
+        assertFalse(defaultPrefs.useCustomTypography)
+        assertEquals("Noto Naskh Arabic", defaultPrefs.profile.body)
+
+        val customPrefs = com.example.data.typography.UserTypographyPreferences(
+            useCustomTypography = true,
+            presetId = "classical_diwan",
+            profile = com.example.data.typography.BookTypographyProfile(
+                body = "Amiri",
+                headings = "Aref Ruqaa",
+                chapterTitles = "Reem Kufi",
+                quotes = "Amiri",
+                interfaceFont = "IBM Plex Sans Arabic",
+                numbers = "Noto Sans Arabic"
+            )
+        )
+        com.example.data.typography.MaktabatiFontRegistry.saveUserTypographyPreferences(prefs, customPrefs)
+
+        val loadedPrefs = com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(prefs)
+        assertTrue(loadedPrefs.useCustomTypography)
+        assertEquals("classical_diwan", loadedPrefs.presetId)
+        assertEquals("Amiri", loadedPrefs.profile.body)
+        assertEquals("Aref Ruqaa", loadedPrefs.profile.headings)
+        assertEquals("Reem Kufi", loadedPrefs.profile.chapterTitles)
+        assertEquals("IBM Plex Sans Arabic", loadedPrefs.profile.interfaceFont)
+
+        val liveJs = com.example.data.typography.MaktabatiFontRegistry.buildLiveTypographyOverrideJs(loadedPrefs)
+        assertTrue(liveJs.contains("maktabati-user-typography-override"))
+        assertTrue(liveJs.contains("--font-body: \"Amiri\""))
+        assertTrue(liveJs.contains("!important"))
+    }
+
 }
+
 

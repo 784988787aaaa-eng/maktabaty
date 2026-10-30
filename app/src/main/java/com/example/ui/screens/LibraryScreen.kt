@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -95,6 +96,7 @@ import com.example.ui.components.BookDetailDialog
 import com.example.ui.components.BookGridItem
 import com.example.ui.components.BookListItem
 import com.example.ui.components.CreateShelfDialog
+import com.example.ui.components.TypographySettingsDialog
 import com.example.ui.components.UnifiedShelfAndFilterRow
 import com.example.ui.viewmodel.FilterType
 import com.example.ui.viewmodel.ImportState
@@ -120,6 +122,7 @@ fun LibraryScreen(
     val gridCardWidthDp by viewModel.gridCardWidthDp.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val pendingMultiBookProposal by viewModel.pendingMultiBookProposal.collectAsStateWithLifecycle()
+    val userTypographyPreferences by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
     val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
 
     LaunchedEffect(allRawBooks.size) {
@@ -133,6 +136,7 @@ fun LibraryScreen(
     var selectedBookForDetails by remember { mutableStateOf<Book?>(null) }
     var bookPendingDelete by remember { mutableStateOf<Book?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showTypographySettingsDialog by remember { mutableStateOf(false) }
 
     val gridState = rememberLazyGridState()
     val listState = rememberLazyListState()
@@ -227,6 +231,22 @@ fun LibraryScreen(
                         Icon(
                             imageVector = if (viewMode == ViewMode.GRID) Icons.Default.ViewList else Icons.Default.GridView,
                             contentDescription = "تبديل نمط الرفوف"
+                        )
+                    }
+
+                    // Gear Icon: Typography Preferences Studio
+                    IconButton(
+                        onClick = { showTypographySettingsDialog = true },
+                        modifier = Modifier.testTag("typography_settings_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "إعدادات الخطوط الطباعية",
+                            tint = if (userTypographyPreferences.useCustomTypography) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
                         )
                     }
 
@@ -698,6 +718,17 @@ fun LibraryScreen(
             onAddInNewShelf = { viewModel.confirmMultiBookImportWithNewShelf(proposal) },
             onAddStandalone = { viewModel.confirmMultiBookImportStandalone(proposal) },
             onCancel = { viewModel.cancelMultiBookImport(proposal) }
+        )
+    }
+
+    // Typography Preferences Studio Dialog (Gear Icon)
+    if (showTypographySettingsDialog) {
+        TypographySettingsDialog(
+            currentPreferences = userTypographyPreferences,
+            onUpdatePreferences = { updated ->
+                viewModel.updateUserTypographyPreferences(updated)
+            },
+            onDismiss = { showTypographySettingsDialog = false }
         )
     }
 }

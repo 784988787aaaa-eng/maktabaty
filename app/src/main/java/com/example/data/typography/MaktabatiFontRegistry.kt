@@ -45,6 +45,19 @@ data class BookTypographyProfile(
     }
 }
 
+data class EditorialTypographyPreset(
+    val id: String,
+    val titleAr: String,
+    val subtitleAr: String,
+    val profile: BookTypographyProfile
+)
+
+data class UserTypographyPreferences(
+    val useCustomTypography: Boolean = false,
+    val presetId: String = "editorial_narrative",
+    val profile: BookTypographyProfile = BookTypographyProfile()
+)
+
 /**
  * Central Arabic Typography Registry for the Maktabati («مكتبتي») platform.
  *
@@ -269,10 +282,100 @@ object MaktabatiFontRegistry {
         return sb.toString()
     }
 
+    val editorialPresets: List<EditorialTypographyPreset> = listOf(
+        EditorialTypographyPreset(
+            id = "editorial_narrative",
+            titleAr = "الأصالة السردية",
+            subtitleAr = "نسخ مريح للمتن مع رقعة للعناوين وكوفي للفصول وأميري للاقتباسات",
+            profile = BookTypographyProfile(
+                body = "Noto Naskh Arabic",
+                headings = "Aref Ruqaa",
+                chapterTitles = "Reem Kufi",
+                quotes = "Amiri",
+                interfaceFont = "Noto Sans Arabic",
+                numbers = "Noto Sans Arabic"
+            )
+        ),
+        EditorialTypographyPreset(
+            id = "classical_diwan",
+            titleAr = "الديوان الكلاسيكي",
+            subtitleAr = "طابع تراثي أدبي فاخر بخط الأميري للمتن والاقتباسات ورقعة للعناوين",
+            profile = BookTypographyProfile(
+                body = "Amiri",
+                headings = "Aref Ruqaa",
+                chapterTitles = "Reem Kufi",
+                quotes = "Amiri",
+                interfaceFont = "Noto Sans Arabic",
+                numbers = "Noto Sans Arabic"
+            )
+        ),
+        EditorialTypographyPreset(
+            id = "modern_intellectual",
+            titleAr = "الإشراق المعاصر",
+            subtitleAr = "قراءة فكرية حديثة بخط IBM Plex للمتن والكوفي الحديث للعناوين",
+            profile = BookTypographyProfile(
+                body = "IBM Plex Sans Arabic",
+                headings = "Noto Kufi Arabic",
+                chapterTitles = "Reem Kufi",
+                quotes = "Noto Naskh Arabic",
+                interfaceFont = "IBM Plex Sans Arabic",
+                numbers = "IBM Plex Sans Arabic"
+            )
+        ),
+        EditorialTypographyPreset(
+            id = "kufi_bayan",
+            titleAr = "البيان الكوفي",
+            subtitleAr = "حضور هندسي واضح للعناوين والفصول مع متن نسخ متزن ورقعة للدرر",
+            profile = BookTypographyProfile(
+                body = "Noto Naskh Arabic",
+                headings = "Noto Kufi Arabic",
+                chapterTitles = "Reem Kufi",
+                quotes = "Aref Ruqaa",
+                interfaceFont = "Noto Sans Arabic",
+                numbers = "Noto Sans Arabic"
+            )
+        )
+    )
+
+    fun loadUserTypographyPreferences(prefs: android.content.SharedPreferences): UserTypographyPreferences {
+        val useCustom = prefs.getBoolean("typo_use_custom", false)
+        val presetId = prefs.getString("typo_preset_id", "editorial_narrative") ?: "editorial_narrative"
+        val profile = BookTypographyProfile(
+            body = validateOrFallback(prefs.getString("typo_body", null), BookTypographyProfile.DEFAULT_BODY_FONT),
+            headings = validateOrFallback(prefs.getString("typo_headings", null), BookTypographyProfile.DEFAULT_HEADINGS_FONT),
+            chapterTitles = validateOrFallback(prefs.getString("typo_chapter_titles", null), BookTypographyProfile.DEFAULT_CHAPTER_TITLES_FONT),
+            quotes = validateOrFallback(prefs.getString("typo_quotes", null), BookTypographyProfile.DEFAULT_QUOTES_FONT),
+            interfaceFont = validateOrFallback(prefs.getString("typo_interface", null), BookTypographyProfile.DEFAULT_INTERFACE_FONT),
+            numbers = validateOrFallback(prefs.getString("typo_numbers", null), BookTypographyProfile.DEFAULT_NUMBERS_FONT)
+        )
+        return UserTypographyPreferences(
+            useCustomTypography = useCustom,
+            presetId = presetId,
+            profile = profile
+        )
+    }
+
+    fun saveUserTypographyPreferences(
+        prefs: android.content.SharedPreferences,
+        userPrefs: UserTypographyPreferences
+    ) {
+        prefs.edit()
+            .putBoolean("typo_use_custom", userPrefs.useCustomTypography)
+            .putString("typo_preset_id", userPrefs.presetId)
+            .putString("typo_body", validateOrFallback(userPrefs.profile.body, BookTypographyProfile.DEFAULT_BODY_FONT))
+            .putString("typo_headings", validateOrFallback(userPrefs.profile.headings, BookTypographyProfile.DEFAULT_HEADINGS_FONT))
+            .putString("typo_chapter_titles", validateOrFallback(userPrefs.profile.chapterTitles, BookTypographyProfile.DEFAULT_CHAPTER_TITLES_FONT))
+            .putString("typo_quotes", validateOrFallback(userPrefs.profile.quotes, BookTypographyProfile.DEFAULT_QUOTES_FONT))
+            .putString("typo_interface", validateOrFallback(userPrefs.profile.interfaceFont, BookTypographyProfile.DEFAULT_INTERFACE_FONT))
+            .putString("typo_numbers", validateOrFallback(userPrefs.profile.numbers, BookTypographyProfile.DEFAULT_NUMBERS_FONT))
+            .apply()
+    }
+
     /**
      * Builds the CSS custom property block and role bindings for a book's validated `BookTypographyProfile`.
      */
-    fun buildTypographyProfileCss(profile: BookTypographyProfile): String {
+    fun buildTypographyProfileCss(profile: BookTypographyProfile, important: Boolean = false): String {
+        val imp = if (important) " !important" else ""
         val bodyStack = resolveFallbackStack(profile.body, BookTypographyProfile.DEFAULT_BODY_FONT)
         val headingsStack = resolveFallbackStack(profile.headings, BookTypographyProfile.DEFAULT_HEADINGS_FONT)
         val chapterStack = resolveFallbackStack(profile.chapterTitles, BookTypographyProfile.DEFAULT_CHAPTER_TITLES_FONT)
@@ -282,35 +385,71 @@ object MaktabatiFontRegistry {
 
         return """
             :root {
-              --font-body: $bodyStack;
-              --font-headings: $headingsStack;
-              --font-chapter-titles: $chapterStack;
-              --font-quotes: $quotesStack;
-              --font-interface: $interfaceStack;
-              --font-numbers: $numbersStack;
-              --reader-family: var(--font-body);
+              --font-body: $bodyStack$imp;
+              --font-headings: $headingsStack$imp;
+              --font-chapter-titles: $chapterStack$imp;
+              --font-quotes: $quotesStack$imp;
+              --font-interface: $interfaceStack$imp;
+              --font-numbers: $numbersStack$imp;
+              --reader-family: var(--font-body)$imp;
             }
-            html, body, .page, .reading p, .dedication p, .closing p {
-              font-family: var(--font-body);
+            html, body, .page, .book-page, .page-body, .page-content, #pageInnerContent,
+            p, li, .reading p, .dedication p, .closing p, .subtitle {
+              font-family: var(--font-body)$imp;
             }
-            h1, h2, h3, .reading .section-opening, .cover-page h1, .dedication h1, .closing h1 {
-              font-family: var(--font-headings);
+            h1, h2, h3, h4, h5, h6, .page-heading, .section-title, .reading .section-opening,
+            .cover-page h1, .cover-title, .dedication h1, .closing h1 {
+              font-family: var(--font-headings)$imp;
             }
-            .opener h1, .chapter-number, .toc-item.toc-chapter {
-              font-family: var(--font-chapter-titles);
+            .opener h1, .chapter-opener h1, .chapter-title, .chapter-number, .chapter-badge,
+            .toc-item.toc-chapter {
+              font-family: var(--font-chapter-titles)$imp;
             }
-            .quote-card, .quote-text, .pullquote, .wisdom-pearl, .manal-voice, blockquote {
-              font-family: var(--font-quotes);
+            .quote-card, .quote-text, .quote-box, .pullquote, .wisdom-pearl, .manal-voice,
+            blockquote, q {
+              font-family: var(--font-quotes)$imp;
             }
             .top-bar, .brand, .icon-btn, .nav-btn, .running-header, .eyebrow, .primary-btn,
-            .panel-head h2, .field, #searchInput, .search-result, .toc-item, .wisdom-badge,
-            .manal-badge, .quote-caption, .cover-page .author {
-              font-family: var(--font-interface);
+            .panel-head h2, .field, #searchInput, .search-result, .search-result strong,
+            .toc-item, .wisdom-badge, .manal-badge, .quote-caption, .cover-page .author {
+              font-family: var(--font-interface)$imp;
             }
-            .page-counter, .toc-item small, .search-result small {
-              font-family: var(--font-numbers);
+            .page-counter, .page-number, .search-result-page, .toc-item small, .search-result small {
+              font-family: var(--font-numbers)$imp;
               font-variant-numeric: tabular-nums;
             }
+        """.trimIndent()
+    }
+
+    /**
+     * Generates JavaScript that live-updates `<style id="maktabati-user-typography-override">` inside
+     * the active WebView so user font preferences take effect immediately without reloading the page.
+     */
+    fun buildLiveTypographyOverrideJs(userPrefs: UserTypographyPreferences): String {
+        if (!userPrefs.useCustomTypography) {
+            return """
+                (function() {
+                    const el = document.getElementById('maktabati-user-typography-override');
+                    if (el) el.remove();
+                })();
+            """.trimIndent()
+        }
+        val css = buildTypographyProfileCss(userPrefs.profile, important = true)
+            .replace("\\", "\\\\")
+            .replace("`", "\\`")
+        return """
+            (function() {
+                let el = document.getElementById('maktabati-user-typography-override');
+                if (!el) {
+                    el = document.createElement('style');
+                    el.id = 'maktabati-user-typography-override';
+                    (document.head || document.documentElement).appendChild(el);
+                }
+                el.textContent = `$css`;
+                if (window.MaktabatiLayoutGuard && typeof window.MaktabatiLayoutGuard.inspectAndHeal === 'function') {
+                    window.MaktabatiLayoutGuard.inspectAndHeal();
+                }
+            })();
         """.trimIndent()
     }
 

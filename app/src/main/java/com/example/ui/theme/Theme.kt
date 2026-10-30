@@ -47,6 +47,7 @@ private val LightColorScheme = lightColorScheme(
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // Keep consistent literary palette
+    typographyProfile: com.example.data.typography.BookTypographyProfile? = null,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -60,7 +61,7 @@ fun MyApplicationTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = buildAppTypography(typographyProfile),
         content = content
     )
 }

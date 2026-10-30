@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -60,6 +61,9 @@ import com.example.data.importer.HtmlBookParser
 import com.example.data.model.Book
 import com.example.data.model.Bookmark
 import com.example.data.sandbox.SandboxHtmlInjector
+import com.example.data.typography.MaktabatiFontRegistry
+import com.example.data.typography.UserTypographyPreferences
+import com.example.ui.components.TypographySettingsDialog
 import com.example.ui.reader.MaktabatiJsBridge
 import com.example.ui.reader.ObservableWebView
 import com.example.ui.reader.ReaderAddBookmarkDialog
@@ -120,6 +124,8 @@ private fun isTextMimeType(mime: String): Boolean {
 fun ReaderScreen(
     book: Book,
     bookmarks: List<Bookmark>,
+    userTypographyPreferences: UserTypographyPreferences = UserTypographyPreferences(),
+    onUpdateTypographyPreferences: (UserTypographyPreferences) -> Unit = {},
     onBack: () -> Unit,
     onSaveProgress: (progress: Float, scrollY: Int, currentPage: Int, actualTotalPages: Int) -> Unit,
     onAddBookmark: (title: String, scrollY: Int, progress: Float, excerpt: String) -> Unit,
@@ -153,10 +159,12 @@ fun ReaderScreen(
     var showBookmarksSheet by remember { mutableStateOf(false) }
     var showAddBookmarkDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showTypographyDialog by remember { mutableStateOf(false) }
 
     var webViewRef by remember(book.id) { mutableStateOf<ObservableWebView?>(null) }
     val lastAppliedZoom = remember(book.id) { IntArray(1) { -1 } }
     val lastAppliedTheme = remember(book.id) { arrayOf<ReaderThemeMode?>(null) }
+    val lastAppliedTypography = remember(book.id) { arrayOf<UserTypographyPreferences?>(null) }
 
     val tocEntries = remember(book.tableOfContentsJson) {
         HtmlBookParser.jsonToToc(book.tableOfContentsJson)
@@ -236,11 +244,20 @@ fun ReaderScreen(
     }
 
     fun applyFluidZoomToWebView(wv: WebView, zoomPct: Int) {
-        wv.settings.textZoom = zoomPct
+        // Keep native textZoom at 100 so fixed bars (.top-bar, .running-header, .bottom-nav-dock) never inflate or shift;
+        // Fluid Reflow Zoom scales only the reading text and content inside the page.
+        if (wv.settings.textZoom != 100) {
+            wv.settings.textZoom = 100
+        }
         wv.evaluateJavascript(
             "if (typeof window.__maktabatiSetFluidZoom === 'function') window.__maktabatiSetFluidZoom($zoomPct, true);",
             null
         )
+    }
+
+    fun applyTypographyPreferencesToWebView(wv: WebView, typoPrefs: UserTypographyPreferences) {
+        val js = MaktabatiFontRegistry.buildLiveTypographyOverrideJs(typoPrefs)
+        wv.evaluateJavascript(js, null)
     }
 
     Box(
@@ -281,16 +298,18 @@ fun ReaderScreen(
                             @Suppress("DEPRECATION")
                             allowUniversalAccessFromFileURLs = true
                             mediaPlaybackRequiresUserGesture = false
+                            setSupportZoom(false)
                             builtInZoomControls = false
                             displayZoomControls = false
-                            useWideViewPort = true
-                            loadWithOverviewMode = true
+                            useWideViewPort = false
+                            loadWithOverviewMode = false
                             defaultTextEncodingName = "UTF-8"
-                            textZoom = textZoomPercent
+                            textZoom = 100
                             cacheMode = WebSettings.LOAD_DEFAULT
                         }
                         lastAppliedZoom[0] = textZoomPercent
                         lastAppliedTheme[0] = readerTheme
+                        lastAppliedTypography[0] = userTypographyPreferences
 
                         isVerticalScrollBarEnabled = true
                         isHorizontalScrollBarEnabled = false
@@ -324,7 +343,6 @@ fun ReaderScreen(
                                     lastAppliedZoom[0] = clamped
                                     textZoomPercent = clamped
                                     prefs.edit().putInt("textZoomPercent", clamped).apply()
-                                    settings.textZoom = clamped
                                     showFloatingZoomBadge = true
                                     zoomInteractionTick++
                                 }
@@ -357,7 +375,7 @@ fun ReaderScreen(
                                             // Upgrade legacy book files on background I/O thread if needed
                                             if (mime == "text/html") {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV8Initialized")) {
+                                                if (!raw.contains("__maktabatiV9Initialized")) {
                                                     val upgraded = SandboxHtmlInjector.injectIntoHtml(
                                                         rawHtml = raw,
                                                         bookId = book.id,
@@ -406,6 +424,7 @@ fun ReaderScreen(
                                     if (readerTheme != ReaderThemeMode.ORIGINAL) {
                                         applyThemeToWebView(wv, readerTheme)
                                     }
+                                    applyTypographyPreferencesToWebView(wv, userTypographyPreferences)
                                     if (textZoomPercent != 100) {
                                         applyFluidZoomToWebView(wv, textZoomPercent)
                                     }
@@ -479,6 +498,10 @@ fun ReaderScreen(
                         lastAppliedTheme[0] = readerTheme
                         applyThemeToWebView(wv, readerTheme)
                     }
+                    if (lastAppliedTypography[0] != userTypographyPreferences) {
+                        lastAppliedTypography[0] = userTypographyPreferences
+                        applyTypographyPreferencesToWebView(wv, userTypographyPreferences)
+                    }
                 }
             )
         }
@@ -546,6 +569,25 @@ fun ReaderScreen(
                     }
                 }
                 Surface(
+                    onClick = { showTypographyDialog = true },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .shadow(6.dp, CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), CircleShape)
+                        .testTag("reader_pill_typography_button")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "إعدادات الخطوط الطباعية",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Surface(
                     onClick = {
                         pillCollapsed = true
                         showExtendedControls = false
@@ -605,6 +647,7 @@ fun ReaderScreen(
             onShowToc = { showTocSheet = true },
             onShowBookmarks = { showBookmarksSheet = true },
             onShowTheme = { showThemeDialog = true },
+            onShowTypographySettings = { showTypographyDialog = true },
             onShowAddBookmark = { showAddBookmarkDialog = true },
             onProgressSliderChange = { newProg ->
                 currentProgress = newProg
@@ -641,6 +684,20 @@ fun ReaderScreen(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false }
+        )
+    }
+
+    // Typography Preferences Studio Dialog
+    if (showTypographyDialog) {
+        TypographySettingsDialog(
+            currentPreferences = userTypographyPreferences,
+            onUpdatePreferences = { updated ->
+                onUpdateTypographyPreferences(updated)
+                webViewRef?.let { wv ->
+                    applyTypographyPreferencesToWebView(wv, updated)
+                }
+            },
+            onDismiss = { showTypographyDialog = false }
         )
     }
 

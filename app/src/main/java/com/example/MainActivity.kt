@@ -36,7 +36,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
-            MyApplicationTheme(darkTheme = isDarkTheme) {
+            val userTypographyPrefs by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
+            MyApplicationTheme(
+                darkTheme = isDarkTheme,
+                typographyProfile = if (userTypographyPrefs.useCustomTypography) userTypographyPrefs.profile else null
+            ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavRoot(viewModel)
                 }
@@ -76,12 +80,15 @@ fun AppNavRoot(viewModel: LibraryViewModel) {
     val activeBook by viewModel.activeBook.collectAsStateWithLifecycle()
     val activeBookmarks by viewModel.activeBookmarks.collectAsStateWithLifecycle()
     val isOpeningExternalFile by viewModel.isOpeningExternalFile.collectAsStateWithLifecycle()
+    val userTypographyPrefs by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
 
     val currentBook = activeBook
     if (currentBook != null) {
         ReaderScreen(
             book = currentBook,
             bookmarks = activeBookmarks,
+            userTypographyPreferences = userTypographyPrefs,
+            onUpdateTypographyPreferences = { viewModel.updateUserTypographyPreferences(it) },
             onBack = { viewModel.closeReader() },
             onSaveProgress = { progress, scrollY, currentPage, actualTotalPages ->
                 viewModel.saveProgress(currentBook.id, progress, scrollY, currentPage, actualTotalPages)

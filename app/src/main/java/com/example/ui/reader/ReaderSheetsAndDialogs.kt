@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.AlertDialog
@@ -135,6 +136,7 @@ fun ReaderExtendedBottomBar(
     onShowToc: () -> Unit,
     onShowBookmarks: () -> Unit,
     onShowTheme: () -> Unit,
+    onShowTypographySettings: () -> Unit = {},
     onShowAddBookmark: () -> Unit,
     onProgressSliderChange: (Float) -> Unit,
     modifier: Modifier = Modifier
@@ -193,6 +195,16 @@ fun ReaderExtendedBottomBar(
                             modifier = Modifier.testTag("reader_theme_button")
                         ) {
                             Icon(imageVector = Icons.Default.ColorLens, contentDescription = "سمة القراءة")
+                        }
+                        IconButton(
+                            onClick = onShowTypographySettings,
+                            modifier = Modifier.testTag("reader_typography_settings_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "إعدادات الخطوط الطباعية",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
