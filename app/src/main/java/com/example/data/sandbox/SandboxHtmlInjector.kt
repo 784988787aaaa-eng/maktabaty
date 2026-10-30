@@ -99,18 +99,25 @@ object SandboxHtmlInjector {
           }
           .book-stage, .stage {
             width: 100%;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-            box-sizing: border-box !important;
-            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+            box-sizing: border-box;
           }
+          /* Never clip a page container: long content must remain scrollable and visible. */
           .page-canvas, .page, .book-page, .page-container {
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-            box-sizing: border-box !important;
+            max-width: 100%;
+            box-sizing: border-box;
             position: relative;
-            transform-origin: center center;
+            transform-origin: top center;
           }
+          /* The selected page grows with its text; it is never clipped by a fixed-height page shell. */
+          .page.active, .book-page.active, [data-page].active,
+          #pageInnerContent, #pageBody, .page-body, .page-content {
+            max-height: none !important;
+            overflow-y: visible !important;
+            overflow-x: visible;
+          }
+          html { font-size: calc(16px * var(--reader-font, 1)); }
+          body { font-size: 1rem; overflow-x: hidden; overflow-y: auto; }
           .maktabati-gpu-hint {
             will-change: transform, opacity;
             transform: translateZ(0);
@@ -142,31 +149,26 @@ object SandboxHtmlInjector {
             animation: maktabatiMicroSlidePrev 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
           }
           #pageInnerContent, .page-body, .page-content {
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            box-sizing: border-box !important;
-            overflow-wrap: anywhere;
-            word-break: break-word;
-            font-size: calc(1em * var(--reader-font, 1));
-          }
-          #pageInnerContent *, .page-body *, .page-content *, .page-canvas * {
             max-width: 100%;
             box-sizing: border-box;
-            overflow-wrap: anywhere;
+            overflow-wrap: break-word;
           }
+          /* Constrain media, not every descendant: preserve designed grids and page layouts. */
           #pageInnerContent img, .page-body img, .page-content img,
           #pageInnerContent svg, .page-body svg, .page-content svg,
           #pageInnerContent video, .page-body video, .page-content video {
-            max-width: 100% !important;
-            height: auto !important;
+            max-width: 100%;
+            height: auto;
           }
           #pageInnerContent table, .page-body table, .page-content table {
-            display: block;
-            max-width: 100% !important;
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          #pageInnerContent pre, .page-body pre, .page-content pre {
+            max-width: 100%;
             overflow-x: auto;
-            box-sizing: border-box !important;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
           }
           .quote-box, blockquote, .insight-card, .flip-card, .quiz-card, .quiz-option {
             max-width: 100% !important;
@@ -186,7 +188,8 @@ object SandboxHtmlInjector {
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV8Initialized) return;
+          if (window.__maktabatiV9Initialized) return;
+          window.__maktabatiV9Initialized = true;
           window.__maktabatiV8Initialized = true;
           window.__maktabatiV7Initialized = true;
           window.__maktabatiV6Initialized = true;
@@ -223,7 +226,26 @@ object SandboxHtmlInjector {
                 const dataPageEls = Array.from(document.querySelectorAll('[data-page]')).filter(function(el) {
                   return /^\d+$/.test((el.getAttribute('data-page') || '').trim());
                 });
-                if (dataPageEls.length > 0) return dataPageEls;
+                if (dataPageEls.length > 0) {
+                  /* Ignore nested data-page annotations inside a page and sort by the numeric index. */
+                  const set = new Set(dataPageEls);
+                  const pageRoots = dataPageEls.filter(function(el) {
+                    let parent = el.parentElement;
+                    while (parent && parent !== document.body) {
+                      if (set.has(parent)) return false;
+                      parent = parent.parentElement;
+                    }
+                    return true;
+                  });
+                  const byIndex = new Map();
+                  pageRoots.forEach(function(el) {
+                    const index = Number(el.getAttribute('data-page'));
+                    if (!byIndex.has(index)) byIndex.set(index, el);
+                  });
+                  return Array.from(byIndex.entries()).sort(function(a, b) {
+                    return a[0] - b[0];
+                  }).map(function(entry) { return entry[1]; });
+                }
                 return Array.from(document.querySelectorAll('article.page, section.page, div.page, .book-page')).filter(function(el) {
                   return el.classList && (el.classList.contains('page') || el.classList.contains('book-page'));
                 });
@@ -525,7 +547,7 @@ object SandboxHtmlInjector {
                   let healedCount = 0;
 
                   const candidates = canvas.querySelectorAll(
-                    'table, img, svg, video, pre, code, blockquote, .quote-box, .flip-card, .insight-card, .quiz-card, .quiz-option, div, p, section, article, h1, h2, h3, h4'
+                    'table, img, svg, video, pre, code'
                   );
                   for (let i = 0; i < candidates.length; i++) {
                     const el = candidates[i];
@@ -559,26 +581,27 @@ object SandboxHtmlInjector {
                 currentZoomPercent = target;
                 const scale = +(target / 100).toFixed(2);
                 const root = document.documentElement;
+                const scroller = document.scrollingElement || document.documentElement;
+                const oldScrollTop = scroller ? scroller.scrollTop : 0;
+                const activePage = getCurrentPageIndex();
+
+                /* One zoom mechanism only: root rem/em reflow. Native WebView textZoom stays at 100%. */
                 root.style.setProperty('--reader-font', String(scale));
                 root.style.setProperty('--reader-font-size', target + '%');
                 root.style.setProperty('--font-scale', String(scale));
+                root.style.fontSize = 'calc(16px * ' + scale + ')';
 
                 try {
-                  if (typeof state !== 'undefined' && state) {
-                    state.fontScale = scale;
-                  }
-                  if (window.state) {
-                    window.state.fontScale = scale;
-                  }
+                  if (typeof state !== 'undefined' && state) state.fontScale = scale;
+                  if (window.state) window.state.fontScale = scale;
                 } catch (e) {}
 
-                const bodyContainers = document.querySelectorAll('#pageInnerContent, #pageBody, .page-body, .page-content');
-                for (let i = 0; i < bodyContainers.length; i++) {
-                  bodyContainers[i].style.fontSize = 'calc(1.08rem * ' + scale + ')';
-                  bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
-                }
-
                 MaktabatiLayoutGuard.inspectAndHeal();
+                requestAnimationFrame(function() {
+                  try {
+                    if (scroller && getCurrentPageIndex() === activePage) scroller.scrollTop = oldScrollTop;
+                  } catch (e) {}
+                });
 
                 if (!fromNative && window.MaktabatiBridge && window.MaktabatiBridge.onZoomChanged) {
                   window.MaktabatiBridge.onZoomChanged(target);

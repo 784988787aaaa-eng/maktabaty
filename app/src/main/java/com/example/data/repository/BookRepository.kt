@@ -94,7 +94,7 @@ class BookRepository(
                         val meta = HtmlBookParser.parse(entryFile, userBook.title)
                         val finalPages = meta.pageCount.coerceAtLeast(1)
 
-                        if (!raw.contains("__maktabatiV8Initialized") || userBook.pageCount != finalPages) {
+                        if (!raw.contains("__maktabatiV9Initialized") || userBook.pageCount != finalPages) {
                             val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, finalPages)
                             entryFile.writeText(healedHtml, Charsets.UTF_8)
                         }

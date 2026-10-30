@@ -524,7 +524,7 @@ class ExampleRobolectricTest {
         val rawHtml = """<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>اختبار الخطوط</title></head><body><div class="page">متن عربي فاخر</div></body></html>"""
         val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fonts_v8", 12)
 
-        assertTrue(injected.contains("__maktabatiV8Initialized"))
+        assertTrue(injected.contains("__maktabatiV9Initialized"))
         assertTrue(injected.contains("@font-face"))
         assertTrue(injected.contains("https://maktabati.app/fonts/amiri.ttf"))
         assertTrue(injected.contains("https://maktabati.app/fonts/cairo.ttf"))

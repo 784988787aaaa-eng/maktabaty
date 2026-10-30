@@ -236,7 +236,9 @@ fun ReaderScreen(
     }
 
     fun applyFluidZoomToWebView(wv: WebView, zoomPct: Int) {
-        wv.settings.textZoom = zoomPct
+        // The injected reader engine scales the document root. Keep Chromium textZoom at 100%
+        // to prevent compounded scaling (e.g. 200% native × 200% CSS = 400%).
+        if (wv.settings.textZoom != 100) wv.settings.textZoom = 100
         wv.evaluateJavascript(
             "if (typeof window.__maktabatiSetFluidZoom === 'function') window.__maktabatiSetFluidZoom($zoomPct, true);",
             null
@@ -286,7 +288,7 @@ fun ReaderScreen(
                             useWideViewPort = true
                             loadWithOverviewMode = true
                             defaultTextEncodingName = "UTF-8"
-                            textZoom = textZoomPercent
+                            textZoom = 100
                             cacheMode = WebSettings.LOAD_DEFAULT
                         }
                         lastAppliedZoom[0] = textZoomPercent
@@ -324,7 +326,7 @@ fun ReaderScreen(
                                     lastAppliedZoom[0] = clamped
                                     textZoomPercent = clamped
                                     prefs.edit().putInt("textZoomPercent", clamped).apply()
-                                    settings.textZoom = clamped
+                                    settings.textZoom = 100
                                     showFloatingZoomBadge = true
                                     zoomInteractionTick++
                                 }
@@ -367,12 +369,13 @@ fun ReaderScreen(
                                         if (f.exists()) f else File(booksRoot, rawRelPath)
                                     }
                                     try {
-                                        if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
+                                        if (targetFile.isFile &&
+                                            targetFile.canonicalPath.startsWith(booksRoot.canonicalPath + File.separator)) {
                                             val mime = resolveMimeType(targetFile.name)
                                             // Upgrade legacy book files on background I/O thread if needed
                                             if (mime == "text/html") {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV8Initialized")) {
+                                                if (!raw.contains("__maktabatiV9Initialized")) {
                                                     val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
                                                     targetFile.writeText(upgraded, Charsets.UTF_8)
                                                     return WebResourceResponse(
@@ -408,10 +411,10 @@ fun ReaderScreen(
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 super.onPageFinished(view, url)
                                 view?.let { wv ->
-                                    if (book.scrollY > 0) {
-                                        wv.postDelayed({
-                                            wv.scrollTo(0, book.scrollY)
-                                        }, 30)
+                                    // A paginated book restores by page index, never by a stale scroll
+                                    // offset that can land midway through or conceal the selected page.
+                                    if (book.pageCount <= 1 && book.scrollY > 0) {
+                                        wv.postDelayed({ wv.scrollTo(0, book.scrollY) }, 30)
                                     }
                                     if (readerTheme != ReaderThemeMode.ORIGINAL) {
                                         applyThemeToWebView(wv, readerTheme)
