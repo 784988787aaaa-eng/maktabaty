@@ -104,9 +104,11 @@ fun BookGridItem(
     onClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onDetailsClick: () -> Unit,
+    scaleFactor: Float = 1f,
     modifier: Modifier = Modifier
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val s = scaleFactor.coerceIn(0.68f, 1.25f)
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
     val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFFE11D48))
     val rawBgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
@@ -125,9 +127,22 @@ fun BookGridItem(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 10.dp, topEnd = 14.dp, bottomStart = 6.dp, bottomEnd = 10.dp))
+                .shadow(
+                    elevation = (7f * s).dp,
+                    shape = RoundedCornerShape(
+                        topStart = (10f * s).dp,
+                        topEnd = (14f * s).dp,
+                        bottomStart = (6f * s).dp,
+                        bottomEnd = (10f * s).dp
+                    )
+                )
                 .clickable { onClick() },
-            shape = RoundedCornerShape(topStart = 10.dp, topEnd = 14.dp, bottomStart = 6.dp, bottomEnd = 10.dp),
+            shape = RoundedCornerShape(
+                topStart = (10f * s).dp,
+                topEnd = (14f * s).dp,
+                bottomStart = (6f * s).dp,
+                bottomEnd = (10f * s).dp
+            ),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -154,13 +169,13 @@ fun BookGridItem(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .width(8.dp)
+                                    .width((7f * s).dp)
                                     .fillMaxHeight()
                                     .background(Color.Black.copy(alpha = 0.35f))
                             )
                             Box(
                                 modifier = Modifier
-                                    .width(2.dp)
+                                    .width((1.8f * s).dp)
                                     .fillMaxHeight()
                                     .background(goldColor.copy(alpha = 0.55f))
                             )
@@ -170,11 +185,16 @@ fun BookGridItem(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 12.dp)
+                                .padding(
+                                    start = (12f * s).dp,
+                                    end = (9f * s).dp,
+                                    top = (9f * s).dp,
+                                    bottom = (10f * s).dp
+                                )
                                 .border(
                                     width = 1.dp,
                                     color = goldColor.copy(alpha = 0.45f),
-                                    shape = RoundedCornerShape(8.dp)
+                                    shape = RoundedCornerShape((7f * s).dp)
                                 )
                         )
 
@@ -182,35 +202,42 @@ fun BookGridItem(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 18.dp, end = 14.dp, top = 14.dp),
+                                .padding(
+                                    start = (15f * s).dp,
+                                    end = (11f * s).dp,
+                                    top = (11f * s).dp
+                                ),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
                                 color = Color.Black.copy(alpha = 0.45f),
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape((5f * s).dp),
                                 border = androidx.compose.foundation.BorderStroke(0.8.dp, goldColor.copy(alpha = 0.7f))
                             ) {
                                 Text(
                                     text = langLabel,
                                     color = goldColor,
-                                    fontSize = 10.sp,
+                                    fontSize = (9.5f * s).sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(
+                                        horizontal = (6f * s).dp,
+                                        vertical = (1.5f * s).dp
+                                    )
                                 )
                             }
 
                             IconButton(
                                 onClick = onFavoriteToggle,
                                 modifier = Modifier
-                                    .size(28.dp)
+                                    .size((24f * s).dp)
                                     .testTag("favorite_button_${book.id}")
                             ) {
                                 Icon(
                                     imageVector = if (book.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                                     contentDescription = "تفضيل",
                                     tint = if (book.isFavorite) Color(0xFFFBBF24) else Color.White.copy(alpha = 0.75f),
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size((16f * s).dp)
                                 )
                             }
                         }
@@ -219,26 +246,26 @@ fun BookGridItem(
                         Column(
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .padding(start = 20.dp, end = 16.dp),
+                                .padding(start = (16f * s).dp, end = (12f * s).dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(50),
                                 color = goldColor.copy(alpha = 0.16f),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, goldColor.copy(alpha = 0.65f)),
-                                modifier = Modifier.size(42.dp)
+                                modifier = Modifier.size((36f * s).dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = getBookIcon(book.coverIcon),
                                         contentDescription = null,
                                         tint = goldColor,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size((19f * s).dp)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height((7f * s).dp))
 
                             Text(
                                 text = book.title,
@@ -248,11 +275,12 @@ fun BookGridItem(
                                 overflow = TextOverflow.Ellipsis,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                lineHeight = 20.sp
+                                fontSize = (13.5f * s).sp,
+                                lineHeight = (17.5f * s).sp
                             )
 
                             if (book.subtitle.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height((3f * s).dp))
                                 Text(
                                     text = book.subtitle,
                                     style = MaterialTheme.typography.labelSmall,
@@ -260,8 +288,8 @@ fun BookGridItem(
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                     textAlign = TextAlign.Center,
-                                    fontSize = 10.sp,
-                                    lineHeight = 14.sp
+                                    fontSize = (9.5f * s).sp,
+                                    lineHeight = (13f * s).sp
                                 )
                             }
                         }
@@ -275,27 +303,34 @@ fun BookGridItem(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(start = 18.dp, end = 14.dp, bottom = 14.dp),
+                                    .padding(
+                                        start = (15f * s).dp,
+                                        end = (11f * s).dp,
+                                        bottom = (11f * s).dp
+                                    ),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
                                     color = Color.Black.copy(alpha = 0.4f),
-                                    shape = RoundedCornerShape(4.dp)
+                                    shape = RoundedCornerShape((4f * s).dp)
                                 ) {
                                     Text(
                                         text = pagesLabel,
                                         color = Color.White.copy(alpha = 0.92f),
-                                        fontSize = 10.sp,
+                                        fontSize = (9.5f * s).sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(
+                                            horizontal = (5f * s).dp,
+                                            vertical = (1.5f * s).dp
+                                        )
                                     )
                                 }
 
                                 Text(
                                     text = "${(book.readingProgress * 100).toInt()}%",
                                     color = goldColor,
-                                    fontSize = 11.sp,
+                                    fontSize = (10f * s).sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -304,7 +339,7 @@ fun BookGridItem(
                                 progress = { book.readingProgress.coerceIn(0f, 1f) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(5.dp),
+                                    .height((4.5f * s).dp),
                                 color = goldColor,
                                 trackColor = Color.Black.copy(alpha = 0.45f)
                             )
@@ -316,7 +351,10 @@ fun BookGridItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                        .padding(
+                            horizontal = (8f * s).dp,
+                            vertical = (6f * s).dp
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -327,13 +365,15 @@ fun BookGridItem(
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = (11.5f * s).sp
                         )
                         Text(
                             text = shelfName ?: pagesLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            maxLines = 1,
+                            fontSize = (9.5f * s).sp
                         )
                     }
 
@@ -341,14 +381,14 @@ fun BookGridItem(
                         IconButton(
                             onClick = { menuExpanded = true },
                             modifier = Modifier
-                                .size(28.dp)
+                                .size((24f * s).dp)
                                 .testTag("book_menu_${book.id}")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
                                 contentDescription = "خيارات الكتاب",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size((16f * s).dp)
                             )
                         }
 
@@ -382,9 +422,9 @@ fun BookGridItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .padding(horizontal = 4.dp)
-                .clip(RoundedCornerShape(bottomStart = 6.dp, bottomEnd = 6.dp))
+                .height((7f * s).dp)
+                .padding(horizontal = (3.5f * s).dp)
+                .clip(RoundedCornerShape(bottomStart = (5f * s).dp, bottomEnd = (5f * s).dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(

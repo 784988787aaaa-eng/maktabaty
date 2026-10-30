@@ -12,6 +12,9 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +53,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,6 +77,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -107,7 +112,9 @@ fun LibraryScreen(
     val filterType by viewModel.filterType.collectAsStateWithLifecycle()
     val viewMode by viewModel.viewMode.collectAsStateWithLifecycle()
     val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
+    val gridCardWidthDp by viewModel.gridCardWidthDp.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
+    val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
 
     var isSearchActive by remember { mutableStateOf(false) }
     var showCreateShelfDialog by remember { mutableStateOf(false) }
@@ -225,6 +232,7 @@ fun LibraryScreen(
                 )
             )
         },
+        floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -368,12 +376,27 @@ fun LibraryScreen(
                 if (viewMode == ViewMode.GRID) {
                     LazyVerticalGrid(
                         state = gridState,
-                        columns = GridCells.Adaptive(minSize = 156.dp),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 88.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        columns = GridCells.Adaptive(minSize = gridCardWidthDp.dp),
+                        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 88.dp),
+                        horizontalArrangement = Arrangement.spacedBy((gridCardWidthDp * 0.095f).dp),
+                        verticalArrangement = Arrangement.spacedBy((gridCardWidthDp * 0.11f).dp),
                         modifier = Modifier
                             .fillMaxSize()
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    awaitFirstDown(requireUnconsumed = false)
+                                    do {
+                                        val event = awaitPointerEvent()
+                                        if (event.changes.count { it.pressed } >= 2) {
+                                            val zoom = event.calculateZoom()
+                                            if (zoom != 1f && zoom > 0f) {
+                                                viewModel.scaleGridCardWidth(zoom)
+                                                event.changes.forEach { it.consume() }
+                                            }
+                                        }
+                                    } while (event.changes.any { it.pressed })
+                                }
+                            }
                             .testTag("books_grid")
                     ) {
                         items(books, key = { it.id }) { book ->
@@ -383,7 +406,8 @@ fun LibraryScreen(
                                 shelfName = shelf?.name,
                                 onClick = { onOpenBook(book) },
                                 onFavoriteToggle = { viewModel.toggleFavorite(book) },
-                                onDetailsClick = { selectedBookForDetails = book }
+                                onDetailsClick = { selectedBookForDetails = book },
+                                scaleFactor = cardScaleFactor
                             )
                         }
                     }

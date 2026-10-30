@@ -58,6 +58,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             .getOrDefault(ViewMode.GRID)
     )
     val isDarkTheme = MutableStateFlow(preferences.getBoolean("isDarkTheme", false))
+    val gridCardWidthDp = MutableStateFlow(
+        preferences.getFloat("gridCardWidthDp", 112f).coerceIn(82f, 175f)
+    )
 
     val importState = MutableStateFlow<ImportState>(ImportState.Idle)
 
@@ -115,6 +118,14 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         val next = !isDarkTheme.value
         isDarkTheme.value = next
         preferences.edit().putBoolean("isDarkTheme", next).apply()
+    }
+
+    fun scaleGridCardWidth(zoomFactor: Float) {
+        val next = (gridCardWidthDp.value * zoomFactor).coerceIn(82f, 175f)
+        if (kotlin.math.abs(next - gridCardWidthDp.value) > 0.2f) {
+            gridCardWidthDp.value = next
+            preferences.edit().putFloat("gridCardWidthDp", next).apply()
+        }
     }
 
     fun selectShelf(shelfId: String?) {
