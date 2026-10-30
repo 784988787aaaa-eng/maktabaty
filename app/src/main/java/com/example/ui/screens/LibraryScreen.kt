@@ -85,7 +85,7 @@ import com.example.ui.components.BookDetailDialog
 import com.example.ui.components.BookGridItem
 import com.example.ui.components.BookListItem
 import com.example.ui.components.CreateShelfDialog
-import com.example.ui.components.ShelfSelector
+import com.example.ui.components.UnifiedShelfAndFilterRow
 import com.example.ui.viewmodel.FilterType
 import com.example.ui.viewmodel.ImportState
 import com.example.ui.viewmodel.LibraryViewModel
@@ -252,7 +252,7 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Compact single-row reading statistics card that auto-collapses on scroll or when library is empty
+            // Micro 32.dp single-line reading statistics bar that auto-collapses on scroll or when library is empty
             val readingBooksCount = allRawBooks.count { it.readingProgress > 0f && it.readingProgress < 0.95f }
             val averageProgress = if (allRawBooks.isEmpty()) 0f else allRawBooks.map { it.readingProgress.coerceIn(0f, 1f) }.average().toFloat()
 
@@ -264,28 +264,29 @@ fun LibraryScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(14.dp),
+                        .padding(horizontal = 16.dp, vertical = 2.dp)
+                        .height(32.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = "رحلتك مع القراءة",
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Text(
                                 text = "الكتب: ${allRawBooks.size}",
@@ -303,13 +304,13 @@ fun LibraryScreen(
                                 LinearProgressIndicator(
                                     progress = { averageProgress },
                                     modifier = Modifier
-                                        .width(42.dp)
-                                        .height(5.dp)
-                                        .clip(RoundedCornerShape(3.dp)),
+                                        .width(36.dp)
+                                        .height(4.dp)
+                                        .clip(RoundedCornerShape(2.dp)),
                                     color = MaterialTheme.colorScheme.secondary,
                                     trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
                                 Text(
                                     text = "${(averageProgress * 100).toInt()}%",
                                     style = MaterialTheme.typography.labelSmall,
@@ -322,48 +323,15 @@ fun LibraryScreen(
                 }
             }
 
-            // Shelves Selector Row
-            ShelfSelector(
+            // Unified single-row status filters + user shelves
+            UnifiedShelfAndFilterRow(
                 shelves = shelves,
                 selectedShelfId = selectedShelfId,
+                filterType = filterType,
+                onSelectFilter = { viewModel.setFilterType(it) },
                 onSelectShelf = { viewModel.selectShelf(it) },
                 onAddShelfClick = { showCreateShelfDialog = true }
             )
-
-            // Secondary Status Filter Tabs (الكل، قيد القراءة، المكتملة، المفضلة)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = filterType == FilterType.ALL,
-                    onClick = { viewModel.setFilterType(FilterType.ALL) },
-                    label = { Text("الكل", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.testTag("filter_all")
-                )
-                FilterChip(
-                    selected = filterType == FilterType.READING,
-                    onClick = { viewModel.setFilterType(FilterType.READING) },
-                    label = { Text("قيد القراءة", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.testTag("filter_reading")
-                )
-                FilterChip(
-                    selected = filterType == FilterType.COMPLETED,
-                    onClick = { viewModel.setFilterType(FilterType.COMPLETED) },
-                    label = { Text("المكتملة", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.testTag("filter_completed")
-                )
-                FilterChip(
-                    selected = filterType == FilterType.FAVORITES,
-                    onClick = { viewModel.setFilterType(FilterType.FAVORITES) },
-                    label = { Text("المفضلة ★", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.testTag("filter_favorites")
-                )
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
 
             // 3D Bookshelf Grid or List View
             if (books.isEmpty()) {
@@ -401,7 +369,7 @@ fun LibraryScreen(
                     LazyVerticalGrid(
                         state = gridState,
                         columns = GridCells.Adaptive(minSize = 156.dp),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 88.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                         modifier = Modifier
@@ -422,7 +390,7 @@ fun LibraryScreen(
                 } else {
                     LazyColumn(
                         state = listState,
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 88.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier
                             .fillMaxSize()

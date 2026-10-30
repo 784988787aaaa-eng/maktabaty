@@ -129,30 +129,13 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun testSampleBooksGeneratesSingleKhaymaMasterpieceBook() {
+    fun testSampleBooksReturnsEmptyListWithNoDefaultBooks() {
         val sampleBooks = SampleBooksProvider.generateSampleBooks(context)
-        assertEquals(1, sampleBooks.size)
-
-        val khaymaBook = sampleBooks.first()
-        assertEquals("khayma_fi_alqalb_masterpiece", khaymaBook.id)
-        assertEquals("خَيْمَةٌ فِي القَلْب", khaymaBook.title)
-        assertEquals("رحلةُ فتاةٍ من ركامِ الصراخ إلى سكينةِ البناء", khaymaBook.subtitle)
-        assertEquals(105, khaymaBook.pageCount)
-        assertEquals("ar", khaymaBook.language)
-        assertTrue(khaymaBook.isRtl)
-        assertEquals("#9E3B5A", khaymaBook.accentRoseHex)
-        assertEquals("#C49148", khaymaBook.accentGoldHex)
-
-        val khaymaHtml = File(File(File(context.filesDir, "books"), khaymaBook.folderPath), khaymaBook.entryHtmlPath)
-        assertTrue(khaymaHtml.isFile)
-        val khaymaSource = khaymaHtml.readText(Charsets.UTF_8)
-        assertTrue(khaymaSource.contains("--bg-primary"))
-        assertTrue(khaymaSource.contains("--accent-rose"))
-        assertTrue(khaymaSource.contains("--accent-gold"))
-        assertTrue(khaymaSource.contains("top-bar"))
-        assertTrue(khaymaSource.contains("page-canvas"))
-        assertTrue(khaymaSource.contains("bottom-nav-dock"))
-        assertTrue(khaymaSource.contains("pageCanvas"))
+        assertTrue(sampleBooks.isEmpty())
+        assertTrue(SampleBooksProvider.isDefaultOrSampleBookId("sample_book_1"))
+        assertTrue(SampleBooksProvider.isDefaultOrSampleBookId("islamic_sakina_masterpiece"))
+        assertTrue(SampleBooksProvider.isDefaultOrSampleBookId("khayma_fi_alqalb_masterpiece"))
+        assertFalse(SampleBooksProvider.isDefaultOrSampleBookId("user_book_123"))
     }
 
     @Test
@@ -224,7 +207,7 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun testInitializeCleansSampleBooksAndDefaultShelvesAndInsertsKhaymaMasterpiece() = runBlocking {
+    fun testInitializeCleansAllDefaultBooksAndDefaultShelves() = runBlocking {
         val dao = database.bookDao()
         val repository = com.example.data.repository.BookRepository(dao, context)
 
@@ -232,7 +215,7 @@ class ExampleRobolectricTest {
         dao.insertShelf(Shelf(id = "shelf_literature", name = "الأدب والبلاغة", iconName = "auto_stories", colorHex = "#92400E"))
         dao.insertShelf(Shelf(id = "shelf_user_custom", name = "كتبي الخاصة", iconName = "bookmark", colorHex = "#0284C7"))
 
-        // Insert legacy sample books and a user book
+        // Insert legacy sample/default books and a user book
         dao.insertBook(
             Book(
                 id = "sample_test_1",
@@ -253,6 +236,15 @@ class ExampleRobolectricTest {
         )
         dao.insertBook(
             Book(
+                id = "khayma_fi_alqalb_masterpiece",
+                title = "خيمة في القلب",
+                author = "مؤلف",
+                folderPath = "khayma_fi_alqalb_masterpiece",
+                entryHtmlPath = "index.html"
+            )
+        )
+        dao.insertBook(
+            Book(
                 id = "book_user_1",
                 title = "كتابي الشخصي",
                 author = "منصور",
@@ -267,11 +259,11 @@ class ExampleRobolectricTest {
         val allBooks = dao.getAllBooks().first()
         val allShelves = dao.getAllShelves().first()
 
-        assertEquals(2, allBooks.size)
-        assertTrue(allBooks.any { it.id == "book_user_1" })
-        assertTrue(allBooks.any { it.id == "khayma_fi_alqalb_masterpiece" })
+        assertEquals(1, allBooks.size)
+        assertEquals("book_user_1", allBooks.first().id)
         assertFalse(allBooks.any { it.id.startsWith("sample_") })
         assertFalse(allBooks.any { it.id == "islamic_sakina_masterpiece" })
+        assertFalse(allBooks.any { it.id == "khayma_fi_alqalb_masterpiece" })
 
         assertEquals(1, allShelves.size)
         assertEquals("shelf_user_custom", allShelves.first().id)

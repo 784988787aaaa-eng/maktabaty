@@ -45,7 +45,9 @@ class BookRepository(
         val booksRoot = File(context.filesDir, "books")
         val currentBooks = bookDao.getAllBooks().first()
         for (book in currentBooks) {
-            if (book.id.startsWith("sample_") || book.id == SampleBooksProvider.LEGACY_ISLAMIC_ID) {
+            if (SampleBooksProvider.isDefaultOrSampleBookId(book.id) ||
+                SampleBooksProvider.isDefaultOrSampleBookId(book.folderPath)
+            ) {
                 bookDao.deleteBook(book)
                 val bookDir = File(booksRoot, book.folderPath)
                 if (bookDir.exists()) {
@@ -56,45 +58,8 @@ class BookRepository(
 
         if (booksRoot.exists()) {
             booksRoot.listFiles()?.forEach { dir ->
-                if (dir.name.startsWith("sample_") || dir.name == SampleBooksProvider.LEGACY_ISLAMIC_ID) {
+                if (SampleBooksProvider.isDefaultOrSampleBookId(dir.name)) {
                     dir.deleteRecursively()
-                }
-            }
-        }
-
-        // Fast-path check: only generate/parse the default masterpiece if missing or not yet upgraded to V4
-        val existingDefault = bookDao.getBookByIdOnce(SampleBooksProvider.DEFAULT_MASTERPIECE_ID)
-        val defaultHtmlFile = File(File(booksRoot, SampleBooksProvider.DEFAULT_MASTERPIECE_ID), "index.html")
-        val isDefaultUpToDate = existingDefault != null &&
-            existingDefault.pageCount >= 105 &&
-            defaultHtmlFile.isFile &&
-            runCatching { defaultHtmlFile.readText(Charsets.UTF_8).contains("__maktabatiV4Initialized") }.getOrDefault(false)
-
-        if (!isDefaultUpToDate) {
-            val defaultSamples = SampleBooksProvider.generateSampleBooks(context)
-            if (existingDefault == null) {
-                for (sample in defaultSamples) {
-                    bookDao.insertBook(sample)
-                }
-            } else {
-                val freshSample = defaultSamples.firstOrNull()
-                if (freshSample != null) {
-                    bookDao.updateBookMetadataAndStyle(
-                        id = existingDefault.id,
-                        title = freshSample.title,
-                        subtitle = freshSample.subtitle,
-                        author = freshSample.author,
-                        coverGradientStart = freshSample.coverGradientStart,
-                        coverGradientEnd = freshSample.coverGradientEnd,
-                        bgPrimaryHex = freshSample.bgPrimaryHex,
-                        accentGoldHex = freshSample.accentGoldHex,
-                        accentRoseHex = freshSample.accentRoseHex
-                    )
-                    bookDao.updateBookPageCountAndToc(
-                        id = existingDefault.id,
-                        pageCount = freshSample.pageCount,
-                        tocJson = freshSample.tableOfContentsJson
-                    )
                 }
             }
         }
@@ -102,7 +67,7 @@ class BookRepository(
         // Auto-heal any legacy user-imported books on disk only if they haven't been upgraded to V4 yet
         val remainingBooks = bookDao.getAllBooks().first()
         for (userBook in remainingBooks) {
-            if (userBook.id != SampleBooksProvider.DEFAULT_MASTERPIECE_ID && !userBook.id.startsWith("sample_")) {
+            if (!SampleBooksProvider.isDefaultOrSampleBookId(userBook.id)) {
                 val entryFile = File(File(booksRoot, userBook.folderPath), userBook.entryHtmlPath)
                 if (entryFile.isFile) {
                     runCatching {
