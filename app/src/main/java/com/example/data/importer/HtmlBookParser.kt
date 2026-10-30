@@ -41,10 +41,13 @@ object HtmlBookParser {
     private val ARABIC_UNICODE_PATTERN = Pattern.compile("[\\u0600-\\u06FF]")
 
     // BOOK_DATA JavaScript Object / JSON Patterns
-    private val BOOK_DATA_BLOCK_PATTERN = Pattern.compile("(?:const|let|var|window\\.)\\s*BOOK_DATA\\s*=\\s*\\{(.*?)\\};", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
-    private val BOOK_DATA_TITLE_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,800}?[\"']?\\btitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
-    private val BOOK_DATA_SUBTITLE_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,1200}?[\"']?\\bsubtitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
-    private val BOOK_DATA_AUTHOR_PATTERN = Pattern.compile("BOOK_DATA[\\s\\S]{0,1500}?[\"']?\\bauthor[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val BOOK_DATA_DECL_REGEX = Regex("(?:const|let|var|window\\.)\\s*BOOK_DATA\\s*=")
+    private val BOOK_DATA_TITLE_PATTERN = Pattern.compile("[\"']?\\btitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val BOOK_DATA_SUBTITLE_PATTERN = Pattern.compile("[\"']?\\bsubtitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val BOOK_DATA_AUTHOR_PATTERN = Pattern.compile("[\"']?\\bauthor[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val KEY_TITLE_REGEX = Regex("[\"']?(?:title|sectionTitle|chapterTag|chapterNumber|heading|subtitle)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val ARRAY_START_REGEX = Regex("[\"']?(?:pages|chapters|slides)[\"']?\\s*:\\s*\\[")
+    private val STRIP_TAGS_REGEX = Regex("<.*?>")
 
     // CSS :root Variable Patterns
     private val ACCENT_ROSE_PATTERN = Pattern.compile("--(?:accent-rose|accent-peach)\\s*:\\s*(#[0-9a-fA-F]{3,8})")
@@ -54,27 +57,26 @@ object HtmlBookParser {
     fun isValidHtmlContent(content: String): Boolean {
         val trimmed = content.trim()
         if (trimmed.length < 15) return false
-        // Reject binary files (e.g., null bytes in first KB)
         val checkLen = minOf(trimmed.length, 1024)
         for (i in 0 until checkLen) {
             if (trimmed[i] == '\u0000') return false
         }
-        val lower = trimmed.lowercase()
-        return lower.contains("<html") ||
-            lower.contains("<!doctype html") ||
-            lower.contains("<body") ||
-            lower.contains("<head") ||
-            lower.contains("<div") ||
-            lower.contains("<section") ||
-            lower.contains("<article") ||
-            lower.contains("<h1") ||
-            lower.contains("<p") ||
-            lower.contains("book_data")
+        val probe = if (trimmed.length > 16384) trimmed.substring(0, 16384).lowercase() else trimmed.lowercase()
+        return probe.contains("<html") ||
+            probe.contains("<!doctype html") ||
+            probe.contains("<body") ||
+            probe.contains("<head") ||
+            probe.contains("<div") ||
+            probe.contains("<section") ||
+            probe.contains("<article") ||
+            probe.contains("<h1") ||
+            probe.contains("<p") ||
+            probe.contains("book_data") ||
+            trimmed.lowercase().contains("book_data")
     }
 
     fun parse(entryHtmlFile: File, fallbackTitle: String): ParsedHtmlMetadata {
         val content = try {
-            // Read up to 5MB safely for full BOOK_DATA.pages counting without blocking
             if (entryHtmlFile.length() > 5 * 1024 * 1024) {
                 entryHtmlFile.bufferedReader(Charsets.UTF_8).use { reader ->
                     val buffer = CharArray(5 * 1024 * 1024)
@@ -87,42 +89,64 @@ object HtmlBookParser {
         } catch (e: Exception) {
             ""
         }
+        return parseContent(content, fallbackTitle, quickMode = false)
+    }
 
+    fun parseQuickHeader(content: String, fallbackTitle: String): ParsedHtmlMetadata {
+        return parseContent(content, fallbackTitle, quickMode = true)
+    }
+
+    fun parseContent(content: String, fallbackTitle: String, quickMode: Boolean = false): ParsedHtmlMetadata {
         if (!isValidHtmlContent(content)) {
             throw IllegalArgumentException("الملف المحدد تالف أو ليس ملف كتاب HTML صالحاً")
         }
 
+        val headSample = if (content.length > 20000) content.substring(0, 20000) else content
+        val bdDeclMatch = BOOK_DATA_DECL_REGEX.find(content)
+        val bdStartIdx = bdDeclMatch?.range?.first ?: content.indexOf("BOOK_DATA")
+        val bdHeaderSlice = if (bdStartIdx >= 0) {
+            val pagesIdx = content.indexOf("pages", bdStartIdx).takeIf { it > bdStartIdx && it - bdStartIdx < 1600 }
+            val endIdx = pagesIdx ?: minOf(content.length, bdStartIdx + 1600)
+            content.substring(bdStartIdx, endIdx)
+        } else {
+            ""
+        }
+
         // 1. Extract Title: Priority 1 -> BOOK_DATA.title, Priority 2 -> <title>, Priority 3 -> first <h1>
         var title = ""
-        val bdTitleMatcher = BOOK_DATA_TITLE_PATTERN.matcher(content)
-        if (bdTitleMatcher.find()) {
-            title = bdTitleMatcher.group(1)?.trim() ?: ""
-        }
-        if (title.isBlank()) {
-            val titleMatcher = TITLE_PATTERN.matcher(content)
-            if (titleMatcher.find()) {
-                title = titleMatcher.group(1)?.replace(Regex("<.*?>"), "")?.trim() ?: ""
+        if (bdHeaderSlice.isNotEmpty()) {
+            val bdTitleMatcher = BOOK_DATA_TITLE_PATTERN.matcher(bdHeaderSlice)
+            if (bdTitleMatcher.find()) {
+                title = bdTitleMatcher.group(1)?.trim() ?: ""
             }
         }
         if (title.isBlank()) {
-            val h1Matcher = H1_PATTERN.matcher(content)
+            val titleMatcher = TITLE_PATTERN.matcher(headSample)
+            if (titleMatcher.find()) {
+                title = titleMatcher.group(1)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
+            }
+        }
+        if (title.isBlank()) {
+            val h1Matcher = H1_PATTERN.matcher(headSample)
             if (h1Matcher.find()) {
-                title = h1Matcher.group(1)?.replace(Regex("<.*?>"), "")?.trim() ?: ""
+                title = h1Matcher.group(1)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
             }
         }
         if (title.isBlank()) {
             title = fallbackTitle
         }
 
-        // 2. Extract Subtitle & Author: Priority 1 -> BOOK_DATA.subtitle / BOOK_DATA.author, Priority 2 -> <meta>
+        // 2. Extract Subtitle & Author
         var subtitle = ""
-        val bdSubtitleMatcher = BOOK_DATA_SUBTITLE_PATTERN.matcher(content)
-        if (bdSubtitleMatcher.find()) {
-            subtitle = bdSubtitleMatcher.group(1)?.trim() ?: ""
+        if (bdHeaderSlice.isNotEmpty()) {
+            val bdSubtitleMatcher = BOOK_DATA_SUBTITLE_PATTERN.matcher(bdHeaderSlice)
+            if (bdSubtitleMatcher.find()) {
+                subtitle = bdSubtitleMatcher.group(1)?.trim() ?: ""
+            }
         }
 
         var description = ""
-        val descMatcher = DESC_META_PATTERN.matcher(content)
+        val descMatcher = DESC_META_PATTERN.matcher(headSample)
         if (descMatcher.find()) {
             description = descMatcher.group(1)?.trim() ?: ""
         }
@@ -131,12 +155,14 @@ object HtmlBookParser {
         }
 
         var author = ""
-        val bdAuthorMatcher = BOOK_DATA_AUTHOR_PATTERN.matcher(content)
-        if (bdAuthorMatcher.find()) {
-            author = bdAuthorMatcher.group(1)?.trim() ?: ""
+        if (bdHeaderSlice.isNotEmpty()) {
+            val bdAuthorMatcher = BOOK_DATA_AUTHOR_PATTERN.matcher(bdHeaderSlice)
+            if (bdAuthorMatcher.find()) {
+                author = bdAuthorMatcher.group(1)?.trim() ?: ""
+            }
         }
         if (author.isBlank()) {
-            val authorMatcher = AUTHOR_META_PATTERN.matcher(content)
+            val authorMatcher = AUTHOR_META_PATTERN.matcher(headSample)
             if (authorMatcher.find()) {
                 author = authorMatcher.group(1)?.trim() ?: ""
             }
@@ -145,7 +171,7 @@ object HtmlBookParser {
         // 3. Direction & Language from <html dir="..." lang="...">
         var dirAttr: String? = null
         var langAttr: String? = null
-        val htmlTagMatcher = HTML_TAG_PATTERN.matcher(content)
+        val htmlTagMatcher = HTML_TAG_PATTERN.matcher(headSample)
         if (htmlTagMatcher.find()) {
             val attrs = htmlTagMatcher.group(1) ?: ""
             val dirM = DIR_ATTR_PATTERN.matcher(attrs)
@@ -171,53 +197,57 @@ object HtmlBookParser {
             author = if (language == "ar") "مؤلف غير محدد" else "Unknown Author"
         }
 
-        // 4. Extract Page Count & TOC from BOOK_DATA.pages or HTML structure (unlimited pages)
+        // 4. Extract Page Count & TOC
         val tocList = mutableListOf<TocEntry>()
-        var pageCount = extractBookDataPagesCountAndToc(content, tocList)
+        var pageCount = if (quickMode) {
+            maxOf(1, content.length / 950)
+        } else {
+            extractBookDataPagesCountAndToc(content, bdStartIdx, tocList)
+        }
 
-        if (tocList.isEmpty()) {
-            val headingMatcher = HEADING_PATTERN.matcher(content)
-            var count = 0
-            while (headingMatcher.find() && count < 1000) {
-                val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
-                val id = headingMatcher.group(2)
-                val headingText = headingMatcher.group(3)?.replace(Regex("<.*?>"), "")?.trim() ?: ""
-                if (headingText.isNotBlank()) {
-                    val level = when (tag) {
-                        "h1" -> 1
-                        "h2" -> 2
-                        else -> 3
+        if (!quickMode) {
+            if (tocList.isEmpty()) {
+                val headingMatcher = HEADING_PATTERN.matcher(content)
+                var count = 0
+                while (headingMatcher.find() && count < 1000) {
+                    val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
+                    val id = headingMatcher.group(2)
+                    val headingText = headingMatcher.group(3)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
+                    if (headingText.isNotBlank()) {
+                        val level = when (tag) {
+                            "h1" -> 1
+                            "h2" -> 2
+                            else -> 3
+                        }
+                        val href = if (!id.isNullOrBlank()) "#$id" else "#page-${count + 1}"
+                        tocList.add(TocEntry(title = headingText, href = href, level = level))
+                        count++
                     }
-                    val href = if (!id.isNullOrBlank()) "#$id" else "#page-${count + 1}"
-                    tocList.add(TocEntry(title = headingText, href = href, level = level))
-                    count++
+                }
+            }
+
+            if (pageCount <= 0) {
+                val pageClassCount = Regex("class\\s*=\\s*[\"'][^\"']*\\b(?:page|book-page)\\b[^\"']*[\"']", RegexOption.IGNORE_CASE).findAll(content).count()
+                val sectionCount = Regex("<(?:section|article)\\b", RegexOption.IGNORE_CASE).findAll(content).count()
+                pageCount = when {
+                    pageClassCount > 1 -> pageClassCount
+                    sectionCount > 1 -> sectionCount
+                    tocList.size > 1 -> tocList.size
+                    else -> maxOf(1, (content.length / 1800))
                 }
             }
         }
 
-        val pageClassCount = Regex("class\\s*=\\s*[\"'][^\"']*\\b(?:page|book-page)\\b[^\"']*[\"']", RegexOption.IGNORE_CASE).findAll(content).count()
-        val sectionCount = Regex("<(?:section|article)\\b", RegexOption.IGNORE_CASE).findAll(content).count()
-
-        if (pageCount <= 0 || pageClassCount > pageCount) {
-            pageCount = when {
-                pageClassCount > pageCount -> pageClassCount
-                pageCount > 0 -> pageCount
-                sectionCount > 1 -> sectionCount
-                tocList.size > 1 -> tocList.size
-                else -> maxOf(1, (content.length / 1800))
-            }
-        }
-
         // 5. Extract CSS :root Colors (--accent-rose, --accent-gold, --bg-primary)
-        val accentRoseHex = extractCssVar(content, ACCENT_ROSE_PATTERN) ?: "#E11D48"
-        val accentGoldHex = extractCssVar(content, ACCENT_GOLD_PATTERN) ?: "#D97706"
-        val bgPrimaryHex = extractCssVar(content, BG_PRIMARY_PATTERN) ?: "#1E293B"
+        val accentRoseHex = extractCssVar(headSample, ACCENT_ROSE_PATTERN) ?: "#E11D48"
+        val accentGoldHex = extractCssVar(headSample, ACCENT_GOLD_PATTERN) ?: "#D97706"
+        val bgPrimaryHex = extractCssVar(headSample, BG_PRIMARY_PATTERN) ?: "#1E293B"
 
         val startColor = parseHexToColorLong(bgPrimaryHex, 0xFF1E293B)
         val endColor = parseHexToColorLong(accentRoseHex, darkenColorLong(startColor))
 
-        val hasExternalCss = CSS_LINK_PATTERN.matcher(content).find() || STYLE_TAG_PATTERN.matcher(content).find()
-        val hasExternalJs = SCRIPT_PATTERN.matcher(content).find()
+        val hasExternalCss = CSS_LINK_PATTERN.matcher(headSample).find() || STYLE_TAG_PATTERN.matcher(headSample).find()
+        val hasExternalJs = bdStartIdx >= 0 || SCRIPT_PATTERN.matcher(headSample).find()
 
         return ParsedHtmlMetadata(
             title = title,
@@ -238,16 +268,14 @@ object HtmlBookParser {
         )
     }
 
-    private fun extractBookDataPagesCountAndToc(content: String, tocOut: MutableList<TocEntry>): Int {
-        // Locate `pages: [` or `"pages": [` (or `chapters` / `slides`) inside BOOK_DATA
-        val bdIdx = content.indexOf("BOOK_DATA").takeIf { it >= 0 } ?: 0
-        val searchRegion = content.substring(bdIdx)
-        val arrayRegex = Regex("[\"']?(?:pages|chapters|slides)[\"']?\\s*:\\s*\\[")
-        val pagesStartMatch = arrayRegex.find(searchRegion)
-            ?: arrayRegex.find(content)
+    private fun extractBookDataPagesCountAndToc(content: String, bdStartIdx: Int, tocOut: MutableList<TocEntry>): Int {
+        val startSearch = if (bdStartIdx >= 0) bdStartIdx else 0
+        val searchRegion = if (startSearch > 0) content.substring(startSearch) else content
+        val pagesStartMatch = ARRAY_START_REGEX.find(searchRegion)
+            ?: (if (startSearch > 0) ARRAY_START_REGEX.find(content) else null)
             ?: return 0
 
-        val baseOffset = if (arrayRegex.find(searchRegion) != null) bdIdx else 0
+        val baseOffset = if (ARRAY_START_REGEX.find(searchRegion) != null) startSearch else 0
         val arrayStartIndex = baseOffset + pagesStartMatch.range.last // index of '['
         var bracketDepth = 0
         var inString = false
@@ -259,12 +287,11 @@ object HtmlBookParser {
         var objectDepth = 0
         var currentObjectStart = -1
 
-        val keyTitleRegex = Regex("[\"']?(?:title|sectionTitle|chapterTag|chapterNumber|heading|subtitle)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
-
         var i = arrayStartIndex
-        while (i < content.length) {
+        val len = content.length
+        while (i < len) {
             val c = content[i]
-            val nextC = if (i + 1 < content.length) content[i + 1] else ' '
+            val nextC = if (i + 1 < len) content[i + 1] else ' '
 
             if (inLineComment) {
                 if (c == '\n' || c == '\r') inLineComment = false
@@ -330,17 +357,20 @@ object HtmlBookParser {
                     objectDepth--
                     if (bracketDepth == 1 && objectDepth == 0 && currentObjectStart != -1) {
                         topLevelObjectCount++
-                        val objSlice = content.substring(currentObjectStart, i + 1)
-                        val pageTitleMatch = keyTitleRegex.find(objSlice)
-                        val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim() ?: "صفحة $topLevelObjectCount"
-                        if (pageTitle.isNotBlank() && tocOut.size < 1000) {
-                            tocOut.add(
-                                TocEntry(
-                                    title = pageTitle,
-                                    href = "#page-$topLevelObjectCount",
-                                    level = 1
+                        if (tocOut.size < 1000) {
+                            val sliceEnd = minOf(i + 1, currentObjectStart + 450)
+                            val objSlice = content.substring(currentObjectStart, sliceEnd)
+                            val pageTitleMatch = KEY_TITLE_REGEX.find(objSlice)
+                            val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim() ?: "صفحة $topLevelObjectCount"
+                            if (pageTitle.isNotBlank()) {
+                                tocOut.add(
+                                    TocEntry(
+                                        title = pageTitle,
+                                        href = "#page-$topLevelObjectCount",
+                                        level = 1
+                                    )
                                 )
-                            )
+                            }
                         }
                         currentObjectStart = -1
                     }

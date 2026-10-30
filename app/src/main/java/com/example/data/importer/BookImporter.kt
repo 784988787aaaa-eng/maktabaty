@@ -16,7 +16,12 @@ import java.util.zip.ZipInputStream
 
 object BookImporter {
 
-    suspend fun importFromUri(context: Context, uri: Uri, userCustomTitle: String? = null): Book = withContext(Dispatchers.IO) {
+    suspend fun importFromUri(
+        context: Context,
+        uri: Uri,
+        userCustomTitle: String? = null,
+        onQuickBookStaged: ((Book) -> Unit)? = null
+    ): Book = withContext(Dispatchers.IO) {
         val originalName = queryFileName(context, uri) ?: "كتاب_مستورد.html"
         val lowerName = originalName.lowercase()
         val isZip = lowerName.endsWith(".zip")
@@ -37,35 +42,85 @@ object BookImporter {
         var totalSize = 0L
 
         try {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                if (isZip) {
+            val fallbackName = userCustomTitle ?: originalName.substringBeforeLast(".")
+            val relativeEntryPath: String
+            val rawHtml: String
+
+            if (isZip) {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
                     val stats = extractZipSafely(inputStream, targetDir)
                     fileCount = stats.first
                     totalSize = stats.second
-                } else {
-                    val destFile = File(targetDir, "index.html")
-                    FileOutputStream(destFile).use { out ->
-                        val bytesCopied = inputStream.copyTo(out)
-                        fileCount = 1
-                        totalSize = bytesCopied
-                    }
-                }
-            } ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف من الذاكرة")
+                } ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف من الذاكرة")
 
-            if (totalSize == 0L) {
-                throw IllegalArgumentException("الملف المختار فارغ ولا يحتوي على بيانات")
+                if (totalSize == 0L) {
+                    throw IllegalArgumentException("الملف المختار فارغ ولا يحتوي على بيانات")
+                }
+
+                val entryFile = findEntryHtml(targetDir)
+                    ?: throw IllegalArgumentException("لم يتم العثور على أي ملف HTML صالح داخل الحزمة المستوردة")
+
+                relativeEntryPath = entryFile.relativeTo(targetDir).path
+                rawHtml = entryFile.readText(Charsets.UTF_8)
+                val quickMeta = HtmlBookParser.parseQuickHeader(rawHtml, fallbackName)
+                val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, quickMeta.pageCount)
+                entryFile.writeText(injectedHtml, Charsets.UTF_8)
+            } else {
+                // Single-pass in-memory read + inject + single disk write for instant Chrome-speed opening
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف من الذاكرة")
+
+                if (bytes.isEmpty()) {
+                    throw IllegalArgumentException("الملف المختار فارغ ولا يحتوي على بيانات")
+                }
+
+                fileCount = 1
+                totalSize = bytes.size.toLong()
+                relativeEntryPath = "index.html"
+                rawHtml = String(bytes, Charsets.UTF_8)
+
+                val quickMeta = HtmlBookParser.parseQuickHeader(rawHtml, fallbackName)
+                val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, quickMeta.pageCount)
+                val destFile = File(targetDir, "index.html")
+                destFile.writeText(injectedHtml, Charsets.UTF_8)
+
+                if (onQuickBookStaged != null) {
+                    val quickTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else quickMeta.title
+                    val stagedBook = Book(
+                        id = bookId,
+                        title = quickTitle,
+                        subtitle = quickMeta.subtitle,
+                        author = quickMeta.author,
+                        description = quickMeta.description,
+                        folderPath = bookId,
+                        entryHtmlPath = relativeEntryPath,
+                        shelfId = null,
+                        isFavorite = false,
+                        readingProgress = 0f,
+                        scrollY = 0,
+                        currentPage = 1,
+                        pageCount = quickMeta.pageCount,
+                        language = quickMeta.language,
+                        isRtl = quickMeta.isRtl,
+                        accentRoseHex = quickMeta.accentRoseHex,
+                        accentGoldHex = quickMeta.accentGoldHex,
+                        bgPrimaryHex = quickMeta.bgPrimaryHex,
+                        coverGradientStart = quickMeta.coverGradientStart,
+                        coverGradientEnd = quickMeta.coverGradientEnd,
+                        coverIcon = if (quickMeta.hasExternalJs) "auto_stories" else "menu_book",
+                        lastReadTimestamp = System.currentTimeMillis(),
+                        createdAt = System.currentTimeMillis(),
+                        fileCount = fileCount,
+                        totalSizeBytes = totalSize,
+                        hasExternalCss = quickMeta.hasExternalCss,
+                        hasExternalJs = quickMeta.hasExternalJs,
+                        tableOfContentsJson = "[]"
+                    )
+                    onQuickBookStaged(stagedBook)
+                }
             }
 
-            val entryFile = findEntryHtml(targetDir)
-                ?: throw IllegalArgumentException("لم يتم العثور على أي ملف HTML صالح داخل الحزمة المستوردة")
-
-            val relativeEntryPath = entryFile.relativeTo(targetDir).path
-            val fallbackName = userCustomTitle ?: originalName.substringBeforeLast(".")
-            val metadata = HtmlBookParser.parse(entryFile, fallbackName)
-            // Pre-inject once on Dispatchers.IO; WebView subsequently streams the file directly.
-            val rawHtml = entryFile.readText(Charsets.UTF_8)
-            entryFile.writeText(SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, metadata.pageCount), Charsets.UTF_8)
-
+            val metadata = HtmlBookParser.parseContent(rawHtml, fallbackName, quickMode = false)
             val finalTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else metadata.title
 
             Book(

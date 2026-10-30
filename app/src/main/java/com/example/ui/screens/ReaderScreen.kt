@@ -1,13 +1,15 @@
 package com.example.ui.screens
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.os.Handler
-import android.os.Looper
+import android.net.Uri
+import android.view.MotionEvent
 import android.view.View
-import android.webkit.JavascriptInterface
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
@@ -29,7 +31,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -55,7 +56,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -67,6 +67,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,26 +77,45 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.data.importer.HtmlBookParser
-import com.example.data.sandbox.SandboxHtmlInjector
-import com.example.ui.reader.ObservableWebView
-import com.example.ui.reader.MaktabatiJsBridge
-import com.example.ui.reader.ReaderThemeMode
 import com.example.data.model.Book
 import com.example.data.model.Bookmark
+import com.example.data.sandbox.SandboxHtmlInjector
+import com.example.ui.reader.MaktabatiJsBridge
+import com.example.ui.reader.ObservableWebView
+import com.example.ui.reader.ReaderThemeMode
+import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
+
+private const val VIRTUAL_BOOK_HOST = "maktabati.app"
+private const val VIRTUAL_BOOK_BASE = "https://maktabati.app/books/"
+
+private fun resolveMimeType(fileName: String): String {
+    val lower = fileName.lowercase()
+    return when {
+        lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".xhtml") -> "text/html"
+        lower.endsWith(".css") -> "text/css"
+        lower.endsWith(".js") || lower.endsWith(".mjs") -> "application/javascript"
+        lower.endsWith(".json") -> "application/json"
+        lower.endsWith(".svg") -> "image/svg+xml"
+        lower.endsWith(".png") -> "image/png"
+        lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
+        lower.endsWith(".webp") -> "image/webp"
+        lower.endsWith(".gif") -> "image/gif"
+        lower.endsWith(".woff2") -> "font/woff2"
+        lower.endsWith(".woff") -> "font/woff"
+        lower.endsWith(".ttf") -> "font/ttf"
+        lower.endsWith(".otf") -> "font/otf"
+        else -> "application/octet-stream"
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
@@ -109,15 +129,15 @@ fun ReaderScreen(
     onDeleteBookmark: (Bookmark) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val prefs = remember(context) {
         context.getSharedPreferences("maktabati_preferences", android.content.Context.MODE_PRIVATE)
     }
-    var showExtendedControls by remember { mutableStateOf(false) }
-    var pillCollapsed by remember { mutableStateOf(true) }
-    var currentProgress by remember { mutableFloatStateOf(book.readingProgress) }
-    val scrollYHolder = remember { IntArray(1) { book.scrollY } }
-    var currentPage by remember { mutableIntStateOf(book.currentPage.coerceAtLeast(1)) }
+    var showExtendedControls by remember(book.id) { mutableStateOf(false) }
+    var pillCollapsed by remember(book.id) { mutableStateOf(true) }
+    var currentProgress by remember(book.id) { mutableFloatStateOf(book.readingProgress) }
+    val scrollYHolder = remember(book.id) { IntArray(1) { book.scrollY } }
+    var currentPage by remember(book.id) { mutableIntStateOf(book.currentPage.coerceAtLeast(1)) }
     var livePageCount by remember(book.id, book.pageCount) { mutableIntStateOf(book.pageCount.coerceAtLeast(1)) }
     var textZoomPercent by remember(book.id) { mutableIntStateOf(prefs.getInt("textZoomPercent", 100)) }
     var readerTheme by remember(book.id) {
@@ -132,9 +152,9 @@ fun ReaderScreen(
     var showAddBookmarkDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
 
-    var webViewRef by remember { mutableStateOf<ObservableWebView?>(null) }
-    val lastAppliedZoom = remember { IntArray(1) { -1 } }
-    val lastAppliedTheme = remember { arrayOf<ReaderThemeMode?>(null) }
+    var webViewRef by remember(book.id) { mutableStateOf<ObservableWebView?>(null) }
+    val lastAppliedZoom = remember(book.id) { IntArray(1) { -1 } }
+    val lastAppliedTheme = remember(book.id) { arrayOf<ReaderThemeMode?>(null) }
 
     val tocEntries = remember(book.tableOfContentsJson) {
         HtmlBookParser.jsonToToc(book.tableOfContentsJson)
@@ -153,9 +173,6 @@ fun ReaderScreen(
             webViewRef?.let { wv ->
                 try {
                     wv.stopLoading()
-                    wv.loadUrl("about:blank")
-                    wv.clearHistory()
-                    wv.clearCache(false)
                     wv.removeAllViews()
                     wv.destroy()
                 } catch (_: Exception) {}
@@ -205,126 +222,192 @@ fun ReaderScreen(
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
-        // Full-Screen Sandboxed HTML Book Engine
-        AndroidView(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("sandboxed_reader_webview"),
-            factory = { ctx ->
-                ObservableWebView(ctx).apply {
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        allowFileAccess = true
-                        allowContentAccess = true
-                        builtInZoomControls = false
-                        displayZoomControls = false
-                        useWideViewPort = true
-                        loadWithOverviewMode = false
-                        defaultTextEncodingName = "UTF-8"
-                        textZoom = textZoomPercent
-                    }
-                    lastAppliedZoom[0] = textZoomPercent
-                    lastAppliedTheme[0] = readerTheme
-
-                    isVerticalScrollBarEnabled = true
-                    isHorizontalScrollBarEnabled = false
-
-                    // Automatically fold the edge handle / extended controls when user touches the book
-                    setOnTouchListener { _, event ->
-                        if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-                            if (!pillCollapsed || showExtendedControls) {
-                                pillCollapsed = true
-                                showExtendedControls = false
-                            }
-                        }
-                        false
-                    }
-
-                    addJavascriptInterface(
-                        MaktabatiJsBridge(livePageCount) { page, total, prog ->
-                            currentPage = page
-                            if (total > 0 && total != livePageCount) {
-                                livePageCount = total
-                            }
-                            currentProgress = prog
-                            onSaveProgress(prog, scrollYHolder[0], page)
-                        },
-                        "MaktabatiBridge"
-                    )
-
-                    webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            super.onPageFinished(view, url)
-                            view?.let { wv ->
-                                if (book.scrollY > 0) {
-                                    wv.postDelayed({
-                                        wv.scrollTo(0, book.scrollY)
-                                    }, 50)
-                                }
-                                if (readerTheme != ReaderThemeMode.ORIGINAL) {
-                                    applyThemeToWebView(wv, readerTheme)
-                                }
-                                val savedPage = book.currentPage.coerceAtLeast(1)
-                                if (savedPage > 1) {
-                                    wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${savedPage - 1});", null)
-                                }
-                            }
-                        }
-
-                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                            return false
-                        }
-                    }
-
-                    webChromeClient = WebChromeClient()
-
-                    onScrollListener = { scrollY, maxScroll ->
-                        scrollYHolder[0] = scrollY
-                        if (maxScroll > 20 && livePageCount <= 1) {
-                            val prog = (scrollY.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f)
-                            currentProgress = prog
-                        }
-                    }
-
+        // Full-Screen Hardware-Accelerated HTML Book Engine
+        key(book.id) {
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("sandboxed_reader_webview"),
+                factory = { ctx ->
                     val booksRoot = File(ctx.filesDir, "books")
                     val bookDir = File(booksRoot, book.folderPath)
                     val entryFile = File(bookDir, book.entryHtmlPath)
-                    if (entryFile.exists()) {
-                        // Heal any legacy CSS containment on the fly before loading
-                        runCatching {
-                            val raw = entryFile.readText(Charsets.UTF_8)
-                            if (raw.contains("contain: layout style") || raw.contains("backdrop-filter:blur(4px)!important") || !raw.contains("__maktabatiV3Initialized")) {
-                                val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
-                                entryFile.writeText(upgraded, Charsets.UTF_8)
+
+                    ObservableWebView(ctx).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
+                        settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            databaseEnabled = true
+                            allowFileAccess = true
+                            allowContentAccess = true
+                            @Suppress("DEPRECATION")
+                            allowFileAccessFromFileURLs = true
+                            @Suppress("DEPRECATION")
+                            allowUniversalAccessFromFileURLs = true
+                            builtInZoomControls = false
+                            displayZoomControls = false
+                            useWideViewPort = true
+                            loadWithOverviewMode = true
+                            defaultTextEncodingName = "UTF-8"
+                            textZoom = textZoomPercent
+                            cacheMode = WebSettings.LOAD_DEFAULT
+                        }
+                        lastAppliedZoom[0] = textZoomPercent
+                        lastAppliedTheme[0] = readerTheme
+
+                        isVerticalScrollBarEnabled = true
+                        isHorizontalScrollBarEnabled = false
+
+                        // Automatically fold the edge handle / extended controls when user touches the book
+                        setOnTouchListener { _, event ->
+                            if (event.action == MotionEvent.ACTION_DOWN) {
+                                if (!pillCollapsed || showExtendedControls) {
+                                    pillCollapsed = true
+                                    showExtendedControls = false
+                                }
+                            }
+                            false
+                        }
+
+                        addJavascriptInterface(
+                            MaktabatiJsBridge(livePageCount) { page, total, prog ->
+                                currentPage = page
+                                if (total > 0 && total != livePageCount) {
+                                    livePageCount = total
+                                }
+                                currentProgress = prog
+                                onSaveProgress(prog, scrollYHolder[0], page)
+                            },
+                            "MaktabatiBridge"
+                        )
+
+                        webViewClient = object : WebViewClient() {
+                            override fun shouldInterceptRequest(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): WebResourceResponse? {
+                                val reqUri = request?.url ?: return null
+                                if (reqUri.host == VIRTUAL_BOOK_HOST && reqUri.path?.startsWith("/books/") == true) {
+                                    val relPath = reqUri.path!!.removePrefix("/books/")
+                                    val targetFile = File(booksRoot, relPath)
+                                    try {
+                                        if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
+                                            val mime = resolveMimeType(targetFile.name)
+                                            // Upgrade legacy book files on background I/O thread if needed
+                                            if (mime == "text/html") {
+                                                val raw = targetFile.readText(Charsets.UTF_8)
+                                                if (!raw.contains("__maktabatiV4Initialized")) {
+                                                    val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
+                                                    targetFile.writeText(upgraded, Charsets.UTF_8)
+                                                    return WebResourceResponse(
+                                                        "text/html",
+                                                        "UTF-8",
+                                                        200,
+                                                        "OK",
+                                                        mapOf(
+                                                            "Access-Control-Allow-Origin" to "*",
+                                                            "Cache-Control" to "no-cache"
+                                                        ),
+                                                        upgraded.byteInputStream(Charsets.UTF_8)
+                                                    )
+                                                }
+                                            }
+                                            return WebResourceResponse(
+                                                mime,
+                                                "UTF-8",
+                                                200,
+                                                "OK",
+                                                mapOf(
+                                                    "Access-Control-Allow-Origin" to "*",
+                                                    "Cache-Control" to "no-cache"
+                                                ),
+                                                BufferedInputStream(FileInputStream(targetFile), 65536)
+                                            )
+                                        }
+                                    } catch (_: Exception) {}
+                                }
+                                return super.shouldInterceptRequest(view, request)
+                            }
+
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                super.onPageFinished(view, url)
+                                view?.let { wv ->
+                                    if (book.scrollY > 0) {
+                                        wv.postDelayed({
+                                            wv.scrollTo(0, book.scrollY)
+                                        }, 30)
+                                    }
+                                    if (readerTheme != ReaderThemeMode.ORIGINAL) {
+                                        applyThemeToWebView(wv, readerTheme)
+                                    }
+                                    val savedPage = book.currentPage.coerceAtLeast(1)
+                                    if (savedPage > 1) {
+                                        wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${savedPage - 1});", null)
+                                    }
+                                }
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                                error: WebResourceError?
+                            ) {
+                                super.onReceivedError(view, request, error)
+                                if (request?.isForMainFrame == true && request.url?.host == VIRTUAL_BOOK_HOST && entryFile.isFile) {
+                                    view?.loadUrl(Uri.fromFile(entryFile).toString())
+                                }
+                            }
+
+                            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                                return false
                             }
                         }
-                        settings.cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
-                        loadUrl(android.net.Uri.fromFile(entryFile).toString())
-                    } else {
-                        loadDataWithBaseURL(
-                            null,
-                            "<h3 style='text-align:center;padding:40px;'>تعذر العثور على ملف الكتاب</h3>",
-                            "text/html",
-                            "UTF-8",
-                            null
-                        )
-                    }
 
-                    webViewRef = this
+                        webChromeClient = WebChromeClient()
+
+                        onScrollListener = { scrollY, maxScroll ->
+                            scrollYHolder[0] = scrollY
+                            if (maxScroll > 20 && livePageCount <= 1) {
+                                val prog = (scrollY.toFloat() / maxScroll.toFloat()).coerceIn(0f, 1f)
+                                currentProgress = prog
+                            }
+                        }
+
+                        if (entryFile.exists()) {
+                            // Load over virtual HTTPS origin so Chromium streams off the UI thread with full localStorage & CSS support
+                            val virtualUrl = "$VIRTUAL_BOOK_BASE${book.folderPath}/${book.entryHtmlPath}"
+                            loadUrl(virtualUrl)
+                        } else {
+                            loadDataWithBaseURL(
+                                null,
+                                "<h3 style='text-align:center;padding:40px;'>تعذر العثور على ملف الكتاب</h3>",
+                                "text/html",
+                                "UTF-8",
+                                null
+                            )
+                        }
+
+                        webViewRef = this
+                    }
+                },
+                update = { wv ->
+                    if (lastAppliedZoom[0] != textZoomPercent) {
+                        lastAppliedZoom[0] = textZoomPercent
+                        wv.settings.textZoom = textZoomPercent
+                    }
+                    if (lastAppliedTheme[0] != readerTheme) {
+                        lastAppliedTheme[0] = readerTheme
+                        applyThemeToWebView(wv, readerTheme)
+                    }
                 }
-            },
-            update = { wv ->
-                if (lastAppliedZoom[0] != textZoomPercent) {
-                    lastAppliedZoom[0] = textZoomPercent
-                    wv.settings.textZoom = textZoomPercent
-                }
-                if (lastAppliedTheme[0] != readerTheme) {
-                    lastAppliedTheme[0] = readerTheme
-                    applyThemeToWebView(wv, readerTheme)
-                }
-            }
-        )
+            )
+        }
 
         // Smart Auto-Hiding Edge Handle (collapsed by default on the middle side edge, non-intrusive 18.dp x 56.dp)
         Row(

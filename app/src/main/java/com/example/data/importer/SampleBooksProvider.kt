@@ -30,13 +30,9 @@ object SampleBooksProvider {
         val htmlFile = File(bookDir, "index.html")
 
         val rawHtml = loadKhaymaMasterpieceHtml(context)
-        val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, DEFAULT_MASTERPIECE_ID, 105)
+        val meta = HtmlBookParser.parseContent(rawHtml, "خَيْمَةٌ فِي القَلْب")
+        val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, DEFAULT_MASTERPIECE_ID, meta.pageCount)
         htmlFile.writeText(injectedHtml, Charsets.UTF_8)
-
-        val meta = HtmlBookParser.parse(
-            htmlFile,
-            "خَيْمَةٌ فِي القَلْب"
-        )
 
         val book = Book(
             id = DEFAULT_MASTERPIECE_ID,

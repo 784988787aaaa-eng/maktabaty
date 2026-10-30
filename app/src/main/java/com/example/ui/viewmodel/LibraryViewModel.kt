@@ -9,6 +9,8 @@ import com.example.data.model.Book
 import com.example.data.model.Bookmark
 import com.example.data.model.Shelf
 import com.example.data.repository.BookRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -59,6 +61,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     val importState = MutableStateFlow<ImportState>(ImportState.Idle)
 
+    // True when launched directly via ACTION_VIEW / ACTION_SEND so LibraryScreen never flashes
+    val isOpeningExternalFile = MutableStateFlow(false)
+
     val filteredBooks: StateFlow<List<Book>> = combine(
         rawBooks,
         selectedShelfId,
@@ -95,9 +100,13 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     // Active Reader State
     val activeBook = MutableStateFlow<Book?>(null)
     val activeBookmarks = MutableStateFlow<List<Bookmark>>(emptyList())
+    private var bookmarksJob: Job? = null
 
     init {
         viewModelScope.launch {
+            if (isOpeningExternalFile.value) {
+                delay(600)
+            }
             repository.initializeDefaultDataIfNeeded()
         }
     }
@@ -124,6 +133,37 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         val next = if (viewMode.value == ViewMode.GRID) ViewMode.LIST else ViewMode.GRID
         viewMode.value = next
         preferences.edit().putString("viewMode", next.name).apply()
+    }
+
+    /**
+     * Direct-to-Reader fast path for external file intents (WhatsApp, Files, Telegram):
+     * Immediately stages the HTML file on disk and opens ReaderScreen in <15ms without flashing LibraryScreen.
+     */
+    fun openExternalUriImmediately(uri: Uri) {
+        isOpeningExternalFile.value = true
+        viewModelScope.launch {
+            val result = repository.importBook(
+                uri = uri,
+                customTitle = null,
+                onQuickBookStaged = { stagedBook ->
+                    activeBook.value = stagedBook
+                    isOpeningExternalFile.value = false
+                    observeBookmarksFor(stagedBook.id)
+                }
+            )
+            result.onSuccess { fullBook ->
+                // Update full TOC & pageCount seamlessly (same book.id so WebView does not reload)
+                val current = activeBook.value
+                if (current == null || current.id == fullBook.id) {
+                    activeBook.value = fullBook
+                }
+                isOpeningExternalFile.value = false
+                observeBookmarksFor(fullBook.id)
+            }.onFailure { err ->
+                isOpeningExternalFile.value = false
+                importState.value = ImportState.Error(err.message ?: "تعذر فتح الملف المحدد")
+            }
+        }
     }
 
     fun importBook(uri: Uri, customTitle: String? = null, onComplete: ((Book?) -> Unit)? = null) {
@@ -165,30 +205,28 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         importState.value = ImportState.Idle
     }
 
-    fun openBook(book: Book) {
-        activeBook.value = book
-        viewModelScope.launch {
-            repository.getBookmarks(book.id).collect { bookmarks ->
+    private fun observeBookmarksFor(bookId: String) {
+        bookmarksJob?.cancel()
+        bookmarksJob = viewModelScope.launch {
+            repository.getBookmarks(bookId).collect { bookmarks ->
                 activeBookmarks.value = bookmarks
             }
         }
     }
 
+    fun openBook(book: Book) {
+        activeBook.value = book
+        observeBookmarksFor(book.id)
+    }
+
     fun closeReader() {
+        isOpeningExternalFile.value = false
         activeBook.value = null
     }
 
     fun saveProgress(bookId: String, progress: Float, scrollY: Int, currentPage: Int = 1) {
         viewModelScope.launch {
             repository.updateReadingProgress(bookId, progress, scrollY, currentPage)
-            if (activeBook.value?.id == bookId) {
-                activeBook.value = activeBook.value?.copy(
-                    readingProgress = progress,
-                    scrollY = scrollY,
-                    currentPage = currentPage,
-                    lastReadTimestamp = System.currentTimeMillis()
-                )
-            }
         }
     }
 

@@ -39,8 +39,8 @@ html, body {
   font-family: var(--reader-family);
 }
 .app {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: 100vh;
+  max-height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -195,7 +195,7 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 64dvh;
+  min-height: 64vh;
   padding: 24px 16px;
   background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-soft-rose) 100%);
   border-radius: 16px;
@@ -456,6 +456,10 @@ p {
 }
 .overlay {
   position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   inset: 0;
   background: rgba(26, 14, 20, 0.62);
   z-index: 20;
@@ -471,7 +475,7 @@ p {
   color: var(--text-primary);
   width: 100%;
   max-width: 650px;
-  max-height: 84dvh;
+  max-height: 84vh;
   overflow: auto;
   border-radius: 24px 24px 0 0;
   border-top: 2px solid var(--accent-gold);

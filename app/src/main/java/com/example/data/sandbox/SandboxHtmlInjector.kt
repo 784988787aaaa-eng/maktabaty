@@ -1,40 +1,42 @@
 package com.example.data.sandbox
 
 /**
- * Preprocesses imported and sample HTML books with:
- * 1. Safe-Area Viewport CSS (without GPU stacking/containment overrides that hide child layers on WebView).
- * 2. Crash-proof per-book localStorage isolation with in-memory fallback + Android progress bridge.
- * 3. Lightning Progressive Page Engine: renders initial pages immediately (<30ms) and pre-warms remaining pages in background chunks.
- * 4. Self-Healing BOOK_DATA Renderer: guarantees no blank/solid-color screen ever occurs across hundreds of AI book templates.
- * 5. Universal 4-Way Swipe Engine: smooth horizontal (RTL/LTR) and vertical boundary swipe page turns.
+ * High-speed, non-intrusive preprocessor for standalone HTML/CSS/JS books:
+ * 1. Preserves `<meta charset="utf-8">` and `<meta name="viewport">` at byte 0 by injecting right before `</head>`.
+ * 2. Normalizes `dvh`/`svh`/`lvh` viewport units to `vh` and enforces 100vh fallback on `.app` so embedded Android
+ *    WebViews (including Huawei/Honor/older System WebViews) never collapse `.app` to 0px height.
+ * 3. Provides crash-proof per-book `localStorage` isolation + full `window.localStorage` polyfill if origin blocks DOMStorage.
+ * 4. Zero-reflow self-healing `BOOK_DATA` renderer + 4-way swipe fallback that stays completely out of the way
+ *    when the book's own native JS engine is active.
  */
 object SandboxHtmlInjector {
 
-    private val OLD_STYLE_REGEX = Regex(
-        "<style\\s+id=[\"']maktabati-perf-booster(?:-v\\d+)?[\"'][^>]*>[\\s\\S]*?</style>",
-        RegexOption.IGNORE_CASE
-    )
-    private val OLD_SCRIPT_REGEX = Regex(
-        "<script\\s+id=[\"']maktabati-storage-isolation(?:-v\\d+)?[\"'][^>]*>[\\s\\S]*?</script>",
-        RegexOption.IGNORE_CASE
-    )
+    private val DVH_UNIT_REGEX = Regex("(\\d+(?:\\.\\d+)?)[dsl]vh\\b", RegexOption.IGNORE_CASE)
 
     fun buildInjectedSnippet(bookId: String, pageCount: Int): String {
         val safePrefix = "book_${bookId.replace(Regex("[^a-zA-Z0-9_]"), "_")}_"
         return """
         <style id="maktabati-perf-booster">
           html, body {
-            min-height: 100vh;
             width: 100%;
+            height: 100%;
+            min-height: 100vh;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
           }
-          .book-stage, .stage {
+          .app {
+            width: 100%;
+            height: 100vh;
             min-height: 100vh;
+            max-height: 100vh;
+            box-sizing: border-box;
+          }
+          .book-stage, .stage {
             width: 100%;
             box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
           }
           .page-canvas, .page, .book-page, .page-container {
             box-sizing: border-box;
@@ -48,73 +50,117 @@ object SandboxHtmlInjector {
             -webkit-overflow-scrolling: touch;
             box-sizing: border-box;
           }
+          .overlay {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+          }
           .bottom-nav-dock, .controls-bar, .page-footer {
             flex-shrink: 0;
             z-index: 25;
           }
-          .maktabati-progressive-chunk-hidden {
-            display: none !important;
-          }
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV3Initialized) return;
+          if (window.__maktabatiV4Initialized) return;
+          window.__maktabatiV4Initialized = true;
           window.__maktabatiV3Initialized = true;
           try {
             const P = "$safePrefix", TOTAL = ${pageCount.coerceAtLeast(1)};
             const memStore = {};
-            const key = k => { k = String(k); return k.startsWith(P) ? k : P + k; };
+            const key = function(k) { k = String(k); return k.indexOf(P) === 0 ? k : P + k; };
 
-            try {
-              const origGet = Storage.prototype.getItem;
-              const origSet = Storage.prototype.setItem;
-              const origRem = Storage.prototype.removeItem;
-
-              Storage.prototype.getItem = function(k) {
-                const sk = key(k);
-                try {
-                  const v = origGet.call(this, sk);
-                  return v !== null ? v : (memStore[sk] !== undefined ? memStore[sk] : null);
-                } catch (e) {
-                  return memStore[sk] !== undefined ? memStore[sk] : null;
-                }
-              };
-
-              Storage.prototype.setItem = function(k, v) {
-                const sk = key(k);
-                const sv = String(v);
-                memStore[sk] = sv;
-                try { origSet.call(this, sk, sv); } catch (e) {}
-                try {
-                  const d = JSON.parse(sv);
-                  const data = getBookData();
-                  const pages = getPagesArray(data);
-                  const pNum = d ? (typeof d.currentPage === 'number' ? d.currentPage : (typeof d.page === 'number' ? d.page : null)) : null;
-                  if (pNum !== null && window.MaktabatiBridge) {
+            function notifyBridgeFromJson(sv) {
+              try {
+                if (!sv || sv.charAt(0) !== '{') return;
+                const d = JSON.parse(sv);
+                if (!d) return;
+                const pNum = typeof d.currentPage === 'number' ? d.currentPage : (typeof d.page === 'number' ? d.page : null);
+                if (pNum !== null) {
+                  window.__maktabatiLastSavedPage = pNum;
+                  if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
+                    const data = getBookData();
+                    const pages = getPagesArray(data);
                     const n = pages ? pages.length : TOTAL;
                     window.MaktabatiBridge.onPageChanged(pNum + 1, n);
                   }
-                } catch (e) {}
-              };
+                }
+              } catch (e) {}
+            }
 
-              Storage.prototype.removeItem = function(k) {
+            const fallbackStorage = {
+              getItem: function(k) {
                 const sk = key(k);
-                delete memStore[sk];
-                try { origRem.call(this, sk); } catch (e) {}
-              };
-            } catch (storageErr) {}
+                return Object.prototype.hasOwnProperty.call(memStore, sk) ? memStore[sk] : null;
+              },
+              setItem: function(k, v) {
+                const sk = key(k);
+                const sv = String(v);
+                memStore[sk] = sv;
+                notifyBridgeFromJson(sv);
+              },
+              removeItem: function(k) {
+                delete memStore[key(k)];
+              },
+              clear: function() {
+                for (const prop in memStore) {
+                  if (Object.prototype.hasOwnProperty.call(memStore, prop)) delete memStore[prop];
+                }
+              }
+            };
 
-            document.addEventListener('input', function(e) {
-              const target = e.target;
-              if (!target || !target.matches || !target.matches('#bookSearchInput,#searchInput,.search-input') || target.__maktabatiDispatch) return;
-              e.stopImmediatePropagation();
-              clearTimeout(target.__maktabatiTimer);
-              target.__maktabatiTimer = setTimeout(function() {
-                target.__maktabatiDispatch = true;
-                target.dispatchEvent(new Event('input', { bubbles: true }));
-                target.__maktabatiDispatch = false;
-              }, 160);
-            }, true);
+            let nativeStorageOk = false;
+            try {
+              const ls = window.localStorage;
+              if (ls) {
+                ls.setItem(P + "__probe__", "1");
+                ls.removeItem(P + "__probe__");
+                nativeStorageOk = true;
+              }
+            } catch (e) {
+              nativeStorageOk = false;
+            }
+
+            if (!nativeStorageOk) {
+              try {
+                Object.defineProperty(window, 'localStorage', {
+                  configurable: true,
+                  enumerable: true,
+                  get: function() { return fallbackStorage; }
+                });
+              } catch (e) {}
+            } else {
+              try {
+                const origGet = Storage.prototype.getItem;
+                const origSet = Storage.prototype.setItem;
+                const origRem = Storage.prototype.removeItem;
+
+                Storage.prototype.getItem = function(k) {
+                  const sk = key(k);
+                  try {
+                    const v = origGet.call(this, sk);
+                    return v !== null ? v : (memStore[sk] !== undefined ? memStore[sk] : null);
+                  } catch (e) {
+                    return memStore[sk] !== undefined ? memStore[sk] : null;
+                  }
+                };
+
+                Storage.prototype.setItem = function(k, v) {
+                  const sk = key(k);
+                  const sv = String(v);
+                  memStore[sk] = sv;
+                  try { origSet.call(this, sk, sv); } catch (e) {}
+                  notifyBridgeFromJson(sv);
+                };
+
+                Storage.prototype.removeItem = function(k) {
+                  const sk = key(k);
+                  delete memStore[sk];
+                  try { origRem.call(this, sk); } catch (e) {}
+                };
+              } catch (storageErr) {}
+            }
 
             const pageHtmlCache = {};
 
@@ -146,12 +192,14 @@ object SandboxHtmlInjector {
                 if (typeof window.state.page === 'number') return window.state.page;
               }
               if (typeof window.currentPage === 'number') return window.currentPage;
+              if (typeof window.__maktabatiLastSavedPage === 'number') return window.__maktabatiLastSavedPage;
               if (typeof window.__maktabatiFallbackPage === 'number') return window.__maktabatiFallbackPage;
               return 0;
             }
 
             function setCurrentPageIndex(newIdx) {
               window.__maktabatiFallbackPage = newIdx;
+              window.__maktabatiLastSavedPage = newIdx;
               try {
                 if (typeof state !== 'undefined' && state) {
                   state.currentPage = newIdx;
@@ -165,7 +213,7 @@ object SandboxHtmlInjector {
               }
             }
 
-            function buildPageHtml(pageObj, idx, totalPages) {
+            function buildPageHtml(pageObj, idx) {
               if (pageHtmlCache[idx]) return pageHtmlCache[idx];
               if (!pageObj) return '';
               const parts = [];
@@ -206,75 +254,33 @@ object SandboxHtmlInjector {
                   }
                 });
               }
-              if (Array.isArray(pageObj.sections)) {
-                pageObj.sections.forEach(function(sec) {
-                  if (sec && (sec.title || sec.heading)) {
-                    parts.push('<h3 style="margin:10px 0 4px 0;font-size:16.5px;">' + (sec.title || sec.heading) + '</h3>');
-                  }
-                  if (sec && (sec.content || sec.text || sec.body)) {
-                    parts.push('<p style="line-height:1.8;font-size:15px;margin:0 0 8px 0;">' + (sec.content || sec.text || sec.body) + '</p>');
-                  }
-                });
-              }
-              if (Array.isArray(pageObj.items)) {
-                parts.push('<ul style="margin:8px 0;padding-right:20px;line-height:1.8;">' +
-                  pageObj.items.map(function(it) { return '<li>' + (typeof it === 'string' ? it : (it.title || it.text || '')) + '</li>'; }).join('') +
-                  '</ul>');
-              }
               const quoteText = pageObj.quote || pageObj.epigraph || pageObj.reflection || '';
               if (quoteText) {
                 parts.push('<blockquote style="margin:10px 0;padding:10px 14px;border-right:3px solid currentColor;opacity:0.9;font-style:italic;border-radius:8px;background:rgba(128,128,128,0.07);">' + quoteText + '</blockquote>');
               }
-              const actionText = pageObj.action || pageObj.takeaway || pageObj.exercise || '';
-              if (actionText) {
-                parts.push('<div style="margin-top:8px;padding:8px 12px;border:1px dashed currentColor;border-radius:10px;font-size:13.5px;opacity:0.92;">✦ ' + actionText + '</div>');
-              }
-
               const built = parts.join('');
               pageHtmlCache[idx] = built;
               return built;
             }
 
-            // Pre-warm pages progressively in background chunks of 4 so initial open is instant (<30ms)
-            function startProgressivePrewarm() {
-              const data = getBookData();
-              const pages = getPagesArray(data);
-              if (pages && pages.length > 0) {
-                const cur = Math.max(0, Math.min(pages.length - 1, getCurrentPageIndex()));
-                buildPageHtml(pages[cur], cur, pages.length);
-                if (cur + 1 < pages.length) buildPageHtml(pages[cur + 1], cur + 1, pages.length);
-                if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
-                  window.MaktabatiBridge.onPageChanged(cur + 1, pages.length);
-                }
-
-                let cursor = 0;
-                function warmChunk() {
-                  const end = Math.min(pages.length, cursor + 4);
-                  for (let i = cursor; i < end; i++) {
-                    if (!pageHtmlCache[i]) buildPageHtml(pages[i], i, pages.length);
-                  }
-                  cursor = end;
-                  if (cursor < pages.length) {
-                    setTimeout(warmChunk, 24);
-                  }
-                }
-                setTimeout(warmChunk, 30);
-              }
-            }
-
+            // Zero-reflow check: only acts if the book template left its container completely empty
             function healBlankPageIfNeeded() {
               try {
+                let container = document.getElementById('pageCanvas')
+                  || document.getElementById('pageInnerContent')
+                  || document.getElementById('pageContent')
+                  || document.querySelector('.page-canvas, .page.active .page-body, .page.active, .book-page.active');
+
+                if (container && (container.childElementCount > 0 || (container.textContent || '').trim().length > 0)) {
+                  return;
+                }
+
                 const data = getBookData();
                 const pages = getPagesArray(data);
                 if (!pages || !pages.length) return;
                 const idx = Math.max(0, Math.min(pages.length - 1, getCurrentPageIndex()));
                 const pageObj = pages[idx];
                 if (!pageObj) return;
-
-                let container = document.getElementById('pageInnerContent')
-                  || document.getElementById('pageContent')
-                  || document.getElementById('pageCanvas')
-                  || document.querySelector('.page.active .page-body, .page.active, .book-page.active, #pageContainer .page-body, .page-canvas');
 
                 if (!container) {
                   const stage = document.createElement('div');
@@ -290,17 +296,13 @@ object SandboxHtmlInjector {
                   container = document.getElementById('pageInnerContent');
                 }
 
-                const visibleText = (container.innerText || '').trim();
-                if (visibleText.length === 0) {
-                  const html = buildPageHtml(pageObj, idx, pages.length);
-                  if (html) {
-                    container.innerHTML = html;
-                  }
+                const html = buildPageHtml(pageObj, idx);
+                if (html && container) {
+                  container.innerHTML = html;
                 }
-
                 const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
-                if (counterEl && !(counterEl.innerText || '').trim()) {
-                  counterEl.innerText = 'صفحة ' + (idx + 1) + ' من ' + pages.length;
+                if (counterEl && !(counterEl.textContent || '').trim()) {
+                  counterEl.textContent = (idx + 1) + ' / ' + pages.length;
                 }
                 if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
                   window.MaktabatiBridge.onPageChanged(idx + 1, pages.length);
@@ -314,71 +316,42 @@ object SandboxHtmlInjector {
               if (!pages || !pages.length) return;
               const nextIdx = Math.max(0, Math.min(pages.length - 1, getCurrentPageIndex() + delta));
               setCurrentPageIndex(nextIdx);
-              const container = document.getElementById('pageInnerContent') || document.getElementById('pageContent');
+              const container = document.getElementById('pageInnerContent') || document.getElementById('pageContent') || document.getElementById('pageCanvas');
               if (container) {
-                container.__maktabatiSelfHealed = true;
-                container.innerHTML = buildPageHtml(pages[nextIdx], nextIdx, pages.length);
+                container.innerHTML = buildPageHtml(pages[nextIdx], nextIdx);
               }
               const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
-              if (counterEl) counterEl.innerText = 'صفحة ' + (nextIdx + 1) + ' من ' + pages.length;
+              if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
               if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
                 window.MaktabatiBridge.onPageChanged(nextIdx + 1, pages.length);
               }
             };
 
-            function hookRenderFunctions() {
-              ['renderCurrentPage', 'renderPage', 'goToPage'].forEach(function(fnName) {
-                const orig = window[fnName];
-                if (typeof orig === 'function' && !orig.__maktabatiHooked) {
-                  const wrapped = function() {
-                    const res = orig.apply(this, arguments);
-                    setTimeout(healBlankPageIfNeeded, 10);
-                    return res;
-                  };
-                  wrapped.__maktabatiHooked = true;
-                  window[fnName] = wrapped;
-                }
-              });
-            }
-
             if (document.readyState === 'loading') {
               document.addEventListener('DOMContentLoaded', function() {
-                hookRenderFunctions();
-                startProgressivePrewarm();
-                setTimeout(healBlankPageIfNeeded, 16);
+                setTimeout(healBlankPageIfNeeded, 20);
               });
             } else {
-              hookRenderFunctions();
-              startProgressivePrewarm();
-              setTimeout(healBlankPageIfNeeded, 16);
+              setTimeout(healBlankPageIfNeeded, 20);
             }
-
-            window.addEventListener('load', function() {
-              hookRenderFunctions();
-              setTimeout(healBlankPageIfNeeded, 30);
-            });
 
             function triggerUniversalPageTurn(delta) {
               try {
                 const beforePage = getCurrentPageIndex();
                 if (delta > 0 && typeof window.nextPage === 'function') {
                   window.nextPage();
-                  setTimeout(healBlankPageIfNeeded, 16);
                   return true;
                 }
                 if (delta < 0 && typeof window.prevPage === 'function') {
                   window.prevPage();
-                  setTimeout(healBlankPageIfNeeded, 16);
                   return true;
                 }
                 if (typeof window.changePage === 'function') {
                   window.changePage(delta);
-                  setTimeout(healBlankPageIfNeeded, 16);
                   return true;
                 }
                 if (typeof window.goToPage === 'function') {
                   window.goToPage(beforePage + delta);
-                  setTimeout(healBlankPageIfNeeded, 16);
                   return true;
                 }
                 const btnSelector = delta > 0
@@ -387,7 +360,6 @@ object SandboxHtmlInjector {
                 const btn = document.querySelector(btnSelector);
                 if (btn && !btn.disabled) {
                   btn.click();
-                  setTimeout(healBlankPageIfNeeded, 16);
                   return true;
                 }
                 window.__maktabatiTurn(delta);
@@ -417,7 +389,7 @@ object SandboxHtmlInjector {
             document.addEventListener('touchstart', function(e) {
               if (!e.touches || e.touches.length !== 1) { tIgnore = true; return; }
               const tgt = e.target;
-              if (tgt && tgt.closest && tgt.closest('button,a,input,textarea,select,label,.toc-drawer,.drawer,.modal')) {
+              if (tgt && tgt.closest && tgt.closest('button,a,input,textarea,select,label,.toc-drawer,.drawer,.modal,.overlay')) {
                 tIgnore = true; return;
               }
               tIgnore = false;
@@ -434,26 +406,25 @@ object SandboxHtmlInjector {
               const dx = e.changedTouches[0].clientX - tStartX;
               const dy = e.changedTouches[0].clientY - tStartY;
               const absX = Math.abs(dx), absY = Math.abs(dy);
-              if (absX < 40 && absY < 48) return;
+              if (absX < 48 && absY < 55) return;
 
               setTimeout(function() {
                 if (getCurrentPageIndex() !== tStartPage) {
-                  healBlankPageIfNeeded();
                   return;
                 }
                 const dirAttr = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
                 const isRtl = dirAttr === 'rtl';
-                if (absX > absY * 1.1 && absX >= 40) {
+                if (absX > absY * 1.15 && absX >= 48) {
                   const delta = isRtl ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1);
                   triggerUniversalPageTurn(delta);
-                } else if (absY > absX * 1.1 && absY >= 48) {
+                } else if (absY > absX * 1.15 && absY >= 55) {
                   if (dy < 0 && tAtBottom) {
                     triggerUniversalPageTurn(1);
                   } else if (dy > 0 && tAtTop) {
                     triggerUniversalPageTurn(-1);
                   }
                 }
-              }, 12);
+              }, 16);
             }, { passive: true });
           } catch (e) {}
         })();
@@ -461,14 +432,44 @@ object SandboxHtmlInjector {
         """.trimIndent()
     }
 
+    /**
+     * Fast O(N) tag stripper by element id without backtracking regexes.
+     */
+    private fun stripElementById(html: String, tagName: String, idPrefix: String): String {
+        val idIndex = html.indexOf(idPrefix, ignoreCase = true)
+        if (idIndex < 0) return html
+        val openStart = html.lastIndexOf("<$tagName", idIndex, ignoreCase = true)
+        if (openStart < 0) return html
+        val closeTag = "</$tagName>"
+        val closeEnd = html.indexOf(closeTag, idIndex, ignoreCase = true)
+        if (closeEnd < 0) return html
+        return html.substring(0, openStart) + html.substring(closeEnd + closeTag.length)
+    }
+
     fun injectIntoHtml(rawHtml: String, bookId: String, pageCount: Int): String {
-        val cleanedHtml = rawHtml
-            .replace(OLD_STYLE_REGEX, "")
-            .replace(OLD_SCRIPT_REGEX, "")
+        var cleanedHtml = stripElementById(rawHtml, "style", "maktabati-perf-booster")
+        cleanedHtml = stripElementById(cleanedHtml, "script", "maktabati-storage-isolation")
+
+        // Normalize dvh/svh/lvh units inside <style> blocks to standard vh so all Android System WebViews render 100% height
+        val headEndIdx = cleanedHtml.indexOf("</head>", ignoreCase = true)
+        if (headEndIdx > 0) {
+            val headPart = cleanedHtml.substring(0, headEndIdx).replace(DVH_UNIT_REGEX, "$1vh")
+            cleanedHtml = headPart + cleanedHtml.substring(headEndIdx)
+        } else {
+            cleanedHtml = cleanedHtml.replace(DVH_UNIT_REGEX, "$1vh")
+        }
+
         val snippet = buildInjectedSnippet(bookId, pageCount)
-        val match = Regex("<head[^>]*>", RegexOption.IGNORE_CASE).find(cleanedHtml)
-        return if (match != null) {
-            val p = match.range.last + 1
+
+        // Inject right before </head> so <meta charset="utf-8"> and <meta name="viewport"> remain at byte 0
+        val targetHeadClose = cleanedHtml.indexOf("</head>", ignoreCase = true)
+        if (targetHeadClose >= 0) {
+            return cleanedHtml.substring(0, targetHeadClose) + "\n" + snippet + "\n" + cleanedHtml.substring(targetHeadClose)
+        }
+
+        val headOpenMatch = Regex("<head[^>]*>", RegexOption.IGNORE_CASE).find(cleanedHtml)
+        return if (headOpenMatch != null) {
+            val p = headOpenMatch.range.last + 1
             cleanedHtml.substring(0, p) + "\n" + snippet + "\n" + cleanedHtml.substring(p)
         } else {
             snippet + "\n" + cleanedHtml

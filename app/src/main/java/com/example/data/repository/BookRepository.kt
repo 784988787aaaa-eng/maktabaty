@@ -62,36 +62,44 @@ class BookRepository(
             }
         }
 
-        // Ensure the sole default luxury book («خَيْمَةٌ فِي القَلْب») is generated and inserted/updated
-        val defaultSamples = SampleBooksProvider.generateSampleBooks(context)
+        // Fast-path check: only generate/parse the default masterpiece if missing or not yet upgraded to V4
         val existingDefault = bookDao.getBookByIdOnce(SampleBooksProvider.DEFAULT_MASTERPIECE_ID)
-        if (existingDefault == null) {
-            for (sample in defaultSamples) {
-                bookDao.insertBook(sample)
-            }
-        } else {
-            val freshSample = defaultSamples.firstOrNull()
-            if (freshSample != null) {
-                bookDao.updateBookMetadataAndStyle(
-                    id = existingDefault.id,
-                    title = freshSample.title,
-                    subtitle = freshSample.subtitle,
-                    author = freshSample.author,
-                    coverGradientStart = freshSample.coverGradientStart,
-                    coverGradientEnd = freshSample.coverGradientEnd,
-                    bgPrimaryHex = freshSample.bgPrimaryHex,
-                    accentGoldHex = freshSample.accentGoldHex,
-                    accentRoseHex = freshSample.accentRoseHex
-                )
-                bookDao.updateBookPageCountAndToc(
-                    id = existingDefault.id,
-                    pageCount = freshSample.pageCount,
-                    tocJson = freshSample.tableOfContentsJson
-                )
+        val defaultHtmlFile = File(File(booksRoot, SampleBooksProvider.DEFAULT_MASTERPIECE_ID), "index.html")
+        val isDefaultUpToDate = existingDefault != null &&
+            existingDefault.pageCount >= 105 &&
+            defaultHtmlFile.isFile &&
+            runCatching { defaultHtmlFile.readText(Charsets.UTF_8).contains("__maktabatiV4Initialized") }.getOrDefault(false)
+
+        if (!isDefaultUpToDate) {
+            val defaultSamples = SampleBooksProvider.generateSampleBooks(context)
+            if (existingDefault == null) {
+                for (sample in defaultSamples) {
+                    bookDao.insertBook(sample)
+                }
+            } else {
+                val freshSample = defaultSamples.firstOrNull()
+                if (freshSample != null) {
+                    bookDao.updateBookMetadataAndStyle(
+                        id = existingDefault.id,
+                        title = freshSample.title,
+                        subtitle = freshSample.subtitle,
+                        author = freshSample.author,
+                        coverGradientStart = freshSample.coverGradientStart,
+                        coverGradientEnd = freshSample.coverGradientEnd,
+                        bgPrimaryHex = freshSample.bgPrimaryHex,
+                        accentGoldHex = freshSample.accentGoldHex,
+                        accentRoseHex = freshSample.accentRoseHex
+                    )
+                    bookDao.updateBookPageCountAndToc(
+                        id = existingDefault.id,
+                        pageCount = freshSample.pageCount,
+                        tocJson = freshSample.tableOfContentsJson
+                    )
+                }
             }
         }
 
-        // Auto-heal any existing user-imported books on disk (strip old CSS containment & refresh page count)
+        // Auto-heal any legacy user-imported books on disk only if they haven't been upgraded to V4 yet
         val remainingBooks = bookDao.getAllBooks().first()
         for (userBook in remainingBooks) {
             if (userBook.id != SampleBooksProvider.DEFAULT_MASTERPIECE_ID && !userBook.id.startsWith("sample_")) {
@@ -99,15 +107,17 @@ class BookRepository(
                 if (entryFile.isFile) {
                     runCatching {
                         val raw = entryFile.readText(Charsets.UTF_8)
-                        val meta = HtmlBookParser.parse(entryFile, userBook.title)
-                        val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, meta.pageCount)
-                        entryFile.writeText(healedHtml, Charsets.UTF_8)
-                        if (meta.pageCount != userBook.pageCount || meta.tableOfContents.isNotEmpty()) {
-                            bookDao.updateBookPageCountAndToc(
-                                id = userBook.id,
-                                pageCount = maxOf(meta.pageCount, userBook.pageCount),
-                                tocJson = HtmlBookParser.tocToJson(meta.tableOfContents)
-                            )
+                        if (!raw.contains("__maktabatiV4Initialized")) {
+                            val meta = HtmlBookParser.parseContent(raw, userBook.title)
+                            val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, meta.pageCount)
+                            entryFile.writeText(healedHtml, Charsets.UTF_8)
+                            if (meta.pageCount != userBook.pageCount || meta.tableOfContents.isNotEmpty()) {
+                                bookDao.updateBookPageCountAndToc(
+                                    id = userBook.id,
+                                    pageCount = maxOf(meta.pageCount, userBook.pageCount),
+                                    tocJson = HtmlBookParser.tocToJson(meta.tableOfContents)
+                                )
+                            }
                         }
                     }
                 }
@@ -115,9 +125,13 @@ class BookRepository(
         }
     }
 
-    suspend fun importBook(uri: Uri, customTitle: String? = null): Result<Book> = withContext(Dispatchers.IO) {
+    suspend fun importBook(
+        uri: Uri,
+        customTitle: String? = null,
+        onQuickBookStaged: ((Book) -> Unit)? = null
+    ): Result<Book> = withContext(Dispatchers.IO) {
         try {
-            val book = BookImporter.importFromUri(context, uri, customTitle)
+            val book = BookImporter.importFromUri(context, uri, customTitle, onQuickBookStaged)
             bookDao.insertBook(book)
             Result.success(book)
         } catch (e: Exception) {

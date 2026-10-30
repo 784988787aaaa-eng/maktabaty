@@ -277,6 +277,27 @@ class ExampleRobolectricTest {
         assertEquals("shelf_user_custom", allShelves.first().id)
     }
 
+    @Test
+    fun testInjectorPreservesCharsetAtTopAndNormalizesDvhUnits() {
+        val rawHtml = """<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>.app{height:100dvh;max-height:100dvh}.cover-page{min-height:72dvh}.panel{max-height:85dvh}</style></head><body><div class="app"></div></body></html>"""
+        val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fast_test", 105)
+
+        // <meta charset="utf-8"> must remain within the first 200 characters (never pushed behind injected script)
+        val charsetIndex = injected.indexOf("<meta charset=\"utf-8\">")
+        val scriptIndex = injected.indexOf("maktabati-storage-isolation")
+        assertTrue(charsetIndex in 0..200)
+        assertTrue(scriptIndex > charsetIndex)
+
+        // All dvh viewport units in <head> must be normalized to universal vh units
+        assertFalse(injected.contains("100dvh"))
+        assertFalse(injected.contains("72dvh"))
+        assertFalse(injected.contains("85dvh"))
+        assertTrue(injected.contains("100vh"))
+        assertTrue(injected.contains("72vh"))
+        assertTrue(injected.contains("85vh"))
+    }
+
 }
+
 
 
