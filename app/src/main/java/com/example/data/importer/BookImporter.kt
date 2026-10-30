@@ -361,7 +361,7 @@ object BookImporter {
         onQuickBookStaged: ((Book) -> Unit)?
     ): Book {
         val rawHtml = entryFile.readText(Charsets.UTF_8)
-        val quickMeta = HtmlBookParser.parseQuickHeader(rawHtml, fallbackTitle)
+        val quickMeta = HtmlBookParser.parseQuickHeader(rawHtml, fallbackTitle, bookDir = bookDir)
         val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, quickMeta.pageCount)
         entryFile.writeText(injectedHtml, Charsets.UTF_8)
 
@@ -405,7 +405,7 @@ object BookImporter {
             )
         }
 
-        val metadata = HtmlBookParser.parseContent(rawHtml, fallbackTitle, quickMode = false)
+        val metadata = HtmlBookParser.parse(entryFile, fallbackTitle)
         val finalTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else metadata.title
 
         // Generate real cover snapshot if book has an explicit cover image or a designed cover page

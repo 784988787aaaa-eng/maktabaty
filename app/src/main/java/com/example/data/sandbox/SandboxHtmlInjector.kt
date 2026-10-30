@@ -5,17 +5,14 @@ package com.example.data.sandbox
  * 1. Preserves `<meta charset="utf-8">` and `<meta name="viewport">` at byte 0 by injecting right before `</head>`.
  * 2. Normalizes `dvh`/`svh`/`lvh` viewport units to `vh` and enforces 100vh fallback on `.app`.
  * 3. Provides crash-proof per-book `localStorage` isolation + full `window.localStorage` polyfill.
- * 4. Fluid Reflow Zoom Engine (`Fluid Reflow Zoom`): pinch-to-zoom & button zoom (`75%`–`200%`) that updates
+ * 4. Silent Fluid Reflow Zoom Engine (`Fluid Reflow Zoom`): pinch-to-zoom & button zoom (`75%`–`200%`) that updates
  *    `--reader-font`, `--reader-font-size`, and `--font-scale` so text, cards, quotes, and ornaments reflow
- *    inside the page width without rigid PDF-like horizontal clipping, plus a sleek floating top badge with
- *    a quick `"100% الوضع المثالي"` reset button.
- * 5. Layout Distortion Guard (`MaktabatiLayoutGuard`): auto-heals elements wider than `.page-canvas`
- *    (`el.scrollWidth > canvas.clientWidth + 8`) and shows a Smart Warning Toast Banner when reaching maximum
- *    harmonious zoom.
- * 6. 4-Corner Interactive Page-Curl Physics Engine (`MaktabatiPageCurlEngine`): 60fps physical paper curl from
- *    any of the 4 corners (Top-Right, Bottom-Right, Top-Left, Bottom-Left) or edges with backside fold gradient,
- *    dynamic crease/drop shadow, spring-back or quarter-width completion, Web Audio API natural paper flip sound,
- *    and interactive element protection (`input`, `textarea`, `select`, `button`, `.flip-card`, `.quiz-option`).
+ *    inside the page width without rigid PDF-like horizontal clipping. Never injects any HUD or toast into WebView DOM.
+ * 5. Silent Layout Containment (`MaktabatiLayoutGuard`): silently keeps elements fitting within `.page-canvas`
+ *    (`max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere;`) without emitting any warning or toast.
+ * 6. Subtle Smooth Fade & Micro-Slide Page Transition: clean 1-finger swipe navigation with a gentle
+ *    `180ms cubic-bezier(0.22, 1, 0.36, 1)` micro-slide (`translateX(±10px) -> translateX(0)`) and opacity fade
+ *    (`opacity: 0.5 -> 1.0`) only when the page changes, with zero overlays or shapes during finger drag.
  */
 object SandboxHtmlInjector {
 
@@ -69,6 +66,32 @@ object SandboxHtmlInjector {
             will-change: transform, opacity;
             transform: translateZ(0);
           }
+          @keyframes maktabatiMicroSlideNext {
+            0% {
+              opacity: 0.5;
+              transform: translateX(-10px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+          @keyframes maktabatiMicroSlidePrev {
+            0% {
+              opacity: 0.5;
+              transform: translateX(10px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+          .maktabati-transition-next {
+            animation: maktabatiMicroSlideNext 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          }
+          .maktabati-transition-prev {
+            animation: maktabatiMicroSlidePrev 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          }
           #pageInnerContent, .page-body, .page-content {
             max-width: 100% !important;
             overflow-x: hidden !important;
@@ -111,146 +134,12 @@ object SandboxHtmlInjector {
             flex-shrink: 0;
             z-index: 25;
           }
-
-          /* Floating Fluid Reflow Zoom Badge (Top) */
-          #maktabati-zoom-badge {
-            position: fixed;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-16px);
-            z-index: 9998;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 999px;
-            background: rgba(20, 18, 24, 0.90);
-            color: #FFFDF9;
-            border: 1px solid rgba(217, 155, 67, 0.55);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
-            font-family: system-ui, -apple-system, sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.22s ease, transform 0.22s ease;
-            direction: rtl;
-          }
-          #maktabati-zoom-badge.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(-50%) translateY(0);
-          }
-          #maktabati-zoom-badge button {
-            border: 0;
-            border-radius: 999px;
-            padding: 3px 10px;
-            background: linear-gradient(135deg, #D97706, #B45309);
-            color: #FFFFFF;
-            font-size: 11.5px;
-            font-weight: 700;
-            cursor: pointer;
-          }
-
-          /* Smart Layout Distortion Warning Toast Banner (Bottom) */
-          #maktabati-distortion-toast {
-            position: fixed;
-            bottom: 58px;
-            left: 12px;
-            right: 12px;
-            max-width: 520px;
-            margin: 0 auto;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 10px 14px;
-            border-radius: 14px;
-            background: rgba(28, 20, 17, 0.95);
-            color: #FEF3C7;
-            border: 1.5px solid #F59E0B;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
-            font-family: system-ui, -apple-system, sans-serif;
-            font-size: 12.5px;
-            line-height: 1.5;
-            direction: rtl;
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(20px);
-            transition: opacity 0.25s ease, transform 0.25s ease;
-          }
-          #maktabati-distortion-toast.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
-          }
-          #maktabati-distortion-toast button {
-            flex-shrink: 0;
-            border: 0;
-            border-radius: 10px;
-            padding: 6px 12px;
-            background: #F59E0B;
-            color: #1C1411;
-            font-weight: 800;
-            font-size: 12px;
-            cursor: pointer;
-          }
-
-          /* 4-Corner Interactive Page-Curl Physics Overlay */
-          #maktabati-page-curl-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 9990;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.12s ease;
-          }
-          #maktabati-page-curl-overlay.active {
-            opacity: 1;
-          }
-          #maktabati-curl-shadow {
-            position: absolute;
-            pointer-events: none;
-            will-change: transform, opacity, width, height;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.16) 45%, rgba(0,0,0,0) 78%);
-            filter: blur(6px);
-          }
-          #maktabati-curl-backside {
-            position: absolute;
-            pointer-events: none;
-            will-change: transform, width, height, border-radius;
-            background: linear-gradient(
-              135deg,
-              rgba(255, 253, 248, 0.98) 0%,
-              rgba(244, 235, 218, 0.97) 48%,
-              rgba(222, 206, 180, 0.94) 82%,
-              rgba(255, 255, 255, 0.96) 100%
-            );
-            border: 1px solid rgba(196, 145, 72, 0.42);
-            box-shadow:
-              -8px 8px 22px rgba(0, 0, 0, 0.28),
-              inset 0 0 18px rgba(196, 145, 72, 0.16);
-          }
-          [data-theme="night"] #maktabati-curl-backside,
-          [data-theme="dark"] #maktabati-curl-backside {
-            background: linear-gradient(
-              135deg,
-              rgba(38, 34, 48, 0.98) 0%,
-              rgba(28, 24, 36, 0.96) 55%,
-              rgba(18, 15, 24, 0.94) 85%,
-              rgba(55, 48, 68, 0.95) 100%
-            );
-            border-color: rgba(226, 176, 94, 0.35);
-          }
         </style>
         <script id="maktabati-storage-isolation">
         (function(){
-          if (window.__maktabatiV5Initialized) return;
+          if (window.__maktabatiV7Initialized) return;
+          window.__maktabatiV7Initialized = true;
+          window.__maktabatiV6Initialized = true;
           window.__maktabatiV5Initialized = true;
           window.__maktabatiV4Initialized = true;
           window.__maktabatiV3Initialized = true;
@@ -259,6 +148,98 @@ object SandboxHtmlInjector {
             const memStore = {};
             const key = function(k) { k = String(k); return k.indexOf(P) === 0 ? k : P + k; };
 
+            function purgeLegacyDomArtifacts() {
+              try {
+                const legacyIds = [
+                  'maktabati-zoom-badge',
+                  'maktabati-distortion-toast',
+                  'maktabati-guard-toast',
+                  'maktabati-page-curl-overlay',
+                  'maktabati-curl-layer',
+                  'maktabati-curl-backside',
+                  'maktabati-curl-back',
+                  'maktabati-curl-shadow',
+                  'maktabati-curl-spine'
+                ];
+                for (let i = 0; i < legacyIds.length; i++) {
+                  const el = document.getElementById(legacyIds[i]);
+                  if (el && el.parentNode) el.parentNode.removeChild(el);
+                }
+              } catch (e) {}
+            }
+
+            function getDomPageElements() {
+              try {
+                const dataPageEls = Array.from(document.querySelectorAll('[data-page]')).filter(function(el) {
+                  return /^\d+$/.test((el.getAttribute('data-page') || '').trim());
+                });
+                if (dataPageEls.length > 0) return dataPageEls;
+                return Array.from(document.querySelectorAll('article.page, section.page, div.page, .book-page')).filter(function(el) {
+                  return el.classList && (el.classList.contains('page') || el.classList.contains('book-page'));
+                });
+              } catch (e) {
+                return [];
+              }
+            }
+
+            function resolveTrueTotalPages() {
+              try {
+                const data = getBookData();
+                const pages = getPagesArray(data);
+                if (pages && pages.length > 0) return pages.length;
+                const domPages = getDomPageElements();
+                if (domPages.length > 0) return domPages.length;
+                const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+                if (counterEl) {
+                  const m = (counterEl.textContent || '').match(/(\d+)\s*(?:\/|من)\s*(\d+)/);
+                  if (m && Number(m[2]) > 0) return Number(m[2]);
+                }
+              } catch (e) {}
+              return TOTAL;
+            }
+
+            function reportPageToBridge(oneBasedPage, totalPages) {
+              try {
+                const tot = Math.max(1, Number(totalPages) || resolveTrueTotalPages() || 1);
+                const cur = Math.max(1, Math.min(tot, Number(oneBasedPage) || 1));
+                window.__maktabatiLastSavedPage = cur - 1;
+                if (window.__maktabatiLastReportedPage === cur && window.__maktabatiLastReportedTotal === tot) {
+                  return;
+                }
+                window.__maktabatiLastReportedPage = cur;
+                window.__maktabatiLastReportedTotal = tot;
+                if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
+                  window.MaktabatiBridge.onPageChanged(cur, tot);
+                }
+              } catch (e) {}
+            }
+
+            function syncDomActivePageWithBridge() {
+              try {
+                const domPages = getDomPageElements();
+                if (domPages.length > 0) {
+                  let activeIdx = -1;
+                  for (let i = 0; i < domPages.length; i++) {
+                    if (domPages[i].classList && domPages[i].classList.contains('active')) {
+                      activeIdx = i;
+                      break;
+                    }
+                  }
+                  if (activeIdx >= 0) {
+                    reportPageToBridge(activeIdx + 1, domPages.length);
+                    return;
+                  }
+                }
+                const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+                if (counterEl) {
+                  const m = (counterEl.textContent || '').match(/(\d+)\s*(?:\/|من)\s*(\d+)/);
+                  if (m && Number(m[1]) > 0 && Number(m[2]) > 0) {
+                    reportPageToBridge(Number(m[1]), Number(m[2]));
+                  }
+                }
+              } catch (e) {}
+            }
+
             function notifyBridgeFromJson(sv) {
               try {
                 if (!sv || sv.charAt(0) !== '{') return;
@@ -266,13 +247,7 @@ object SandboxHtmlInjector {
                 if (!d) return;
                 const pNum = typeof d.currentPage === 'number' ? d.currentPage : (typeof d.page === 'number' ? d.page : null);
                 if (pNum !== null) {
-                  window.__maktabatiLastSavedPage = pNum;
-                  if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
-                    const data = getBookData();
-                    const pages = getPagesArray(data);
-                    const n = pages ? pages.length : TOTAL;
-                    window.MaktabatiBridge.onPageChanged(pNum + 1, n);
-                  }
+                  reportPageToBridge(pNum + 1, resolveTrueTotalPages());
                 }
               } catch (e) {}
             }
@@ -380,6 +355,14 @@ object SandboxHtmlInjector {
                 if (typeof window.state.page === 'number') return window.state.page;
               }
               if (typeof window.currentPage === 'number') return window.currentPage;
+              const domPages = getDomPageElements();
+              if (domPages.length > 0) {
+                for (let i = 0; i < domPages.length; i++) {
+                  if (domPages[i].classList && domPages[i].classList.contains('active')) {
+                    return i;
+                  }
+                }
+              }
               if (typeof window.__maktabatiLastSavedPage === 'number') return window.__maktabatiLastSavedPage;
               if (typeof window.__maktabatiFallbackPage === 'number') return window.__maktabatiFallbackPage;
               return 0;
@@ -407,6 +390,24 @@ object SandboxHtmlInjector {
                 || document.getElementById('pageContent')
                 || document.querySelector('.page-canvas, .page.active, .book-page.active, .page-body, .app')
                 || document.body;
+            }
+
+            let transitionCleanupTimer = null;
+            function animateSubtlePageTransition(delta) {
+              try {
+                const target = getActivePageCanvas();
+                if (!target || target === document.body) return;
+                target.classList.remove('maktabati-transition-next', 'maktabati-transition-prev');
+                void target.offsetWidth;
+                const cls = delta >= 0 ? 'maktabati-transition-next' : 'maktabati-transition-prev';
+                target.classList.add(cls);
+                if (transitionCleanupTimer) clearTimeout(transitionCleanupTimer);
+                transitionCleanupTimer = setTimeout(function() {
+                  try {
+                    target.classList.remove('maktabati-transition-next', 'maktabati-transition-prev');
+                  } catch (e) {}
+                }, 200);
+              } catch (e) {}
             }
 
             function buildPageHtml(pageObj, idx) {
@@ -460,94 +461,25 @@ object SandboxHtmlInjector {
             }
 
             // =========================================================================
-            // 1. FLUID REFLOW ZOOM ENGINE & 2. LAYOUT DISTORTION GUARD (MaktabatiLayoutGuard)
+            // 1. SILENT FLUID REFLOW ZOOM ENGINE & SILENT LAYOUT CONTAINMENT
+            //    (Zero DOM HUD elements or warning toasts inside WebView)
             // =========================================================================
             let currentZoomPercent = 100;
-            let zoomBadgeTimer = null;
-            let distortionToastTimer = null;
-            const DISTORTION_WARNING_TEXT = "تنبيه: وصلتَ لأقصى حجم يحفظ جمال وتناسق عناصر هذا الكتاب — اضغط (100%) للعودة للعرض المثالي";
-
-            function ensureHudElements() {
-              if (!document.body) return;
-              if (!document.getElementById('maktabati-zoom-badge')) {
-                const badge = document.createElement('div');
-                badge.id = 'maktabati-zoom-badge';
-                badge.innerHTML =
-                  '<span id="maktabati-zoom-label">100%</span>' +
-                  '<button type="button" id="maktabati-zoom-reset-btn">100% الوضع المثالي</button>';
-                document.body.appendChild(badge);
-                const resetBtn = document.getElementById('maktabati-zoom-reset-btn');
-                if (resetBtn) {
-                  resetBtn.addEventListener('click', function(ev) {
-                    ev.stopPropagation();
-                    window.__maktabatiSetFluidZoom(100, false);
-                  });
-                }
-              }
-              if (!document.getElementById('maktabati-distortion-toast')) {
-                const toast = document.createElement('div');
-                toast.id = 'maktabati-distortion-toast';
-                toast.innerHTML =
-                  '<span>' + DISTORTION_WARNING_TEXT + '</span>' +
-                  '<button type="button" id="maktabati-toast-reset-btn">100%</button>';
-                document.body.appendChild(toast);
-                const toastBtn = document.getElementById('maktabati-toast-reset-btn');
-                if (toastBtn) {
-                  toastBtn.addEventListener('click', function(ev) {
-                    ev.stopPropagation();
-                    toast.classList.remove('visible');
-                    window.__maktabatiSetFluidZoom(100, false);
-                  });
-                }
-              }
-            }
-
-            function showZoomBadge(percent) {
-              ensureHudElements();
-              const badge = document.getElementById('maktabati-zoom-badge');
-              const label = document.getElementById('maktabati-zoom-label');
-              if (!badge || !label) return;
-              label.textContent = percent + '%';
-              badge.classList.add('visible');
-              if (zoomBadgeTimer) clearTimeout(zoomBadgeTimer);
-              zoomBadgeTimer = setTimeout(function() {
-                badge.classList.remove('visible');
-              }, 2200);
-            }
 
             const MaktabatiLayoutGuard = {
-              showDistortionToast: function() {
-                ensureHudElements();
-                const toast = document.getElementById('maktabati-distortion-toast');
-                if (toast) {
-                  toast.classList.add('visible');
-                  if (distortionToastTimer) clearTimeout(distortionToastTimer);
-                  distortionToastTimer = setTimeout(function() {
-                    toast.classList.remove('visible');
-                  }, 5200);
-                }
-                if (window.MaktabatiBridge && window.MaktabatiBridge.onLayoutDistortionWarning) {
-                  window.MaktabatiBridge.onLayoutDistortionWarning(DISTORTION_WARNING_TEXT);
-                }
-              },
-              hideDistortionToast: function() {
-                const toast = document.getElementById('maktabati-distortion-toast');
-                if (toast) toast.classList.remove('visible');
-              },
-              inspectAndHeal: function(zoomPct) {
+              inspectAndHeal: function() {
                 try {
                   const canvas = getActivePageCanvas();
-                  if (!canvas) return { healedCount: 0, distorted: false };
+                  if (!canvas) return { healedCount: 0 };
                   const canvasWidth = canvas.clientWidth || window.innerWidth || 360;
                   let healedCount = 0;
-                  let unhealedOverflowCount = 0;
 
                   const candidates = canvas.querySelectorAll(
                     'table, img, svg, video, pre, code, blockquote, .quote-box, .flip-card, .insight-card, .quiz-card, .quiz-option, div, p, section, article, h1, h2, h3, h4'
                   );
                   for (let i = 0; i < candidates.length; i++) {
                     const el = candidates[i];
-                    if (!el || el.id === 'maktabati-zoom-badge' || el.id === 'maktabati-distortion-toast') continue;
+                    if (!el) continue;
                     if (el.scrollWidth > canvasWidth + 8) {
                       el.style.setProperty('max-width', '100%', 'important');
                       el.style.setProperty('box-sizing', 'border-box', 'important');
@@ -558,23 +490,11 @@ object SandboxHtmlInjector {
                         el.style.setProperty('min-width', '0', 'important');
                       }
                       healedCount++;
-                      if (el.scrollWidth > canvasWidth + 14) {
-                        unhealedOverflowCount++;
-                      }
                     }
                   }
-
-                  const activeZoom = typeof zoomPct === 'number' ? zoomPct : currentZoomPercent;
-                  const isCrowdedAtHighZoom = activeZoom >= 170 || (activeZoom >= 145 && unhealedOverflowCount > 0);
-                  if (isCrowdedAtHighZoom) {
-                    MaktabatiLayoutGuard.showDistortionToast();
-                    return { healedCount: healedCount, distorted: true };
-                  } else if (activeZoom <= 115) {
-                    MaktabatiLayoutGuard.hideDistortionToast();
-                  }
-                  return { healedCount: healedCount, distorted: false };
+                  return { healedCount: healedCount };
                 } catch (e) {
-                  return { healedCount: 0, distorted: false };
+                  return { healedCount: 0 };
                 }
               }
             };
@@ -585,12 +505,6 @@ object SandboxHtmlInjector {
                 let target = Math.round(Number(percent) || 100);
                 if (target < 75) target = 75;
                 if (target > 200) target = 200;
-
-                // Check if zooming up past safe layout limit causes crowding/distortion
-                if (target > 165) {
-                  MaktabatiLayoutGuard.showDistortionToast();
-                  target = Math.min(target, 165);
-                }
 
                 currentZoomPercent = target;
                 const scale = +(target / 100).toFixed(2);
@@ -614,8 +528,7 @@ object SandboxHtmlInjector {
                   bodyContainers[i].style.lineHeight = scale > 1.25 ? '1.95' : '1.85';
                 }
 
-                showZoomBadge(target);
-                MaktabatiLayoutGuard.inspectAndHeal(target);
+                MaktabatiLayoutGuard.inspectAndHeal();
 
                 if (!fromNative && window.MaktabatiBridge && window.MaktabatiBridge.onZoomChanged) {
                   window.MaktabatiBridge.onZoomChanged(target);
@@ -626,13 +539,15 @@ object SandboxHtmlInjector {
             // Zero-reflow check: only acts if the book template left its container completely empty
             function healBlankPageIfNeeded() {
               try {
+                purgeLegacyDomArtifacts();
+                syncDomActivePageWithBridge();
                 let container = document.getElementById('pageCanvas')
                   || document.getElementById('pageInnerContent')
                   || document.getElementById('pageContent')
                   || document.querySelector('.page-canvas, .page.active .page-body, .page.active, .book-page.active');
 
                 if (container && (container.childElementCount > 0 || (container.textContent || '').trim().length > 0)) {
-                  MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent);
+                  MaktabatiLayoutGuard.inspectAndHeal();
                   return;
                 }
 
@@ -665,38 +580,125 @@ object SandboxHtmlInjector {
                 if (counterEl && !(counterEl.textContent || '').trim()) {
                   counterEl.textContent = (idx + 1) + ' / ' + pages.length;
                 }
-                MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent);
-                if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
-                  window.MaktabatiBridge.onPageChanged(idx + 1, pages.length);
-                }
+                MaktabatiLayoutGuard.inspectAndHeal();
+                reportPageToBridge(idx + 1, pages.length);
               } catch (e) {}
             }
 
             window.__maktabatiTurn = function(delta) {
               const data = getBookData();
               const pages = getPagesArray(data);
-              if (!pages || !pages.length) return;
-              const nextIdx = Math.max(0, Math.min(pages.length - 1, getCurrentPageIndex() + delta));
-              setCurrentPageIndex(nextIdx);
-              const container = document.getElementById('pageInnerContent') || document.getElementById('pageContent') || document.getElementById('pageCanvas');
-              if (container) {
-                container.innerHTML = buildPageHtml(pages[nextIdx], nextIdx);
+              if (pages && pages.length) {
+                const curIdx = getCurrentPageIndex();
+                const nextIdx = Math.max(0, Math.min(pages.length - 1, curIdx + delta));
+                if (nextIdx === curIdx) return;
+                setCurrentPageIndex(nextIdx);
+                const container = document.getElementById('pageInnerContent') || document.getElementById('pageContent') || document.getElementById('pageCanvas');
+                if (container) {
+                  container.innerHTML = buildPageHtml(pages[nextIdx], nextIdx);
+                }
+                const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
+                if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
+                animateSubtlePageTransition(delta);
+                MaktabatiLayoutGuard.inspectAndHeal();
+                reportPageToBridge(nextIdx + 1, pages.length);
+                return;
               }
-              const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
-              if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
-              MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent);
-              if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {
-                window.MaktabatiBridge.onPageChanged(nextIdx + 1, pages.length);
+              const domPages = getDomPageElements();
+              if (domPages.length > 0) {
+                const curIdx = getCurrentPageIndex();
+                const nextIdx = Math.max(0, Math.min(domPages.length - 1, curIdx + delta));
+                if (nextIdx === curIdx) return;
+                for (let i = 0; i < domPages.length; i++) {
+                  if (i === nextIdx) domPages[i].classList.add('active');
+                  else domPages[i].classList.remove('active');
+                }
+                const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+                if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + domPages.length;
+                animateSubtlePageTransition(delta);
+                MaktabatiLayoutGuard.inspectAndHeal();
+                reportPageToBridge(nextIdx + 1, domPages.length);
               }
             };
 
+            window.__maktabatiGoToDomPage = function(targetZeroBasedIdx) {
+              try {
+                if (typeof window.goToPage === 'function') {
+                  window.goToPage(targetZeroBasedIdx);
+                  setTimeout(syncDomActivePageWithBridge, 30);
+                  return;
+                }
+                const domPages = getDomPageElements();
+                if (domPages.length > 0) {
+                  const target = Math.max(0, Math.min(domPages.length - 1, Number(targetZeroBasedIdx) || 0));
+                  const cur = getCurrentPageIndex();
+                  const diff = target - cur;
+                  if (diff !== 0) {
+                    const btnSelector = diff > 0
+                      ? '#btnNextPage,#nextBtn,.btn-next,[data-action="next"]'
+                      : '#btnPrevPage,#prevBtn,.btn-prev,[data-action="prev"]';
+                    const btn = document.querySelector(btnSelector);
+                    if (btn) {
+                      const steps = Math.abs(diff);
+                      for (let s = 0; s < steps; s++) {
+                        if (!btn.disabled) btn.click();
+                      }
+                      animateSubtlePageTransition(diff);
+                      setTimeout(syncDomActivePageWithBridge, 30);
+                      return;
+                    }
+                  }
+                  for (let i = 0; i < domPages.length; i++) {
+                    if (i === target) domPages[i].classList.add('active');
+                    else domPages[i].classList.remove('active');
+                  }
+                  const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
+                  if (counterEl) counterEl.textContent = (target + 1) + ' / ' + domPages.length;
+                  if (diff !== 0) animateSubtlePageTransition(diff);
+                  reportPageToBridge(target + 1, domPages.length);
+                }
+              } catch (e) {}
+            };
+
+            let domSyncObserverAttached = false;
+            let domSyncDebounceTimer = null;
+            function scheduleDomPageSync() {
+              if (domSyncDebounceTimer) clearTimeout(domSyncDebounceTimer);
+              domSyncDebounceTimer = setTimeout(function() {
+                syncDomActivePageWithBridge();
+              }, 25);
+            }
+
+            function attachLiveDomPageObserver() {
+              if (domSyncObserverAttached || !document.body) return;
+              domSyncObserverAttached = true;
+              try {
+                const observer = new MutationObserver(function() {
+                  scheduleDomPageSync();
+                });
+                observer.observe(document.body, {
+                  attributes: true,
+                  attributeFilter: ['class'],
+                  subtree: true,
+                  childList: true,
+                  characterData: true
+                });
+              } catch (e) {}
+              document.addEventListener('click', function() {
+                scheduleDomPageSync();
+              }, { passive: true });
+              scheduleDomPageSync();
+            }
+
             if (document.readyState === 'loading') {
               document.addEventListener('DOMContentLoaded', function() {
-                ensureHudElements();
+                purgeLegacyDomArtifacts();
+                attachLiveDomPageObserver();
                 setTimeout(healBlankPageIfNeeded, 20);
               });
             } else {
-              ensureHudElements();
+              purgeLegacyDomArtifacts();
+              attachLiveDomPageObserver();
               setTimeout(healBlankPageIfNeeded, 20);
             }
 
@@ -705,22 +707,38 @@ object SandboxHtmlInjector {
                 const beforePage = getCurrentPageIndex();
                 if (delta > 0 && typeof window.nextPage === 'function') {
                   window.nextPage();
-                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
+                  animateSubtlePageTransition(delta);
+                  setTimeout(function() {
+                    syncDomActivePageWithBridge();
+                    MaktabatiLayoutGuard.inspectAndHeal();
+                  }, 25);
                   return true;
                 }
                 if (delta < 0 && typeof window.prevPage === 'function') {
                   window.prevPage();
-                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
+                  animateSubtlePageTransition(delta);
+                  setTimeout(function() {
+                    syncDomActivePageWithBridge();
+                    MaktabatiLayoutGuard.inspectAndHeal();
+                  }, 25);
                   return true;
                 }
                 if (typeof window.changePage === 'function') {
                   window.changePage(delta);
-                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
+                  animateSubtlePageTransition(delta);
+                  setTimeout(function() {
+                    syncDomActivePageWithBridge();
+                    MaktabatiLayoutGuard.inspectAndHeal();
+                  }, 25);
                   return true;
                 }
                 if (typeof window.goToPage === 'function') {
                   window.goToPage(beforePage + delta);
-                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
+                  animateSubtlePageTransition(delta);
+                  setTimeout(function() {
+                    syncDomActivePageWithBridge();
+                    MaktabatiLayoutGuard.inspectAndHeal();
+                  }, 25);
                   return true;
                 }
                 const btnSelector = delta > 0
@@ -729,7 +747,11 @@ object SandboxHtmlInjector {
                 const btn = document.querySelector(btnSelector);
                 if (btn && !btn.disabled) {
                   btn.click();
-                  setTimeout(function() { MaktabatiLayoutGuard.inspectAndHeal(currentZoomPercent); }, 25);
+                  animateSubtlePageTransition(delta);
+                  setTimeout(function() {
+                    syncDomActivePageWithBridge();
+                    MaktabatiLayoutGuard.inspectAndHeal();
+                  }, 25);
                   return true;
                 }
                 window.__maktabatiTurn(delta);
@@ -739,64 +761,11 @@ object SandboxHtmlInjector {
             }
 
             // =========================================================================
-            // 3. 4-CORNER INTERACTIVE PAGE-CURL PHYSICS ENGINE (MaktabatiPageCurlEngine)
+            // 2. CLEAN TOUCH NAVIGATION (SUBTLE SMOOTH FADE & MICRO-SLIDE)
             //    + 2-FINGER FLUID REFLOW PINCH-TO-ZOOM
             // =========================================================================
-            let audioCtx = null;
-            function playPaperFlipSound() {
-              try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContextClass) return;
-                if (!audioCtx) audioCtx = new AudioContextClass();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-
-                const duration = 0.11;
-                const sampleRate = audioCtx.sampleRate || 44100;
-                const frameCount = Math.floor(sampleRate * duration);
-                const buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < frameCount; i++) {
-                  const env = Math.sin((i / frameCount) * Math.PI);
-                  data[i] = (Math.random() * 2 - 1) * env * 0.22;
-                }
-
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = buffer;
-
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(920, audioCtx.currentTime);
-                filter.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + duration);
-                filter.Q.value = 1.4;
-
-                const gain = audioCtx.createGain();
-                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 0.025);
-                gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + duration);
-
-                noise.connect(filter);
-                filter.connect(gain);
-                gain.connect(audioCtx.destination);
-                noise.start();
-              } catch (e) {}
-            }
-
-            function ensureCurlOverlay() {
-              if (!document.body) return null;
-              let overlay = document.getElementById('maktabati-page-curl-overlay');
-              if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'maktabati-page-curl-overlay';
-                overlay.innerHTML =
-                  '<div id="maktabati-curl-shadow"></div>' +
-                  '<div id="maktabati-curl-backside"></div>';
-                document.body.appendChild(overlay);
-              }
-              return overlay;
-            }
-
             const INTERACTIVE_PROTECTED_SELECTOR =
-              'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay,#maktabati-zoom-badge,#maktabati-distortion-toast';
+              'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay';
 
             function isProtectedInteractiveTarget(tgt) {
               if (!tgt || !tgt.closest) return false;
@@ -820,144 +789,6 @@ object SandboxHtmlInjector {
               return { top: winTop <= 4, bottom: winTop >= maxScroll - 6 };
             }
 
-            const MaktabatiPageCurlEngine = {
-              activeCorner: 'NONE', // 'TOP_RIGHT', 'BOTTOM_RIGHT', 'TOP_LEFT', 'BOTTOM_LEFT'
-              startX: 0,
-              startY: 0,
-              curX: 0,
-              curY: 0,
-              isDragging: false,
-              rafId: null,
-
-              detectCorner: function(x, y, vw, vh) {
-                const isRight = x >= vw * 0.5;
-                const isTop = y < vh * 0.5;
-                if (isRight && isTop) return 'TOP_RIGHT';
-                if (isRight && !isTop) return 'BOTTOM_RIGHT';
-                if (!isRight && isTop) return 'TOP_LEFT';
-                return 'BOTTOM_LEFT';
-              },
-
-              renderFrame: function() {
-                MaktabatiPageCurlEngine.rafId = null;
-                if (!MaktabatiPageCurlEngine.isDragging) return;
-                const overlay = ensureCurlOverlay();
-                if (!overlay) return;
-                const backside = document.getElementById('maktabati-curl-backside');
-                const shadow = document.getElementById('maktabati-curl-shadow');
-                if (!backside || !shadow) return;
-
-                const vw = Math.max(280, window.innerWidth || 360);
-                const vh = Math.max(400, window.innerHeight || 640);
-                const dx = MaktabatiPageCurlEngine.curX - MaktabatiPageCurlEngine.startX;
-                const dy = MaktabatiPageCurlEngine.curY - MaktabatiPageCurlEngine.startY;
-                const absDx = Math.abs(dx);
-                const absDy = Math.abs(dy);
-
-                if (absDx < 10 && absDy < 10) {
-                  overlay.classList.remove('active');
-                  return;
-                }
-
-                overlay.classList.add('active');
-                const corner = MaktabatiPageCurlEngine.activeCorner;
-                const isTopCorner = corner === 'TOP_RIGHT' || corner === 'TOP_LEFT';
-                const isRightCorner = corner === 'TOP_RIGHT' || corner === 'BOTTOM_RIGHT';
-
-                const curlProgress = Math.min(1, Math.hypot(dx, dy) / (vw * 0.72));
-                const foldSize = Math.max(24, Math.min(vw * 0.65, curlProgress * vw * 0.58));
-                const angleRad = Math.atan2(dy, dx);
-                const angleDeg = (angleRad * 180 / Math.PI);
-                const clampedTilt = Math.max(-28, Math.min(28, (dy / vh) * 42 * (isTopCorner ? 1 : -1)));
-
-                backside.style.transition = 'none';
-                shadow.style.transition = 'none';
-                backside.style.width = foldSize + 'px';
-                backside.style.height = (foldSize * 1.12) + 'px';
-
-                shadow.style.width = (foldSize * 1.35) + 'px';
-                shadow.style.height = (foldSize * 1.45) + 'px';
-                shadow.style.opacity = String(Math.min(0.85, 0.25 + curlProgress * 0.65));
-
-                // Anchor curl geometry specifically to the grabbed corner (TR, BR, TL, BL)
-                backside.style.top = isTopCorner ? '0px' : 'auto';
-                backside.style.bottom = isTopCorner ? 'auto' : '0px';
-                backside.style.right = isRightCorner ? '0px' : 'auto';
-                backside.style.left = isRightCorner ? 'auto' : '0px';
-
-                shadow.style.top = isTopCorner ? '0px' : 'auto';
-                shadow.style.bottom = isTopCorner ? 'auto' : '0px';
-                shadow.style.right = isRightCorner ? '0px' : 'auto';
-                shadow.style.left = isRightCorner ? 'auto' : '0px';
-
-                if (corner === 'TOP_RIGHT') {
-                  backside.style.borderRadius = '0 0 0 90%';
-                  backside.style.transformOrigin = 'top right';
-                  backside.style.transform = 'translate3d(' + (-foldSize * 0.18) + 'px, ' + (foldSize * 0.12) + 'px, 0) rotate(' + (clampedTilt - 8) + 'deg)';
-                } else if (corner === 'BOTTOM_RIGHT') {
-                  backside.style.borderRadius = '90% 0 0 0';
-                  backside.style.transformOrigin = 'bottom right';
-                  backside.style.transform = 'translate3d(' + (-foldSize * 0.18) + 'px, ' + (-foldSize * 0.12) + 'px, 0) rotate(' + (clampedTilt + 8) + 'deg)';
-                } else if (corner === 'TOP_LEFT') {
-                  backside.style.borderRadius = '0 0 90% 0';
-                  backside.style.transformOrigin = 'top left';
-                  backside.style.transform = 'translate3d(' + (foldSize * 0.18) + 'px, ' + (foldSize * 0.12) + 'px, 0) rotate(' + (-clampedTilt + 8) + 'deg)';
-                } else {
-                  backside.style.borderRadius = '0 90% 0 0';
-                  backside.style.transformOrigin = 'bottom left';
-                  backside.style.transform = 'translate3d(' + (foldSize * 0.18) + 'px, ' + (-foldSize * 0.12) + 'px, 0) rotate(' + (-clampedTilt - 8) + 'deg)';
-                }
-
-                const pageCard = getActivePageCanvas();
-                if (pageCard && pageCard !== document.body) {
-                  const rotY = (dx / vw) * 14;
-                  const rotX = isTopCorner ? -(Math.abs(dx) / vw) * 4 : (Math.abs(dx) / vw) * 4;
-                  pageCard.style.transition = 'none';
-                  pageCard.style.transform = 'perspective(1200px) rotateY(' + rotY.toFixed(2) + 'deg) rotateX(' + rotX.toFixed(2) + 'deg)';
-                }
-              },
-
-              releaseCurl: function(completed) {
-                MaktabatiPageCurlEngine.isDragging = false;
-                if (MaktabatiPageCurlEngine.rafId) {
-                  cancelAnimationFrame(MaktabatiPageCurlEngine.rafId);
-                  MaktabatiPageCurlEngine.rafId = null;
-                }
-                const overlay = document.getElementById('maktabati-page-curl-overlay');
-                const backside = document.getElementById('maktabati-curl-backside');
-                const shadow = document.getElementById('maktabati-curl-shadow');
-                const pageCard = getActivePageCanvas();
-
-                if (pageCard && pageCard !== document.body) {
-                  pageCard.style.transition = 'transform 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
-                  pageCard.style.transform = 'none';
-                }
-
-                if (!overlay || !backside || !shadow) return;
-                backside.style.transition = 'all 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
-                shadow.style.transition = 'all 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
-
-                if (completed) {
-                  playPaperFlipSound();
-                  const vw = Math.max(280, window.innerWidth || 360);
-                  backside.style.width = (vw * 0.95) + 'px';
-                  backside.style.height = (vw * 0.95) + 'px';
-                  shadow.style.opacity = '0';
-                } else {
-                  backside.style.width = '0px';
-                  backside.style.height = '0px';
-                  shadow.style.opacity = '0';
-                }
-
-                setTimeout(function() {
-                  if (overlay) overlay.classList.remove('active');
-                }, 220);
-              },
-
-              playPaperFlipSound: playPaperFlipSound
-            };
-            window.MaktabatiPageCurlEngine = MaktabatiPageCurlEngine;
-
             let tStartX = 0, tStartY = 0, tStartPage = 0, tAtTop = true, tAtBottom = true, tIgnore = false;
             let isPinching = false, pinchStartDist = 0, pinchStartZoom = 100;
 
@@ -974,7 +805,6 @@ object SandboxHtmlInjector {
               if (e.touches.length >= 2) {
                 tIgnore = true;
                 isPinching = true;
-                MaktabatiPageCurlEngine.releaseCurl(false);
                 pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
                 pinchStartZoom = currentZoomPercent;
                 return;
@@ -995,15 +825,6 @@ object SandboxHtmlInjector {
               const m = getScrollMetrics(tgt);
               tAtTop = m.top;
               tAtBottom = m.bottom;
-
-              const vw = window.innerWidth || 360;
-              const vh = window.innerHeight || 640;
-              MaktabatiPageCurlEngine.activeCorner = MaktabatiPageCurlEngine.detectCorner(tStartX, tStartY, vw, vh);
-              MaktabatiPageCurlEngine.startX = tStartX;
-              MaktabatiPageCurlEngine.startY = tStartY;
-              MaktabatiPageCurlEngine.curX = tStartX;
-              MaktabatiPageCurlEngine.curY = tStartY;
-              MaktabatiPageCurlEngine.isDragging = true;
             }, { passive: true });
 
             document.addEventListener('touchmove', function(e) {
@@ -1018,14 +839,6 @@ object SandboxHtmlInjector {
                     window.__maktabatiSetFluidZoom(nextZoom, false);
                   }
                 }
-                return;
-              }
-
-              if (tIgnore || !MaktabatiPageCurlEngine.isDragging || e.touches.length !== 1) return;
-              MaktabatiPageCurlEngine.curX = e.touches[0].clientX;
-              MaktabatiPageCurlEngine.curY = e.touches[0].clientY;
-              if (!MaktabatiPageCurlEngine.rafId) {
-                MaktabatiPageCurlEngine.rafId = requestAnimationFrame(MaktabatiPageCurlEngine.renderFrame);
               }
             }, { passive: true });
 
@@ -1038,7 +851,6 @@ object SandboxHtmlInjector {
               }
 
               if (tIgnore || !e.changedTouches || e.changedTouches.length !== 1) {
-                MaktabatiPageCurlEngine.releaseCurl(false);
                 return;
               }
 
@@ -1046,26 +858,27 @@ object SandboxHtmlInjector {
               const dy = e.changedTouches[0].clientY - tStartY;
               const absX = Math.abs(dx), absY = Math.abs(dy);
               const vw = Math.max(240, window.innerWidth || 360);
-              const quarterWidth = vw * 0.25;
+              const swipeThreshold = Math.min(vw * 0.22, 64);
 
-              const completedHorizontalCurl = absX >= Math.min(quarterWidth, 72) && absX >= absY * 0.75;
+              const completedHorizontalSwipe = absX >= swipeThreshold && absX >= absY * 0.8;
               const completedVerticalSwipe = absY > absX * 1.2 && absY >= 58 && ((dy < 0 && tAtBottom) || (dy > 0 && tAtTop));
 
-              if (!completedHorizontalCurl && !completedVerticalSwipe) {
-                // Spring-back to original position
-                MaktabatiPageCurlEngine.releaseCurl(false);
+              if (!completedHorizontalSwipe && !completedVerticalSwipe) {
                 return;
               }
 
-              MaktabatiPageCurlEngine.releaseCurl(true);
-
               setTimeout(function() {
                 if (getCurrentPageIndex() !== tStartPage) {
+                  // Book template handled the swipe itself; apply subtle micro-slide feedback
+                  const dirAttr0 = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
+                  const isRtl0 = dirAttr0 === 'rtl';
+                  const delta0 = completedHorizontalSwipe ? (isRtl0 ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1)) : (dy < 0 ? 1 : -1);
+                  animateSubtlePageTransition(delta0);
                   return;
                 }
                 const dirAttr = (document.documentElement.getAttribute('dir') || document.body.getAttribute('dir') || 'rtl').toLowerCase();
                 const isRtl = dirAttr === 'rtl';
-                if (completedHorizontalCurl) {
+                if (completedHorizontalSwipe) {
                   const delta = isRtl ? (dx > 0 ? 1 : -1) : (dx < 0 ? 1 : -1);
                   triggerUniversalPageTurn(delta);
                 } else if (completedVerticalSwipe) {

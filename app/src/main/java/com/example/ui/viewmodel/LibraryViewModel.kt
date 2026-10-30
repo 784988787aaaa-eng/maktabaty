@@ -336,9 +336,20 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         activeBook.value = null
     }
 
-    fun saveProgress(bookId: String, progress: Float, scrollY: Int, currentPage: Int = 1) {
+    fun saveProgress(bookId: String, progress: Float, scrollY: Int, currentPage: Int = 1, actualTotalPages: Int = 0) {
+        val currentActive = activeBook.value
+        if (currentActive != null && currentActive.id == bookId) {
+            val resolvedTotal = if (actualTotalPages > 0) actualTotalPages else currentActive.pageCount
+            val resolvedProg = if (resolvedTotal > 0 && currentPage >= resolvedTotal) 1.0f else progress.coerceIn(0f, 1f)
+            activeBook.value = currentActive.copy(
+                readingProgress = resolvedProg,
+                scrollY = scrollY,
+                currentPage = currentPage.coerceAtLeast(1),
+                pageCount = resolvedTotal.coerceAtLeast(1)
+            )
+        }
         viewModelScope.launch {
-            repository.updateReadingProgress(bookId, progress, scrollY, currentPage)
+            repository.updateReadingProgress(bookId, progress, scrollY, currentPage, actualTotalPages)
         }
     }
 

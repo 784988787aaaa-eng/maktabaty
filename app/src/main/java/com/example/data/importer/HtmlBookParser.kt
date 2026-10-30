@@ -62,6 +62,7 @@ object HtmlBookParser {
     private val BG_VAR_NAMES = listOf(
         "bg-primary",
         "paper-bg",
+        "paper",
         "card-bg",
         "bg-secondary",
         "bg",
@@ -87,6 +88,24 @@ object HtmlBookParser {
         "ornament",
         "accent-peach",
         "accent-rose-light"
+    )
+
+    // Priority 2: Numeric data-page="0", data-page="1", etc.
+    private val NUMERIC_DATA_PAGE_REGEX = Regex(
+        "\\bdata-page\\s*=\\s*[\"'](\\d+)[\"']",
+        RegexOption.IGNORE_CASE
+    )
+
+    // Priority 3: Standalone page / book-page class on <article>, <section>, or <div> without hyphen '-'
+    private val EXACT_PAGE_TAG_REGEX = Regex(
+        "<(?:article|section|div)\\b[^>]*\\bclass\\s*=\\s*[\"'][^\"']*(?<![\\w-])(?:page|book-page)(?![\\w-])(?![^\"']*\\bpage-(?:heading|flower|number|canvas|counter|footer|header|body|title|quote|indicator)\\b)[^\"']*[\"']",
+        RegexOption.IGNORE_CASE
+    )
+
+    // Priority 4: Explicit text page counter: <span id="pageCount">1 / 6</span> or <span id="pageCounter">1 من 6</span>
+    private val EXPLICIT_PAGE_COUNTER_REGEX = Regex(
+        "id\\s*=\\s*[\"'](?:pageCount|pageCounter)[\"'][^>]*>\\s*\\d+\\s*(?:/|من)\\s*(\\d+)",
+        RegexOption.IGNORE_CASE
     )
 
     private val BODY_OR_CANVAS_BG_REGEX = Regex(
@@ -139,6 +158,36 @@ object HtmlBookParser {
             trimmed.lowercase().contains("book_data")
     }
 
+    /**
+     * Reads any companion local `.css` or `.js` files inside the book's directory
+     * (e.g., `styles/book.css`, `scripts/book.js`) so `:root` CSS variables and `BOOK_DATA`
+     * defined in external files are accurately extracted.
+     */
+    fun readSupplementalAssetsFromBookDir(bookDir: File?): String {
+        if (bookDir == null || !bookDir.isDirectory) return ""
+        val sb = StringBuilder()
+        runCatching {
+            bookDir.walkTopDown()
+                .maxDepth(3)
+                .filter { f ->
+                    f.isFile &&
+                        f.length() in 1..(2 * 1024 * 1024) &&
+                        (f.extension.equals("css", ignoreCase = true) || f.extension.equals("js", ignoreCase = true))
+                }
+                .forEach { file ->
+                    runCatching {
+                        val text = file.readText(Charsets.UTF_8)
+                        if (file.extension.equals("css", ignoreCase = true)) {
+                            sb.append("\n<style>\n").append(text).append("\n</style>\n")
+                        } else {
+                            sb.append("\n<script>\n").append(text).append("\n</script>\n")
+                        }
+                    }
+                }
+        }
+        return sb.toString()
+    }
+
     fun parse(entryHtmlFile: File, fallbackTitle: String): ParsedHtmlMetadata {
         val content = try {
             if (entryHtmlFile.length() > 5 * 1024 * 1024) {
@@ -153,11 +202,27 @@ object HtmlBookParser {
         } catch (e: Exception) {
             ""
         }
-        return parseContent(content, fallbackTitle, quickMode = false)
+        val supplementalAssets = readSupplementalAssetsFromBookDir(entryHtmlFile.parentFile)
+        return parseContent(
+            content = content,
+            fallbackTitle = fallbackTitle,
+            quickMode = false,
+            supplementalAssets = supplementalAssets
+        )
     }
 
-    fun parseQuickHeader(content: String, fallbackTitle: String): ParsedHtmlMetadata {
-        return parseContent(content, fallbackTitle, quickMode = true)
+    fun parseQuickHeader(
+        content: String,
+        fallbackTitle: String,
+        bookDir: File? = null
+    ): ParsedHtmlMetadata {
+        val supplementalAssets = readSupplementalAssetsFromBookDir(bookDir)
+        return parseContent(
+            content = content,
+            fallbackTitle = fallbackTitle,
+            quickMode = true,
+            supplementalAssets = supplementalAssets
+        )
     }
 
     fun normalizeHexColor(raw: String): String? {
@@ -304,18 +369,34 @@ object HtmlBookParser {
         return false
     }
 
-    fun parseContent(content: String, fallbackTitle: String, quickMode: Boolean = false): ParsedHtmlMetadata {
+    fun parseContent(
+        content: String,
+        fallbackTitle: String,
+        quickMode: Boolean = false,
+        supplementalAssets: String = ""
+    ): ParsedHtmlMetadata {
         if (!isValidHtmlContent(content)) {
             throw IllegalArgumentException("الملف المحدد تالف أو ليس ملف كتاب HTML صالحاً")
         }
 
+        val combinedContent = if (supplementalAssets.isNotBlank()) {
+            "$content\n$supplementalAssets"
+        } else {
+            content
+        }
+        val paletteSource = if (supplementalAssets.isNotBlank()) {
+            "$supplementalAssets\n$content"
+        } else {
+            content
+        }
+
         val headSample = if (content.length > 20000) content.substring(0, 20000) else content
-        val bdDeclMatch = BOOK_DATA_DECL_REGEX.find(content)
-        val bdStartIdx = bdDeclMatch?.range?.first ?: content.indexOf("BOOK_DATA")
+        val bdDeclMatch = BOOK_DATA_DECL_REGEX.find(combinedContent)
+        val bdStartIdx = bdDeclMatch?.range?.first ?: combinedContent.indexOf("BOOK_DATA")
         val bdHeaderSlice = if (bdStartIdx >= 0) {
-            val pagesIdx = content.indexOf("pages", bdStartIdx).takeIf { it > bdStartIdx && it - bdStartIdx < 1600 }
-            val endIdx = pagesIdx ?: minOf(content.length, bdStartIdx + 1600)
-            content.substring(bdStartIdx, endIdx)
+            val pagesIdx = combinedContent.indexOf("pages", bdStartIdx).takeIf { it > bdStartIdx && it - bdStartIdx < 1600 }
+            val endIdx = pagesIdx ?: minOf(combinedContent.length, bdStartIdx + 1600)
+            combinedContent.substring(bdStartIdx, endIdx)
         } else {
             ""
         }
@@ -405,53 +486,83 @@ object HtmlBookParser {
             author = if (language == "ar") "مؤلف غير محدد" else "Unknown Author"
         }
 
-        // 4. Extract Page Count & TOC
+        // 4. Extract Exact Page Count & TOC strictly following the 4 Priorities:
+        //    Priority 1: BOOK_DATA.pages array count
+        //    Priority 2: Unique numeric data-page="0", data-page="1", ... attributes
+        //    Priority 3: Standalone class="page" / class="book-page" on <article|section|div> without hyphen '-'
+        //    Priority 4: Explicit #pageCount / #pageCounter text (e.g., "1 / 6" or "1 من 6")
         val tocList = mutableListOf<TocEntry>()
-        var pageCount = if (quickMode) {
-            maxOf(1, content.length / 950)
-        } else {
-            extractBookDataPagesCountAndToc(content, bdStartIdx, tocList)
+        val bookDataPageCount = extractBookDataPagesCountAndToc(combinedContent, bdStartIdx, tocList)
+
+        if (!quickMode && tocList.isEmpty()) {
+            val headingMatcher = HEADING_PATTERN.matcher(content)
+            var count = 0
+            while (headingMatcher.find() && count < 1000) {
+                val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
+                val id = headingMatcher.group(2)
+                val headingText = headingMatcher.group(3)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
+                if (headingText.isNotBlank()) {
+                    val level = when (tag) {
+                        "h1" -> 1
+                        "h2" -> 2
+                        else -> 3
+                    }
+                    val href = if (!id.isNullOrBlank()) "#$id" else "#page-${count + 1}"
+                    tocList.add(TocEntry(title = headingText, href = href, level = level))
+                    count++
+                }
+            }
         }
 
-        if (!quickMode) {
-            if (tocList.isEmpty()) {
-                val headingMatcher = HEADING_PATTERN.matcher(content)
-                var count = 0
-                while (headingMatcher.find() && count < 1000) {
-                    val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
-                    val id = headingMatcher.group(2)
-                    val headingText = headingMatcher.group(3)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
-                    if (headingText.isNotBlank()) {
-                        val level = when (tag) {
-                            "h1" -> 1
-                            "h2" -> 2
-                            else -> 3
+        val pageCount: Int = if (bookDataPageCount > 0) {
+            // Priority 1: BOOK_DATA.pages
+            bookDataPageCount
+        } else {
+            // Priority 2: Numeric data-page="0", data-page="1", ...
+            val uniqueDataPages = NUMERIC_DATA_PAGE_REGEX.findAll(content)
+                .map { it.groupValues[1] }
+                .toSet()
+
+            if (uniqueDataPages.isNotEmpty()) {
+                uniqueDataPages.size
+            } else {
+                // Priority 3: Standalone page / book-page class without hyphen '-'
+                val exactPageClassCount = EXACT_PAGE_TAG_REGEX.findAll(content).count()
+                if (exactPageClassCount > 0) {
+                    exactPageClassCount
+                } else {
+                    // Priority 4: Explicit text page counter (#pageCount or #pageCounter with "1 / 6" or "1 من 6")
+                    val explicitCounterTotal = EXPLICIT_PAGE_COUNTER_REGEX.find(content)
+                        ?.groupValues
+                        ?.getOrNull(1)
+                        ?.toIntOrNull()
+                        ?: 0
+
+                    if (explicitCounterTotal > 0) {
+                        explicitCounterTotal
+                    } else {
+                        // Fallback when none of Priorities 1-4 are present
+                        val sectionCount = Regex("<(?:section|article)\\b", RegexOption.IGNORE_CASE).findAll(content).count()
+                        when {
+                            sectionCount > 1 -> sectionCount
+                            tocList.size > 1 -> tocList.size
+                            else -> maxOf(1, (content.length / 1800))
                         }
-                        val href = if (!id.isNullOrBlank()) "#$id" else "#page-${count + 1}"
-                        tocList.add(TocEntry(title = headingText, href = href, level = level))
-                        count++
                     }
                 }
             }
-
-            if (pageCount <= 0) {
-                val pageClassCount = Regex("class\\s*=\\s*[\"'][^\"']*\\b(?:page|book-page)\\b[^\"']*[\"']", RegexOption.IGNORE_CASE).findAll(content).count()
-                val sectionCount = Regex("<(?:section|article)\\b", RegexOption.IGNORE_CASE).findAll(content).count()
-                pageCount = when {
-                    pageClassCount > 1 -> pageClassCount
-                    sectionCount > 1 -> sectionCount
-                    tocList.size > 1 -> tocList.size
-                    else -> maxOf(1, (content.length / 1800))
-                }
-            }
         }
 
-        // 5. Extract True Palette (preserving light/creamy and dark themes accurately)
-        val palette = extractTruePalette(content)
-        val hasCoverPage = detectHasCoverPage(content, headSample, bdHeaderSlice)
+        // 5. Extract True Palette (preserving light/creamy and dark themes accurately, including companion .css)
+        val palette = extractTruePalette(paletteSource)
+        val hasCoverPage = detectHasCoverPage(combinedContent, headSample, bdHeaderSlice)
 
-        val hasExternalCss = CSS_LINK_PATTERN.matcher(headSample).find() || STYLE_TAG_PATTERN.matcher(headSample).find()
-        val hasExternalJs = bdStartIdx >= 0 || SCRIPT_PATTERN.matcher(headSample).find()
+        val hasExternalCss = CSS_LINK_PATTERN.matcher(headSample).find() ||
+            STYLE_TAG_PATTERN.matcher(headSample).find() ||
+            supplementalAssets.contains("<style>", ignoreCase = true)
+        val hasExternalJs = bdStartIdx >= 0 ||
+            SCRIPT_PATTERN.matcher(headSample).find() ||
+            supplementalAssets.contains("<script>", ignoreCase = true)
 
         return ParsedHtmlMetadata(
             title = title,

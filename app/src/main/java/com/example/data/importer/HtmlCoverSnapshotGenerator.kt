@@ -164,9 +164,9 @@ object HtmlCoverSnapshotGenerator {
             return@withContext true
         }
 
-        // 2. Check if the HTML book has a designed cover page
+        // 2. Check if the HTML book has a designed cover page (including companion .css/.js in bookDir)
         val metadata = runCatching {
-            HtmlBookParser.parseContent(htmlContent, fallbackTitle, quickMode = true)
+            HtmlBookParser.parseQuickHeader(htmlContent, fallbackTitle, bookDir = bookDir)
         }.getOrNull() ?: return@withContext false
 
         if (!metadata.hasCoverPage) {

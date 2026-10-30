@@ -91,17 +91,36 @@ class BookRepository(
                 if (entryFile.isFile) {
                     runCatching {
                         val raw = entryFile.readText(Charsets.UTF_8)
-                        val meta = HtmlBookParser.parseContent(raw, userBook.title)
-                        if (!raw.contains("__maktabatiV5Initialized")) {
-                            val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, meta.pageCount)
+                        val meta = HtmlBookParser.parse(entryFile, userBook.title)
+                        val finalPages = meta.pageCount.coerceAtLeast(1)
+
+                        if (!raw.contains("__maktabatiV7Initialized") || userBook.pageCount != finalPages) {
+                            val healedHtml = com.example.data.sandbox.SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, finalPages)
                             entryFile.writeText(healedHtml, Charsets.UTF_8)
-                            if (meta.pageCount != userBook.pageCount || meta.tableOfContents.isNotEmpty()) {
-                                bookDao.updateBookPageCountAndToc(
-                                    id = userBook.id,
-                                    pageCount = maxOf(meta.pageCount, userBook.pageCount),
-                                    tocJson = HtmlBookParser.tocToJson(meta.tableOfContents)
-                                )
+                        }
+
+                        if (userBook.pageCount != finalPages || (meta.tableOfContents.isNotEmpty() && userBook.tableOfContentsJson == "[]")) {
+                            bookDao.updateBookPageCountAndToc(
+                                id = userBook.id,
+                                pageCount = finalPages,
+                                tocJson = HtmlBookParser.tocToJson(meta.tableOfContents)
+                            )
+                        }
+
+                        if (userBook.pageCount != finalPages && (userBook.readingProgress > 0f || userBook.currentPage > 1)) {
+                            val clampedPage = userBook.currentPage.coerceIn(1, finalPages)
+                            val correctedProgress = if (clampedPage >= finalPages) {
+                                1.0f
+                            } else {
+                                (clampedPage.toFloat() / finalPages.toFloat()).coerceIn(0f, 1f)
                             }
+                            bookDao.updateReadingProgress(
+                                id = userBook.id,
+                                progress = correctedProgress,
+                                scrollY = userBook.scrollY,
+                                currentPage = clampedPage,
+                                timestamp = userBook.lastReadTimestamp
+                            )
                         }
 
                         // Refresh true palette if legacy default colors were stored previously
@@ -255,10 +274,24 @@ class BookRepository(
         }
     }
 
-    suspend fun updateReadingProgress(bookId: String, progress: Float, scrollY: Int, currentPage: Int = 1) = withContext(Dispatchers.IO) {
+    suspend fun updateReadingProgress(
+        bookId: String,
+        progress: Float,
+        scrollY: Int,
+        currentPage: Int = 1,
+        actualTotalPages: Int = 0
+    ) = withContext(Dispatchers.IO) {
+        if (actualTotalPages > 0) {
+            bookDao.updateBookPageCount(bookId, actualTotalPages)
+        }
+        val finalProgress = if (actualTotalPages > 0 && currentPage >= actualTotalPages) {
+            1.0f
+        } else {
+            progress.coerceIn(0f, 1f)
+        }
         bookDao.updateReadingProgress(
             id = bookId,
-            progress = progress.coerceIn(0f, 1f),
+            progress = finalProgress,
             scrollY = scrollY,
             currentPage = currentPage.coerceAtLeast(1),
             timestamp = System.currentTimeMillis()

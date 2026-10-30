@@ -53,6 +53,9 @@ interface BookDao {
     @Query("UPDATE books SET pageCount = :pageCount, tableOfContentsJson = :tocJson WHERE id = :id")
     suspend fun updateBookPageCountAndToc(id: String, pageCount: Int, tocJson: String)
 
+    @Query("UPDATE books SET pageCount = :pageCount WHERE id = :id")
+    suspend fun updateBookPageCount(id: String, pageCount: Int)
+
 
     @Query("""
         UPDATE books 

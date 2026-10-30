@@ -66,7 +66,6 @@ import com.example.ui.reader.ReaderAddBookmarkDialog
 import com.example.ui.reader.ReaderBookmarksBottomSheet
 import com.example.ui.reader.ReaderExtendedBottomBar
 import com.example.ui.reader.ReaderFloatingZoomBadge
-import com.example.ui.reader.ReaderLayoutDistortionBanner
 import com.example.ui.reader.ReaderThemeMode
 import com.example.ui.reader.ReaderThemeSelectorDialog
 import com.example.ui.reader.ReaderTocBottomSheet
@@ -122,7 +121,7 @@ fun ReaderScreen(
     book: Book,
     bookmarks: List<Bookmark>,
     onBack: () -> Unit,
-    onSaveProgress: (progress: Float, scrollY: Int, currentPage: Int) -> Unit,
+    onSaveProgress: (progress: Float, scrollY: Int, currentPage: Int, actualTotalPages: Int) -> Unit,
     onAddBookmark: (title: String, scrollY: Int, progress: Float, excerpt: String) -> Unit,
     onDeleteBookmark: (Bookmark) -> Unit,
     modifier: Modifier = Modifier
@@ -142,7 +141,6 @@ fun ReaderScreen(
     }
     var showFloatingZoomBadge by remember(book.id) { mutableStateOf(false) }
     var zoomInteractionTick by remember(book.id) { mutableIntStateOf(0) }
-    var distortionWarningMessage by remember(book.id) { mutableStateOf<String?>(null) }
 
     var readerTheme by remember(book.id) {
         mutableStateOf(
@@ -170,37 +168,26 @@ fun ReaderScreen(
         prefs.edit().putInt("textZoomPercent", clamped).apply()
         showFloatingZoomBadge = true
         zoomInteractionTick++
-        if (clamped <= 115) {
-            distortionWarningMessage = null
-        }
     }
 
-    // Auto-hide the floating zoom badge after 2.4 seconds
+    // Auto-hide the floating zoom badge after 1.2 seconds (1200ms)
     LaunchedEffect(zoomInteractionTick) {
         if (zoomInteractionTick > 0) {
-            delay(2400)
+            delay(1200)
             showFloatingZoomBadge = false
-        }
-    }
-
-    // Auto-hide the layout distortion warning after 5.5 seconds
-    LaunchedEffect(distortionWarningMessage) {
-        if (!distortionWarningMessage.isNullOrBlank()) {
-            delay(5500)
-            distortionWarningMessage = null
         }
     }
 
     // Handle system back button cleanly
     BackHandler {
-        onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
+        onSaveProgress(currentProgress, scrollYHolder[0], currentPage, livePageCount)
         onBack()
     }
 
     // Memory Cleanup, Audio/Media Stop & Progress Persistence when Reader closes
     DisposableEffect(book.id) {
         onDispose {
-            onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
+            onSaveProgress(currentProgress, scrollYHolder[0], currentPage, livePageCount)
             webViewRef?.let { wv ->
                 try {
                     wv.stopLoading()
@@ -324,11 +311,13 @@ fun ReaderScreen(
                                 totalBookPages = livePageCount,
                                 onPageProgressChanged = { page, total, prog ->
                                     currentPage = page
-                                    if (total > 0 && total != livePageCount) {
-                                        livePageCount = total
+                                    val resolvedTotal = if (total > 0) total else livePageCount
+                                    if (resolvedTotal != livePageCount) {
+                                        livePageCount = resolvedTotal
                                     }
-                                    currentProgress = prog
-                                    onSaveProgress(prog, scrollYHolder[0], page)
+                                    val finalProg = if (page >= resolvedTotal) 1.0f else prog
+                                    currentProgress = finalProg
+                                    onSaveProgress(finalProg, scrollYHolder[0], page, resolvedTotal)
                                 },
                                 onZoomChangedFromJs = { jsZoomPct ->
                                     val clamped = jsZoomPct.coerceIn(75, 200)
@@ -338,9 +327,6 @@ fun ReaderScreen(
                                     settings.textZoom = clamped
                                     showFloatingZoomBadge = true
                                     zoomInteractionTick++
-                                },
-                                onLayoutDistortionDetected = { msg ->
-                                    distortionWarningMessage = msg
                                 }
                             ),
                             "MaktabatiBridge"
@@ -364,7 +350,7 @@ fun ReaderScreen(
                                             // Upgrade legacy book files on background I/O thread if needed
                                             if (mime == "text/html") {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV5Initialized")) {
+                                                if (!raw.contains("__maktabatiV7Initialized")) {
                                                     val upgraded = SandboxHtmlInjector.injectIntoHtml(raw, book.id, livePageCount)
                                                     targetFile.writeText(upgraded, Charsets.UTF_8)
                                                     return WebResourceResponse(
@@ -413,7 +399,10 @@ fun ReaderScreen(
                                     }
                                     val savedPage = book.currentPage.coerceAtLeast(1)
                                     if (savedPage > 1) {
-                                        wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${savedPage - 1});", null)
+                                        wv.evaluateJavascript(
+                                            "if (typeof window.__maktabatiGoToDomPage === 'function') window.__maktabatiGoToDomPage(${savedPage - 1}); else if (typeof goToPage === 'function') goToPage(${savedPage - 1});",
+                                            null
+                                        )
                                     } else if (book.scrollY == 0 && readerTheme == ReaderThemeMode.ORIGINAL) {
                                         // Capture real cover snapshot from the first page of the live WebView
                                         wv.postDelayed({
@@ -482,22 +471,12 @@ fun ReaderScreen(
             )
         }
 
-        // Sleek Floating Fluid Reflow Zoom Badge at Top Center
+        // Single Sleek Floating Fluid Reflow Zoom Capsule at Top Center
         ReaderFloatingZoomBadge(
             visible = showFloatingZoomBadge,
             zoomPercent = textZoomPercent,
             onResetToOptimal = { updateFluidZoom(100) },
             modifier = Modifier.align(Alignment.TopCenter)
-        )
-
-        // Smart Layout Distortion Warning Toast Banner at Bottom Center
-        ReaderLayoutDistortionBanner(
-            warningMessage = distortionWarningMessage,
-            onResetToOptimal = { updateFluidZoom(100) },
-            onDismiss = { distortionWarningMessage = null },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = if (showExtendedControls) 168.dp else 48.dp)
         )
 
         // Smart Auto-Hiding Edge Handle (collapsed by default on the middle side edge, non-intrusive 18.dp x 56.dp)
@@ -511,7 +490,7 @@ fun ReaderScreen(
             if (!pillCollapsed) {
                 Surface(
                     onClick = {
-                        onSaveProgress(currentProgress, scrollYHolder[0], currentPage)
+                        onSaveProgress(currentProgress, scrollYHolder[0], currentPage, livePageCount)
                         onBack()
                     },
                     shape = RoundedCornerShape(50),
@@ -623,7 +602,7 @@ fun ReaderScreen(
                 webViewRef?.let { wv ->
                     if (livePageCount > 1) {
                         wv.evaluateJavascript(
-                            "if (typeof goToPage === 'function') goToPage(${targetPage - 1}); else if (typeof window.__maktabatiTurn === 'function') window.__maktabatiTurn($delta);",
+                            "if (typeof window.__maktabatiGoToDomPage === 'function') window.__maktabatiGoToDomPage(${targetPage - 1}); else if (typeof goToPage === 'function') goToPage(${targetPage - 1}); else if (typeof window.__maktabatiTurn === 'function') window.__maktabatiTurn($delta);",
                             null
                         )
                     } else {
@@ -675,8 +654,11 @@ fun ReaderScreen(
                     if (entry.href.startsWith("#page-")) {
                         val pageNum = entry.href.removePrefix("#page-").toIntOrNull() ?: 1
                         currentPage = pageNum
-                        currentProgress = (pageNum.toFloat() / livePageCount.coerceAtLeast(1)).coerceIn(0f, 1f)
-                        wv.evaluateJavascript("if (typeof goToPage === 'function') goToPage(${pageNum - 1}); else window.location.hash = '${entry.href}';", null)
+                        currentProgress = if (pageNum >= livePageCount.coerceAtLeast(1)) 1.0f else (pageNum.toFloat() / livePageCount.coerceAtLeast(1)).coerceIn(0f, 1f)
+                        wv.evaluateJavascript(
+                            "if (typeof window.__maktabatiGoToDomPage === 'function') window.__maktabatiGoToDomPage(${pageNum - 1}); else if (typeof goToPage === 'function') goToPage(${pageNum - 1}); else window.location.hash = '${entry.href}';",
+                            null
+                        )
                     } else if (entry.href.isNotBlank()) {
                         wv.evaluateJavascript("window.location.hash = '${entry.href}';", null)
                     }

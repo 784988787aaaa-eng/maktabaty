@@ -445,35 +445,78 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun testFluidReflowZoomAndLayoutDistortionGuardAnd4CornerPageCurlEngine() {
+    fun testSilentFluidReflowZoomAndSubtleSmoothPageTransitionWithoutDomHudOrCurlArtifacts() {
         val rawHtml = """<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كتاب تفاعلي</title></head><body><main class="page-canvas" id="pageCanvas"><div class="page-body">نص متدفق</div></main></body></html>"""
-        val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fluid_v5", 40)
+        val injected = SandboxHtmlInjector.injectIntoHtml(rawHtml, "book_fluid_v7", 40)
 
-        // 1. Verify Fluid Reflow Zoom Engine
+        // 1. Verify Silent Fluid Reflow Zoom Engine & Silent Layout Containment
+        assertTrue(injected.contains("__maktabatiV7Initialized"))
         assertTrue(injected.contains("--reader-font"))
         assertTrue(injected.contains("--reader-font-size"))
         assertTrue(injected.contains("__maktabatiSetFluidZoom"))
         assertTrue(injected.contains("overflow-x: hidden !important"))
         assertTrue(injected.contains("max-width: 100% !important"))
-        assertTrue(injected.contains("100% الوضع المثالي"))
-
-        // 2. Verify MaktabatiLayoutGuard & Smart Warning Toast
         assertTrue(injected.contains("MaktabatiLayoutGuard"))
         assertTrue(injected.contains("inspectAndHeal"))
         assertTrue(injected.contains("el.scrollWidth > canvasWidth + 8"))
-        assertTrue(injected.contains("تنبيه: وصلتَ لأقصى حجم يحفظ جمال وتناسق عناصر هذا الكتاب — اضغط (100%) للعودة للعرض المثالي"))
 
-        // 3. Verify 4-Corner Interactive Page-Curl Physics Engine
-        assertTrue(injected.contains("MaktabatiPageCurlEngine"))
-        assertTrue(injected.contains("TOP_RIGHT"))
-        assertTrue(injected.contains("BOTTOM_RIGHT"))
-        assertTrue(injected.contains("TOP_LEFT"))
-        assertTrue(injected.contains("BOTTOM_LEFT"))
-        assertTrue(injected.contains("maktabati-curl-backside"))
-        assertTrue(injected.contains("maktabati-curl-shadow"))
-        assertTrue(injected.contains("playPaperFlipSound"))
-        assertTrue(injected.contains(".flip-card"))
-        assertTrue(injected.contains(".quiz-option"))
+        // 2. Verify NO DOM HUD badges, NO warning toasts, and NO page-curl overlays are created in HTML
+        assertFalse(injected.contains("#maktabati-zoom-badge"))
+        assertFalse(injected.contains("showZoomBadge"))
+        assertFalse(injected.contains("#maktabati-distortion-toast"))
+        assertFalse(injected.contains("showDistortionToast"))
+        assertFalse(injected.contains("onLayoutDistortionWarning"))
+        assertFalse(injected.contains("#maktabati-page-curl-overlay"))
+        assertFalse(injected.contains("MaktabatiPageCurlEngine"))
+
+        // 3. Verify Subtle Smooth Fade & Micro-Slide (180ms cubic-bezier(0.22, 1, 0.36, 1), ±10px)
+        assertTrue(injected.contains("maktabatiMicroSlideNext"))
+        assertTrue(injected.contains("maktabatiMicroSlidePrev"))
+        assertTrue(injected.contains("180ms cubic-bezier(0.22, 1, 0.36, 1)"))
+        assertTrue(injected.contains("translateX(-10px)"))
+        assertTrue(injected.contains("translateX(10px)"))
+        assertTrue(injected.contains("animateSubtlePageTransition"))
+    }
+
+    @Test
+    fun testExactPageCountIgnoresHyphenatedSubclassesAndBridgeReports100PercentOnLastPage() {
+        val htmlWithSubclasses = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head><meta charset="utf-8"><title>كتاب من 6 صفحات</title></head>
+            <body>
+                <main class="page-canvas">
+                    <article class="page active" data-page="0"><h1 class="page-heading">غلاف</h1><span class="page-flower">*</span><span class="page-number">1</span></article>
+                    <article class="page" data-page="1"><h2 class="page-heading">فصل 1</h2><span class="page-flower">*</span><span class="page-number">2</span></article>
+                    <article class="page" data-page="2"><h2 class="page-heading">فصل 2</h2><span class="page-flower">*</span><span class="page-number">3</span></article>
+                    <article class="page" data-page="3"><h2 class="page-heading">فصل 3</h2><span class="page-flower">*</span><span class="page-number">4</span></article>
+                    <article class="page" data-page="4"><h2 class="page-heading">فصل 4</h2><span class="page-flower">*</span><span class="page-number">5</span></article>
+                    <article class="page" data-page="5"><h2 class="page-heading">خاتمة</h2><span class="page-flower">*</span><span class="page-number">6</span></article>
+                </main>
+                <footer class="page-footer"><span class="page-counter" id="pageCount">1 / 6</span></footer>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val parsed = HtmlBookParser.parseContent(htmlWithSubclasses, "كتاب من 6 صفحات")
+        assertEquals("Must count exactly 6 pages and ignore .page-heading, .page-flower, .page-number, .page-canvas, .page-counter", 6, parsed.pageCount)
+
+        var reportedPage = 0
+        var reportedTotal = 0
+        var reportedProgress = 0f
+        val bridge = com.example.ui.reader.MaktabatiJsBridge(
+            totalBookPages = 6,
+            onPageProgressChanged = { page, total, progress ->
+                reportedPage = page
+                reportedTotal = total
+                reportedProgress = progress
+            }
+        )
+        bridge.onPageChanged(6, 6)
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        assertEquals(6, reportedPage)
+        assertEquals(6, reportedTotal)
+        assertEquals(1.0f, reportedProgress, 0.0001f)
     }
 
     @Test

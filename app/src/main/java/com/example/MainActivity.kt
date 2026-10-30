@@ -83,8 +83,8 @@ fun AppNavRoot(viewModel: LibraryViewModel) {
             book = currentBook,
             bookmarks = activeBookmarks,
             onBack = { viewModel.closeReader() },
-            onSaveProgress = { progress, scrollY, currentPage ->
-                viewModel.saveProgress(currentBook.id, progress, scrollY, currentPage)
+            onSaveProgress = { progress, scrollY, currentPage, actualTotalPages ->
+                viewModel.saveProgress(currentBook.id, progress, scrollY, currentPage, actualTotalPages)
             },
             onAddBookmark = { title, scrollY, progress, excerpt ->
                 viewModel.addBookmark(title, scrollY, progress, excerpt)

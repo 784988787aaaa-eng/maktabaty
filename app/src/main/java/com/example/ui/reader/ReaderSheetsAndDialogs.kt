@@ -86,20 +86,21 @@ fun ReaderFloatingZoomBadge(
             contentColor = Color(0xFFFFFDF9),
             modifier = Modifier
                 .padding(top = 10.dp)
-                .shadow(8.dp, RoundedCornerShape(50))
+                .shadow(6.dp, RoundedCornerShape(50))
                 .border(1.dp, Color(0xFFD97706).copy(alpha = 0.65f), RoundedCornerShape(50))
                 .testTag("reader_floating_zoom_badge")
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "$zoomPercent%",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFFDE047)
+                    color = Color(0xFFFDE047),
+                    maxLines = 1
                 )
                 Surface(
                     onClick = onResetToOptimal,
@@ -109,10 +110,11 @@ fun ReaderFloatingZoomBadge(
                     modifier = Modifier.testTag("reader_zoom_reset_badge_button")
                 ) {
                     Text(
-                        text = "100% الوضع المثالي",
+                        text = "إعادة 100%",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        maxLines = 1,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
             }
@@ -120,66 +122,6 @@ fun ReaderFloatingZoomBadge(
     }
 }
 
-@Composable
-fun ReaderLayoutDistortionBanner(
-    warningMessage: String?,
-    onResetToOptimal: () -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    AnimatedVisibility(
-        visible = !warningMessage.isNullOrBlank(),
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-        modifier = modifier
-    ) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = Color(0xF51C1411),
-            contentColor = Color(0xFFFEF3C7),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-                .shadow(10.dp, RoundedCornerShape(14.dp))
-                .border(1.5.dp, Color(0xFFF59E0B), RoundedCornerShape(14.dp))
-                .testTag("reader_distortion_warning_banner")
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = warningMessage ?: "تنبيه: وصلتَ لأقصى حجم يحفظ جمال وتناسق عناصر هذا الكتاب — اضغط (100%) للعودة للعرض المثالي",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFFEF3C7),
-                    lineHeight = 18.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Button(
-                    onClick = {
-                        onResetToOptimal()
-                        onDismiss()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF59E0B),
-                        contentColor = Color(0xFF1C1411)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("reader_distortion_reset_button")
-                ) {
-                    Text(
-                        text = "100% العرض المثالي",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun ReaderExtendedBottomBar(
