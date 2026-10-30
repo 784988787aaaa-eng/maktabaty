@@ -13,19 +13,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -34,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,7 +44,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.data.model.Book
 import com.example.data.model.Shelf
 
@@ -74,7 +73,7 @@ fun BookDetailDialog(
     book: Book,
     shelves: List<Shelf>,
     onDismiss: () -> Unit,
-    onOpenBook: () -> Unit,
+    onOpenBook: () -> Unit = {},
     onSaveMetadataAndStyle: (
         newTitle: String,
         newSubtitle: String,
@@ -84,7 +83,8 @@ fun BookDetailDialog(
         accentGoldHex: String,
         accentRoseHex: String
     ) -> Unit,
-    onDeleteBook: () -> Unit
+    onDeleteBook: () -> Unit,
+    onShareBook: () -> Unit = {}
 ) {
     var title by remember { mutableStateOf(book.title) }
     var subtitle by remember { mutableStateOf(book.subtitle) }
@@ -129,146 +129,206 @@ fun BookDetailDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("تخصيص الكتاب والغلاف", style = MaterialTheme.typography.titleLarge)
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Book Metadata Summary Card
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                    Text(
+                        text = "تخصيص الكتاب",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Share Book Capsule Button
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .clickable { onShareBook() }
+                                .testTag("share_book_button")
                         ) {
-                            Text(
-                                "عدد الصفحات: ${book.pageCount}",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "اللغة والاتجاه: ${if (book.isRtl) "عربي (RTL)" else "English (LTR)"}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "مشاركة الكتاب",
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "مشاركة",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+
+                        // Delete Book Capsule Button
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .clickable { showDeleteConfirm = true }
+                                .testTag("delete_book_button")
                         ) {
-                            Text(
-                                "الحجم: ${maxOf(1L, book.totalSizeBytes / 1024)} ك.ب",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                "التقدم: ${(book.readingProgress * 100).toInt()}%",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "حذف الكتاب",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "حذف",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
+                // Single-line micro info bar (28.dp)
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(28.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = "${book.pageCount} صفحة  •  ${maxOf(1L, book.totalSizeBytes / 1024)} ك.ب  •  التقدم ${(book.readingProgress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("عنوان الكتاب") },
+                    label = { Text("عنوان الكتاب", fontSize = 12.sp) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("edit_title_input")
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = subtitle,
-                    onValueChange = { subtitle = it },
-                    label = { Text("العنوان الفرعي (اختياري)") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("edit_subtitle_input")
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = author,
-                    onValueChange = { author = it },
-                    label = { Text("اسم المؤلف") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("edit_author_input")
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text("هوية ولون الغلاف:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-
+                // Author and Subtitle side-by-side in one compact row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = author,
+                        onValueChange = { author = it },
+                        label = { Text("اسم المؤلف", fontSize = 11.sp, maxLines = 1) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("edit_author_input")
+                    )
+
+                    OutlinedTextField(
+                        value = subtitle,
+                        onValueChange = { subtitle = it },
+                        label = { Text("العنوان الفرعي", fontSize = 11.sp, maxLines = 1) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("edit_subtitle_input")
+                    )
+                }
+
+                // Cover color selector in a single compact row (32.dp circles)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    for (palette in LUXURY_COVER_PALETTES) {
-                        val isSelected = bgPrimaryHex.equals(palette.bgPrimary, ignoreCase = true) &&
-                            accentRoseHex.equals(palette.accentRose, ignoreCase = true)
-                        val cStart = parseSafeColor(palette.bgPrimary, Color(0xFF1E293B))
-                        val cEnd = parseSafeColor(palette.accentRose, Color(0xFFE11D48))
-                        val cGold = parseSafeColor(palette.accentGold, Color(0xFFF59E0B))
+                    Text(
+                        text = "لون الغلاف:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(cStart, cEnd)))
-                                .border(
-                                    width = if (isSelected) 3.dp else 1.dp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else cGold,
-                                    shape = CircleShape
-                                )
-                                .clickable {
-                                    bgPrimaryHex = palette.bgPrimary
-                                    accentGoldHex = palette.accentGold
-                                    accentRoseHex = palette.accentRose
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        for (palette in LUXURY_COVER_PALETTES) {
+                            val isSelected = bgPrimaryHex.equals(palette.bgPrimary, ignoreCase = true) &&
+                                accentRoseHex.equals(palette.accentRose, ignoreCase = true)
+                            val cStart = parseSafeColor(palette.bgPrimary, Color(0xFF1E293B))
+                            val cEnd = parseSafeColor(palette.accentRose, Color(0xFFE11D48))
+                            val cGold = parseSafeColor(palette.accentGold, Color(0xFFF59E0B))
+
                             Box(
                                 modifier = Modifier
-                                    .size(10.dp)
+                                    .size(32.dp)
                                     .clip(CircleShape)
-                                    .background(cGold)
-                            )
+                                    .background(Brush.linearGradient(listOf(cStart, cEnd)))
+                                    .border(
+                                        width = if (isSelected) 2.5.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else cGold,
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        bgPrimaryHex = palette.bgPrimary
+                                        accentGoldHex = palette.accentGold
+                                        accentRoseHex = palette.accentRose
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(cGold)
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text("الرف في مكتبتي:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-
+                // Compact Shelf Selector
                 ExposedDropdownMenuBox(
                     expanded = shelfDropdownExpanded,
                     onExpandedChange = { shelfDropdownExpanded = !shelfDropdownExpanded },
@@ -278,6 +338,8 @@ fun BookDetailDialog(
                         value = currentShelf?.name ?: "الرف العام (جميع الكتب)",
                         onValueChange = {},
                         readOnly = true,
+                        singleLine = true,
+                        label = { Text("الرف في مكتبتي", fontSize = 11.sp) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = shelfDropdownExpanded) },
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -306,67 +368,27 @@ fun BookDetailDialog(
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                TextButton(
-                    onClick = { showDeleteConfirm = true },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .testTag("delete_book_button")
-                ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("حذف الكتاب من مكتبتي")
-                }
             }
         },
         confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = {
-                        if (title.isNotBlank()) {
-                            onSaveMetadataAndStyle(
-                                title.trim(),
-                                subtitle.trim(),
-                                author.trim(),
-                                selectedShelfId,
-                                bgPrimaryHex,
-                                accentGoldHex,
-                                accentRoseHex
-                            )
-                            onDismiss()
-                        }
-                    },
-                    modifier = Modifier.testTag("save_book_metadata_button")
-                ) {
-                    Text("حفظ")
-                }
-
-                Button(
-                    onClick = {
-                        if (title.isNotBlank()) {
-                            onSaveMetadataAndStyle(
-                                title.trim(),
-                                subtitle.trim(),
-                                author.trim(),
-                                selectedShelfId,
-                                bgPrimaryHex,
-                                accentGoldHex,
-                                accentRoseHex
-                            )
-                        }
+            Button(
+                onClick = {
+                    if (title.isNotBlank()) {
+                        onSaveMetadataAndStyle(
+                            title.trim(),
+                            subtitle.trim(),
+                            author.trim(),
+                            selectedShelfId,
+                            bgPrimaryHex,
+                            accentGoldHex,
+                            accentRoseHex
+                        )
                         onDismiss()
-                        onOpenBook()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    modifier = Modifier.testTag("open_book_from_dialog_button")
-                ) {
-                    Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("فتح الكتاب")
-                }
+                    }
+                },
+                modifier = Modifier.testTag("save_book_metadata_button")
+            ) {
+                Text("حفظ التعديلات")
             }
         },
         dismissButton = {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path
+        name="shared_books"
+        path="shared_books/" />
+    <cache-path
+        name="cache"
+        path="." />
+    <files-path
+        name="books"
+        path="books/" />
+    <files-path
+        name="files"
+        path="." />
+</paths>

@@ -1,7 +1,10 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.db.AppDatabase
@@ -316,4 +319,33 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     fun getBookFile(book: Book): File {
         return repository.getBookAbsoluteFile(book)
     }
+
+    fun shareBook(context: Context, book: Book) {
+        viewModelScope.launch {
+            runCatching {
+                val targetFile = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    repository.prepareSharedBookFile(book)
+                }
+                if (targetFile.exists()) {
+                    val uri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        targetFile
+                    )
+                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/html"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        putExtra(Intent.EXTRA_SUBJECT, book.title)
+                        putExtra(Intent.EXTRA_TEXT, "كتاب «${book.title}» من منصة مكتبتي")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val chooser = Intent.createChooser(sendIntent, "مشاركة كتاب «${book.title}»").apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(chooser)
+                }
+            }
+        }
+    }
 }
+

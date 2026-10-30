@@ -214,4 +214,26 @@ class BookRepository(
         val bookDir = File(booksRoot, book.folderPath)
         return File(bookDir, book.entryHtmlPath)
     }
+
+    /**
+     * Copies the book's HTML file to a temporary directory `cacheDir/shared_books/`
+     * renamed with the book's clean human-readable title (`<BookTitle>.html`)
+     * so external apps (WhatsApp, Telegram, etc.) receive the file under its real title.
+     */
+    fun prepareSharedBookFile(book: Book): File {
+        val sourceFile = getBookAbsoluteFile(book)
+        val sharedDir = File(context.cacheDir, "shared_books").apply {
+            if (!exists()) mkdirs()
+        }
+        val cleanTitle = book.title
+            .replace(Regex("[\\\\/:*?\"<>|]"), "_")
+            .trim()
+            .ifBlank { "book" }
+        val targetFile = File(sharedDir, "$cleanTitle.html")
+        if (sourceFile.exists()) {
+            sourceFile.copyTo(targetFile, overwrite = true)
+        }
+        return targetFile
+    }
 }
+

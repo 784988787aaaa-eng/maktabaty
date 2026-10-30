@@ -48,6 +48,8 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -119,6 +121,7 @@ fun LibraryScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var showCreateShelfDialog by remember { mutableStateOf(false) }
     var selectedBookForDetails by remember { mutableStateOf<Book?>(null) }
+    var bookPendingDelete by remember { mutableStateOf<Book?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
 
     val gridState = rememberLazyGridState()
@@ -408,6 +411,8 @@ fun LibraryScreen(
                                 onClick = { onOpenBook(book) },
                                 onFavoriteToggle = { viewModel.toggleFavorite(book) },
                                 onDetailsClick = { selectedBookForDetails = book },
+                                onShareClick = { viewModel.shareBook(context, book) },
+                                onDeleteClick = { bookPendingDelete = book },
                                 scaleFactor = cardScaleFactor
                             )
                         }
@@ -428,7 +433,9 @@ fun LibraryScreen(
                                 shelfName = shelf?.name,
                                 onClick = { onOpenBook(book) },
                                 onFavoriteToggle = { viewModel.toggleFavorite(book) },
-                                onDetailsClick = { selectedBookForDetails = book }
+                                onDetailsClick = { selectedBookForDetails = book },
+                                onShareClick = { viewModel.shareBook(context, book) },
+                                onDeleteClick = { bookPendingDelete = book }
                             )
                         }
                     }
@@ -470,6 +477,37 @@ fun LibraryScreen(
             onDeleteBook = {
                 viewModel.deleteBook(book.id)
                 selectedBookForDetails = null
+            },
+            onShareBook = {
+                viewModel.shareBook(context, book)
+            }
+        )
+    }
+
+    // Direct Delete Confirmation Dialog from 3-dots menu
+    bookPendingDelete?.let { book ->
+        AlertDialog(
+            onDismissRequest = { bookPendingDelete = null },
+            title = { Text("تأكيد حذف الكتاب من مكتبتي") },
+            text = {
+                Text("هل أنت متأكد من حذف «${book.title}» من المكتبة؟ سيتم إزالة نسخته المحفوظة وسجل القراءة نهائياً دون المساس بملفاتك الأصلية في الجهاز.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteBook(book.id)
+                        bookPendingDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.testTag("confirm_delete_book_button")
+                ) {
+                    Text("نعم، احذف الكتاب")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { bookPendingDelete = null }) {
+                    Text("تراجع")
+                }
             }
         )
     }

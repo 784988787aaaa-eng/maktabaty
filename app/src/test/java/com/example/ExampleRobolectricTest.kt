@@ -289,7 +289,34 @@ class ExampleRobolectricTest {
         assertTrue(injected.contains("85vh"))
     }
 
+    @Test
+    fun testPrepareSharedBookFileUsesRealBookTitle() {
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+
+        val bookDir = File(File(context.filesDir, "books"), "book_share_test").apply { mkdirs() }
+        val entryFile = File(bookDir, "index.html")
+        entryFile.writeText("<!DOCTYPE html><html><head><title>خيمة في القلب</title></head><body>محتوى</body></html>")
+
+        val book = Book(
+            id = "book_share_test",
+            title = "خيمة في القلب: رحلة إيمانية",
+            author = "م/منصور قطينه",
+            folderPath = "book_share_test",
+            entryHtmlPath = "index.html"
+        )
+
+        val sharedFile = repository.prepareSharedBookFile(book)
+        assertTrue(sharedFile.exists())
+        assertEquals("خيمة في القلب_ رحلة إيمانية.html", sharedFile.name)
+        assertTrue(sharedFile.readText().contains("خيمة في القلب"))
+
+        sharedFile.delete()
+        bookDir.deleteRecursively()
+    }
+
 }
+
 
 
 

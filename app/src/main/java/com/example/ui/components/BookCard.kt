@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.outlined.StarBorder
@@ -33,10 +34,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -104,6 +107,8 @@ fun BookGridItem(
     onClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onDetailsClick: () -> Unit,
+    onShareClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
     scaleFactor: Float = 1f,
     modifier: Modifier = Modifier
 ) {
@@ -397,7 +402,7 @@ fun BookGridItem(
                             onDismissRequest = { menuExpanded = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("تعديل الاسم والمؤلف ولون الغلاف") },
+                                text = { Text("تخصيص الكتاب والرف") },
                                 leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
                                 onClick = {
                                     menuExpanded = false
@@ -405,11 +410,56 @@ fun BookGridItem(
                                 }
                             )
                             DropdownMenuItem(
+                                text = { Text("مشاركة ملف الكتاب") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Share,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onShareClick()
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text(if (book.isFavorite) "إزالة من المفضلة" else "إضافة للمفضلة") },
-                                leadingIcon = { Icon(Icons.Default.Star, contentDescription = null) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFBBF24)
+                                    )
+                                },
                                 onClick = {
                                     menuExpanded = false
                                     onFavoriteToggle()
+                                }
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "حذف الكتاب",
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                colors = MenuDefaults.itemColors(
+                                    textColor = MaterialTheme.colorScheme.error,
+                                    leadingIconColor = MaterialTheme.colorScheme.error
+                                ),
+                                onClick = {
+                                    menuExpanded = false
+                                    onDeleteClick()
                                 }
                             )
                         }
@@ -444,8 +494,11 @@ fun BookListItem(
     onClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onDetailsClick: () -> Unit,
+    onShareClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
     val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFFE11D48))
     val bgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
@@ -567,13 +620,86 @@ fun BookListItem(
                 )
             }
 
-            IconButton(onClick = onDetailsClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "تعديل الكتاب",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.testTag("book_menu_${book.id}")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "خيارات الكتاب",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("تخصيص الكتاب والرف") },
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        onClick = {
+                            menuExpanded = false
+                            onDetailsClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("مشاركة ملف الكتاب") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onShareClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (book.isFavorite) "إزالة من المفضلة" else "إضافة للمفضلة") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFBBF24)
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onFavoriteToggle()
+                        }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "حذف الكتاب",
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        colors = MenuDefaults.itemColors(
+                            textColor = MaterialTheme.colorScheme.error,
+                            leadingIconColor = MaterialTheme.colorScheme.error
+                        ),
+                        onClick = {
+                            menuExpanded = false
+                            onDeleteClick()
+                        }
+                    )
+                }
             }
         }
     }
 }
+
