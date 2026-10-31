@@ -1,0 +1,44 @@
+{
+  "id": "ana_fatat_wa_li_risalah",
+  "title": "أَنَا فَتَاةٌ وَلِي رِسَالَة",
+  "subtitle": "رحلة إلى أعماق الذات... من معرفة النفس إلى بناء الشخصية وصناعة الأثر",
+  "author": "إصدارات مكتبتي الفاخرة — كتيب تربوي إيماني للفتيات",
+  "edition": "الطبعة الرقمية الفاخرة V9.0",
+  "language": "ar",
+  "direction": "rtl",
+  "entry": "أَنَا فَتَاةٌ وَلِي رِسَالَة.html",
+  "pageCount": 75,
+  "theme": {
+    "name": "dusty_rose_sage",
+    "bgPrimary": "#FAF6F0",
+    "bgSecondary": "#FFFDF9",
+    "bgSoftRose": "#FCF2F5",
+    "bgSoftSage": "#EFF5F0",
+    "bgPearlGold": "#FDF7EC",
+    "accentRose": "#BD6B80",
+    "accentRoseDark": "#732E41",
+    "accentRoseLight": "#D98C9F",
+    "accentSage": "#6B856E",
+    "accentSageDark": "#445946",
+    "accentGold": "#C69A4E",
+    "textPrimary": "#38272C",
+    "textSecondary": "#6B565C"
+  },
+  "typography": {
+    "body": "Noto Naskh Arabic",
+    "headings": "Aref Ruqaa",
+    "chapterTitles": "Reem Kufi",
+    "quotes": "Amiri",
+    "interface": "Noto Sans Arabic",
+    "numbers": "Noto Sans Arabic"
+  },
+  "tags": [
+    "بنات",
+    "تربية",
+    "إيماني",
+    "بناء الذات",
+    "تطوير الشخصية",
+    "المرأة المسلمة",
+    "صناعة الأثر"
+  ]
+}

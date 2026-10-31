@@ -939,6 +939,55 @@ class ExampleRobolectricTest {
         assertTrue(liveJs.contains("!important"))
     }
 
+    @Test
+    fun testAnaFatatWaLiRisalahBookMasterpieceAudit() {
+        val bookFile = File("/أَنَا فَتَاةٌ وَلِي رِسَالَة.html")
+        assertTrue("Book HTML file must exist", bookFile.exists())
+        assertTrue("Book HTML file must be substantial", bookFile.length() > 50000)
+
+        val meta = HtmlBookParser.parse(bookFile, "افتراضي")
+        assertEquals("أَنَا فَتَاةٌ وَلِي رِسَالَة", meta.title)
+        assertEquals(75, meta.pageCount)
+        assertTrue(meta.isRtl)
+        assertEquals("#BD6B80", meta.accentRoseHex)
+        assertEquals("#C69A4E", meta.accentGoldHex)
+        assertEquals("#FAF6F0", meta.bgPrimaryHex)
+
+        val html = bookFile.readText(Charsets.UTF_8)
+        // Search IDs & Logic
+        assertTrue(html.contains("id=\"searchOpen\""))
+        assertTrue(html.contains("id=\"searchPanel\""))
+        assertTrue(html.contains("id=\"searchInput\""))
+        assertTrue(html.contains("id=\"searchClearBtn\""))
+        assertTrue(html.contains("id=\"searchStatus\""))
+        assertTrue(html.contains("id=\"searchResults\""))
+        assertTrue(html.contains("normalizeArabicWithMap"))
+        assertTrue(html.contains("executeBookSearch"))
+        assertTrue(html.contains("applyCalmPageSearchHighlight"))
+
+        // Navigation & Fluid Reflow Zoom
+        assertTrue(html.contains("id=\"btnPrevPage\""))
+        assertTrue(html.contains("id=\"btnNextPage\""))
+        assertTrue(html.contains("id=\"pageCounter\""))
+        assertTrue(html.contains("__maktabatiSetFluidZoom"))
+        assertTrue(html.contains("touch-action: pan-y !important"))
+
+        // Thoroughly cleaned text: No developer messages, preambles, or pre-print notes
+        assertFalse(html.contains("هذه النسخة الكاملة للكتيب"))
+        assertFalse(html.contains("ملاحظة قبل الطباعة"))
+        assertFalse(html.contains("صغتها بحيث تكون الفتاة قارئة"))
+
+        // Verify ZIP package
+        val zipFile = File("/أَنَا_فَتَاةٌ_وَلِي_رِسَالَة.zip")
+        assertTrue("ZIP archive must exist", zipFile.exists())
+        assertTrue("ZIP archive must be valid size", zipFile.length() > 20000)
+
+        val zip = java.util.zip.ZipFile(zipFile)
+        val entries = zip.entries().asSequence().map { it.name }.toSet()
+        assertTrue(entries.contains("أَنَا فَتَاةٌ وَلِي رِسَالَة.html"))
+        assertTrue(entries.contains("manifest.json"))
+        zip.close()
+    }
 }
 
 
