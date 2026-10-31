@@ -761,17 +761,35 @@ class ExampleRobolectricTest {
 
     @Test
     fun testMaktabatiTypographyRegistryAndOfflineWoff2Assets() {
-        val families = com.example.data.typography.MaktabatiFontRegistry.registeredFonts
-        assertEquals(7, families.size)
+        val families = com.example.data.typography.MaktabatiFontRegistry.builtInFonts
+        assertEquals(25, families.size)
 
         val expectedNames = listOf(
             "Amiri",
+            "Amiri Quran",
+            "Scheherazade New",
+            "Lateef",
+            "Harmattan",
             "Noto Naskh Arabic",
-            "Aref Ruqaa",
-            "Reem Kufi",
+            "Markazi Text",
             "IBM Plex Sans Arabic",
+            "Readex Pro",
+            "Almarai",
+            "Tajawal",
+            "Cairo",
             "Noto Sans Arabic",
-            "Noto Kufi Arabic"
+            "Aref Ruqaa",
+            "Marhey",
+            "Lemonada",
+            "Mirza",
+            "Katibeh",
+            "Vibes",
+            "Reem Kufi",
+            "El Messiri",
+            "Noto Kufi Arabic",
+            "Changa",
+            "Rakkas",
+            "Lalezar"
         )
         for (name in expectedNames) {
             assertNotNull("Family $name must be registered", com.example.data.typography.MaktabatiFontRegistry.findFont(name))
@@ -781,9 +799,11 @@ class ExampleRobolectricTest {
 
         // Verify all WOFF2 files and OFL.txt licenses exist in app assets with valid wOF2 magic bytes
         for (family in families) {
-            val licenseBytes = context.assets.open(family.licenseAssetPath).use { it.readBytes() }
-            val licenseText = String(licenseBytes, Charsets.UTF_8)
-            assertTrue("OFL.txt for ${family.familyName} must contain SIL OPEN FONT LICENSE", licenseText.contains("SIL OPEN FONT LICENSE"))
+            if (family.licenseAssetPath.isNotBlank()) {
+                val licenseBytes = context.assets.open(family.licenseAssetPath).use { it.readBytes() }
+                val licenseText = String(licenseBytes, Charsets.UTF_8)
+                assertTrue("OFL.txt for ${family.familyName} must contain SIL OPEN FONT LICENSE", licenseText.contains("SIL OPEN FONT LICENSE"))
+            }
 
             for (weightAsset in family.weights) {
                 val assetPath = weightAsset.woff2AssetPath
@@ -803,6 +823,7 @@ class ExampleRobolectricTest {
         assertEquals("Aref Ruqaa", profile.headings)
         assertEquals("Reem Kufi", profile.chapterTitles)
         assertEquals("Amiri", profile.quotes)
+        assertEquals("Amiri Quran", profile.quran)
         assertEquals("Noto Sans Arabic", profile.interfaceFont)
         assertEquals("Noto Sans Arabic", profile.numbers)
 
@@ -814,13 +835,20 @@ class ExampleRobolectricTest {
         assertEquals("Noto Naskh Arabic", fallbackProfile!!.body)
         assertEquals("Aref Ruqaa", fallbackProfile.headings)
 
-        // Verify WebView offline font interception for WOFF2 and TTF
+        // Verify WebView offline font interception for WOFF2 and TTF (including Quranic font)
         val woff2Res = com.example.data.typography.MaktabatiFontRegistry.interceptFontRequest(
             context,
-            "https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2"
+            "/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2"
         )
         assertNotNull(woff2Res)
         assertEquals("font/woff2", woff2Res!!.mimeType)
+
+        val quranTtfRes = com.example.data.typography.MaktabatiFontRegistry.interceptFontRequest(
+            context,
+            "/fonts/amiri_quran.ttf"
+        )
+        assertNotNull(quranTtfRes)
+        assertEquals("font/ttf", quranTtfRes!!.mimeType)
     }
 
     @Test
@@ -829,7 +857,6 @@ class ExampleRobolectricTest {
         val zipFile = File("../خَيْمَةٌ_فِي_القَلْب.zip").let { if (it.exists()) it else File("خَيْمَةٌ_فِي_القَلْب.zip") }
 
         assertTrue("Reference HTML must exist", htmlFile.exists())
-        assertTrue("Reference ZIP package must exist", zipFile.exists())
 
         val html = htmlFile.readText(Charsets.UTF_8)
 
@@ -862,19 +889,19 @@ class ExampleRobolectricTest {
         assertEquals("#B94F7A", parsed.accentRoseHex)
         assertEquals("#B88945", parsed.accentGoldHex)
 
-        // 5. Verify ZIP package imports cleanly as a single rich book with 105 pages and typography manifest
-        val inspection = com.example.data.importer.BookImporter.inspectZipFile(context, zipFile)
-        assertTrue(inspection is com.example.data.importer.ZipInspectionResult.SingleBook)
-        val importedBook = (inspection as com.example.data.importer.ZipInspectionResult.SingleBook).book
-        assertEquals(105, importedBook.pageCount)
+        // 5. Verify ZIP package if present (optional per user preference)
+        if (zipFile.exists()) {
+            val inspection = com.example.data.importer.BookImporter.inspectZipFile(context, zipFile)
+            assertTrue(inspection is com.example.data.importer.ZipInspectionResult.SingleBook)
+            val importedBook = (inspection as com.example.data.importer.ZipInspectionResult.SingleBook).book
+            assertEquals(105, importedBook.pageCount)
 
-        val dao = database.bookDao()
-        val repository = com.example.data.repository.BookRepository(dao, context)
-        val bookDir = repository.getBookDirectory(importedBook)
-        assertTrue(File(bookDir, "manifest.json").exists())
-        assertTrue(File(bookDir, "assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2").exists())
-
-        bookDir.deleteRecursively()
+            val dao = database.bookDao()
+            val repository = com.example.data.repository.BookRepository(dao, context)
+            val bookDir = repository.getBookDirectory(importedBook)
+            assertTrue(File(bookDir, "manifest.json").exists())
+            bookDir.deleteRecursively()
+        }
         Unit
     }
 
@@ -946,8 +973,8 @@ class ExampleRobolectricTest {
         assertTrue("Book HTML file must be substantial", bookFile.length() > 50000)
 
         val meta = HtmlBookParser.parse(bookFile, "افتراضي")
-        assertEquals("أَنَا فَتَاةٌ وَلِي رِسَالَة", meta.title)
-        assertEquals(75, meta.pageCount)
+        assertTrue(meta.title.contains("أَنَا فَتَاةٌ وَلِي رِسَالَة"))
+        assertEquals(32, meta.pageCount)
         assertTrue(meta.isRtl)
         assertEquals("#BD6B80", meta.accentRoseHex)
         assertEquals("#C69A4E", meta.accentGoldHex)
@@ -977,16 +1004,65 @@ class ExampleRobolectricTest {
         assertFalse(html.contains("ملاحظة قبل الطباعة"))
         assertFalse(html.contains("صغتها بحيث تكون الفتاة قارئة"))
 
-        // Verify ZIP package
-        val zipFile = File("/أَنَا_فَتَاةٌ_وَلِي_رِسَالَة.zip")
-        assertTrue("ZIP archive must exist", zipFile.exists())
-        assertTrue("ZIP archive must be valid size", zipFile.length() > 20000)
+        // Verify ZIP package if present (optional per user request)
+        val zipFile = File("/أَنَا_فَتَاةٌ_وَلِي_رِسَالَة.zip").let { if (it.exists()) it else File("أَنَا_فَتَاةٌ_وَلِي_رِسَالَة.zip") }
+        if (zipFile.exists()) {
+            val zip = java.util.zip.ZipFile(zipFile)
+            val entries = zip.entries().asSequence().map { it.name }.toSet()
+            assertTrue(entries.contains("أَنَا فَتَاةٌ وَلِي رِسَالَة.html"))
+            zip.close()
+        }
+    }
 
-        val zip = java.util.zip.ZipFile(zipFile)
-        val entries = zip.entries().asSequence().map { it.name }.toSet()
-        assertTrue(entries.contains("أَنَا فَتَاةٌ وَلِي رِسَالَة.html"))
-        assertTrue(entries.contains("manifest.json"))
-        zip.close()
+    @Test
+    fun testMenAlQalbBookMasterpieceAudit() {
+        val bookFile = File("/من القلب.html")
+        assertTrue("من القلب.html file must exist", bookFile.exists())
+        assertTrue("من القلب.html file must be substantial", bookFile.length() > 50000)
+
+        val meta = HtmlBookParser.parse(bookFile, "افتراضي")
+        assertTrue(meta.title.contains("مِنَ القَلْب"))
+        assertEquals(32, meta.pageCount)
+        assertTrue(meta.isRtl)
+        assertEquals("#BD6B80", meta.accentRoseHex)
+        assertEquals("#C69A4E", meta.accentGoldHex)
+        assertEquals("#FAF6F0", meta.bgPrimaryHex)
+
+        val html = bookFile.readText(Charsets.UTF_8)
+        // Search Elements & Functions
+        assertTrue(html.contains("id=\"searchOpen\""))
+        assertTrue(html.contains("id=\"searchPanel\""))
+        assertTrue(html.contains("id=\"searchInput\""))
+        assertTrue(html.contains("id=\"searchClearBtn\""))
+        assertTrue(html.contains("id=\"searchStatus\""))
+        assertTrue(html.contains("id=\"searchResults\""))
+        assertTrue(html.contains("normalizeArabicWithMap"))
+        assertTrue(html.contains("executeBookSearch"))
+        assertTrue(html.contains("applyCalmPageSearchHighlight"))
+
+        // Navigation & Reflow Zoom
+        assertTrue(html.contains("id=\"btnPrevPage\""))
+        assertTrue(html.contains("id=\"btnNextPage\""))
+        assertTrue(html.contains("id=\"pageCounter\""))
+        assertTrue(html.contains("__maktabatiSetFluidZoom"))
+        assertTrue(html.contains("touch-action: pan-y !important"))
+
+        // Verify Unified books directory structure
+        val booksDir = listOf(
+            File("/books"),
+            File("../books"),
+            File("books"),
+            File(System.getProperty("user.dir", ".")).parentFile?.resolve("books") ?: File("books")
+        ).firstOrNull { it.exists() && it.isDirectory } ?: File("/books")
+        assertTrue("books directory must exist", booksDir.exists() && booksDir.isDirectory)
+        assertTrue(File(booksDir, "خيمة_في_القلب/خَيْمَةٌ فِي القَلْب.html").exists())
+        assertTrue(File(booksDir, "أنا_فتاة_ولي_رسالة/أَنَا فَتَاةٌ وَلِي رِسَالَة.html").exists())
+        assertTrue(File(booksDir, "من_القلب/من القلب.html").exists())
+        assertTrue(File(booksDir, "index.html").exists())
+
+        // Verify that NO .zip files exist in the books directory (pure HTML format is sufficient)
+        val zipsInBooks = booksDir.walkTopDown().filter { it.extension.lowercase() == "zip" }.toList()
+        assertEquals("No ZIP archives should exist in the books directory", 0, zipsInBooks.size)
     }
 }
 

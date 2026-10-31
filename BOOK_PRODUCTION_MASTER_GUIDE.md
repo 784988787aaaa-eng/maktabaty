@@ -111,20 +111,23 @@
   ```
 - **تصوير الغلاف الحقيقي (`HtmlCoverSnapshotGenerator`):** يلتقط «مكتبتي» صورة حقيقية لصفحة الغلاف الأولى من كتابك (`.cover-page`, `.cover`, `.layout-cover`, `[data-page="0"]`, أو ملف `cover.png` المرفق) بنسبة أبعاد `0.68` لعرضها كغلاف فعلي للكتاب على رف المكتبة. لذلك اجعل الصفحة الأولى من كل كتاب **لوحة غلاف فنية ساحرة** متكاملة العنوان والزخرفة.
 
-### ٤. جسر الخطوط العربية الفاخرة المدمجة ١٠٠٪ بدون إنترنت (`Offline Bundled Arabic Fonts`)
-- يوفّر تطبيق «مكتبتي» داخلياً خطّي **الأميري (`Amiri`)** و**القاهرة (`Cairo`)** بدون إنترنت عبر المسارين المحليين:
-  - `https://maktabati.app/fonts/amiri.ttf` (مربوط تلقائياً بـ `"Amiri"`, `"Noto Naskh Arabic"`, `"Scheherazade New"`, `"Traditional Arabic"`).
-  - `https://maktabati.app/fonts/cairo.ttf` (مربوط تلقائياً بـ `"Cairo"`, `"Tajawal"`, `"Readex Pro"`).
-- استخدم هذه العائلات مباشرة في تنسيقات كتابك لتضمن ظهوراً طباعياً ملكياً بدون الحاجة للاتصال بالإنترنت.
+### ٤. منظومة الـ ٢٥ خطاً عربياً الفاخرة المدمجة ١٠٠٪ بدون إنترنت + خطوط القارئ المخصصة (`25 Offline Arabic Fonts & User Custom Fonts`)
+- يوفّر تطبيق «مكتبتي» داخلياً **٢٥ عائلة خطية عربية أصيلة** تعمل بدون إنترنت عبر المسارات المحلية (`https://maktabati.app/fonts/amiri.ttf` و `https://maktabati.app/fonts/cairo.ttf` وبقية الخطوط تحت `/fonts/<name>.ttf` و `/assets/fonts/...`)، مقسّمة إلى ٤ مجموعات فنية:
+  1. **خطوط القرآن الكريم والتراث (`--font-quran`):** `"Amiri Quran"`, `"Scheherazade New"`, `"Amiri"`, `"Lateef"`, `"Harmattan"`.
+  2. **خطوط المتون والكتب السردية (`--font-body`):** `"Noto Naskh Arabic"`, `"Markazi Text"`, `"IBM Plex Sans Arabic"`, `"Readex Pro"`, `"Almarai"`, `"Tajawal"`, `"Cairo"`, `"Noto Sans Arabic"`.
+  3. **خطوط المذكرات والرقعة والخط الحر (`--font-quotes`):** `"Aref Ruqaa"`, `"Marhey"`, `"Lemonada"`, `"Mirza"`, `"Katibeh"`, `"Vibes"`.
+  4. **خطوط العناوين والكوفي (`--font-headings` / `--font-chapter-titles`):** `"Reem Kufi"`, `"El Messiri"`, `"Noto Kufi Arabic"`, `"Changa"`, `"Rakkas"`, `"Lalezar"`.
+- **قاعدة آيات القرآن الكريم (إلزامية):** غلّف دائماً الآيات القرآنية الكريمة المحاطة بـ `﴿ ... ﴾` داخل عنصر `<div class="quran-verse">﴿ ... ﴾</div>` المربوط بمتغير `var(--font-quran)` ليظهر بالرسم المصحفي المذهّب والتشكيل الكامل.
+- **قاعدة الفهرس المنبثق (Zero-Page Modal TOC):** الفهرس **لا يأخذ أي صفحة من صفحات الكتاب إطلاقاً**! بل يظهر في نافذة منبثقة أنيقة (`#tocPanel`) عند الضغط على زر الفهرس (`#tocBtn`) في الشريط العلوي.
 
-### ٥. دليل هندسة وتنسيق الصفحات والأبواب والفصول والترويسات والترقيم (`The 3-Zone Locked Page Architecture` & `Fluid Reflow Zoom`)
-للقضاء التام على جمود قوالب PDF، يعمل القارئ بمحرك **`Fluid Reflow Zoom`** (تكبير وتصغير من `75%` إلى `200%`) مع الاحتواء الصامت (`MaktabatiLayoutGuard`) وانتقالات الصفحات الانسيابية (`Subtle Smooth Fade & Micro-Slide` / `4-Corner Page-Curl`):
+### ٥. دليل هندسة وتنسيق الصفحات لهواتف أندرويد والتكبير الانسيابي بالإصبعين (`The 3-Zone Locked Page Architecture` & `Fluid Reflow Zoom`)
+بما أن تطبيق «مكتبتي» مخصص **لجميع هواتف أندرويد بمختلف أحجامها وأشكالها (وليس للحواسيب)**، يعمل القارئ بمحرك **`Fluid Reflow Zoom`** (تكبير وتصغير بالإصبعين من `75%` إلى `200%`) مع الاحتواء الصامت (`MaktabatiLayoutGuard`) وانتقالات الصفحات الانسيابية (`Subtle Smooth Fade & Micro-Slide` / `4-Corner Page-Curl`):
 1. **هيكلة المناطق الثلاث المحمية (`The 3-Zone Locked Page Architecture`):**
-   - **المنطقة العلوية الثابتة (`Top Header 56px` — `flex-shrink: 0`):** لعرض شارة الفصل (`chapterTag`) وعنوان القسم (`sectionTitle`) وأزرار الأدوات المدمجة دون أن تختفي عند التكبير.
-   - **منطقة المتن المتدفقة الوسطى (`Middle Fluid Canvas flex:1` — `min-height: 0; overflow-y: auto; overflow-x: hidden`):** تحتضن محتوى الصفحة، وتعيد جميع النصوص والبطاقات والزخارف ترتيب نفسها داخل عرض الصفحة (`max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere;`) باستخدام الوحدات المرنة (`rem`, `em`, `clamp()`, `%`) مضروبة في `var(--reader-font, 1)`.
-   - **منطقة الترقيم والتنقل السفلية الثابتة (`Bottom Pagination Dock 60px` — `flex-shrink: 0`):** تضم زر السابق (`#btnPrevPage`)، وعداد الصفحات الصريح (`#pageCount` أو `#pageCounter` بصيغة `1 / N`)، وزر التالي (`#btnNextPage`).
+   - **المنطقة العلوية الثابتة (`Top Header` — `flex-shrink: 0`):** تضم عنوان الكتاب، وزر الفهرس المنبثق (`#tocBtn`)، وزر البحث الفوري (`#searchOpen`)، وأزرار التكبير والتصغير دون أن تختفي عند التكبير.
+   - **منطقة المتن المتدفقة الوسطى (`Middle Fluid Canvas flex:1` — `min-height: 0; overflow-y: auto; overflow-x: hidden`):** تحتضن محتوى الصفحة، وتعيد جميع النصوص والآيات والبطاقات والزخارف ترتيب نفسها داخل عرض شاشة الهاتف (`max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere;`) باستخدام الوحدات المرنة (`rem`, `em`, `clamp()`, `%`) مضروبة في `var(--reader-font, 1)` و `var(--font-scale, 1)`.
+   - **منطقة الترقيم والتنقل السفلية الثابتة (`Bottom Pagination Dock` — `flex-shrink: 0`):** تضم زر السابق (`#btnPrevPage`)، وعداد الصفحات الصريح (`#pageCount` أو `#pageCounter` بصيغة `1 / N`)، وزر التالي (`#btnNextPage`).
 2. **سلم الأولويات الأربع لحساب عدد الصفحات الدقيق ومزامنة التقدم (`100%` عند آخر صفحة):**
-   - يحسب «مكتبتي» عدد الصفحات الفعلي بدقة من: (١) طول مصفوفة `BOOK_DATA.pages`، أو (٢) وسوم `data-page="0..N"` الرقمية، أو (٣) وسوم `<article class="page">` / `.book-page` المستقلة (دون خلطها بالكلاسات الفرعية ذات الشرطات مثل `page-heading`, `page-flower`, `page-number`, `page-canvas`, `page-counter`, `page-footer`)، أو (٤) نص العداد `#pageCount` (`1 / N`).
+   - يحسب «مكتبتي» عدد الصفحات الفعلي بدقة من: (١) طول مصفوفة `BOOK_DATA.pages`، أو (٢) وسوم `data-page="0..N"` الرقمية، أو (٣) وسوم `<article class="page">` / `.book-page` المستقلة، أو (٤) نص العداد `#pageCount` (`1 / N`).
    - وفّر الدوال القياسية `window.goToPage(zeroBasedIndex)` و`window.nextPage()` و`window.prevPage()`، وقم باستدعاء الجسر الأصلي عند تغير الصفحة إن وجد:
      ```javascript
      if (window.MaktabatiBridge && window.MaktabatiBridge.onPageChanged) {

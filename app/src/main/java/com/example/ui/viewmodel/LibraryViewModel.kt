@@ -67,7 +67,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         preferences.getFloat("gridCardWidthDp", 112f).coerceIn(82f, 175f)
     )
     val userTypographyPreferences = MutableStateFlow(
-        com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(preferences)
+        com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(preferences, application)
     )
 
     val importState = MutableStateFlow<ImportState>(ImportState.Idle)

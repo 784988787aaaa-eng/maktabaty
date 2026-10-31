@@ -1,0 +1,44 @@
+{
+  "id": "men_al_qalb_ghaliyah",
+  "title": "مِنَ القَلْب — يَا ابْنَتِي، أَنْتِ غَالِيَة",
+  "subtitle": "رسائل من القلب إلى قلبك... رحلة إلى أعماق الذات من معرفة النفس إلى صناعة الأثر",
+  "author": "إصدارات مكتبتي الفاخرة — دار نشر مكتبتي",
+  "edition": "الطبعة الفاخرة الأولى",
+  "language": "ar",
+  "direction": "rtl",
+  "entry": "من القلب.html",
+  "pageCount": 32,
+  "theme": {
+    "name": "men_al_qalb_rose_sage",
+    "bgPrimary": "#FAF6F0",
+    "bgSecondary": "#FFFDF9",
+    "bgSoftRose": "#FCF2F5",
+    "bgSoftSage": "#EFF5F0",
+    "bgPearlGold": "#FDF7EC",
+    "accentRose": "#BD6B80",
+    "accentRoseDark": "#732E41",
+    "accentRoseLight": "#D98C9F",
+    "accentSage": "#6B856E",
+    "accentSageDark": "#445946",
+    "accentGold": "#C69A4E",
+    "textPrimary": "#38272C",
+    "textSecondary": "#6B565C"
+  },
+  "typography": {
+    "body": "Noto Naskh Arabic",
+    "headings": "Aref Ruqaa",
+    "chapterTitles": "Reem Kufi",
+    "quotes": "Amiri",
+    "interface": "Noto Sans Arabic",
+    "numbers": "Noto Sans Arabic"
+  },
+  "tags": [
+    "من القلب",
+    "يا ابنتي أنتِ غالية",
+    "رسائل وجدانية",
+    "بنات",
+    "تربية",
+    "إيماني",
+    "بناء الذات"
+  ]
+}
