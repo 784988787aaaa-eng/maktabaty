@@ -51,6 +51,9 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Book
 import com.example.data.model.Shelf
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+
 data class CoverPaletteOption(
     val name: String,
     val bgPrimary: String,
@@ -59,12 +62,14 @@ data class CoverPaletteOption(
 )
 
 private val LUXURY_COVER_PALETTES = listOf(
+    CoverPaletteOption("ورق كريمي وياقوت", "#FAF6F0", "#C69A4E", "#732E41"),
+    CoverPaletteOption("بردي زمردي", "#F4F1EA", "#B8860B", "#234F3E"),
+    CoverPaletteOption("عاجي وذهب عتيق", "#FDFBF7", "#D97706", "#5B3A29"),
     CoverPaletteOption("عنبر ملكي", "#2D1606", "#F59E0B", "#9A3412"),
     CoverPaletteOption("ياقوت قرمزي", "#3B0722", "#FDE047", "#E11D48"),
     CoverPaletteOption("زمرد كلاسيكي", "#06392F", "#FBBF24", "#0D9488"),
     CoverPaletteOption("كحلي فلكي", "#0F172A", "#38BDF8", "#4F46E5"),
-    CoverPaletteOption("أرجواني إمبراطوري", "#1E1B4B", "#F59E0B", "#7C3AED"),
-    CoverPaletteOption("بني أندلسي", "#291811", "#FCD34D", "#78350F")
+    CoverPaletteOption("أرجواني إمبراطوري", "#1E1B4B", "#F59E0B", "#7C3AED")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -289,7 +294,12 @@ fun BookDetailDialog(
                         fontWeight = FontWeight.Bold
                     )
 
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {

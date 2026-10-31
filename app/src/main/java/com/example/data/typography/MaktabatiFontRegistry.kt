@@ -881,18 +881,18 @@ object MaktabatiFontRegistry {
               font-family: var(--font-body)$imp;
             }
             h1, h2, h3, h4, h5, h6, .page-heading, .section-title, .reading .section-opening,
-            .cover-page h1, .cover-title, .dedication h1, .closing h1 {
+            .cover-page h1, .cover-title, .dedication h1, .closing h1, .letter-greeting {
               font-family: var(--font-headings)$imp;
             }
             .opener h1, .chapter-opener h1, .chapter-title, .chapter-number, .chapter-badge,
-            .toc-item.toc-chapter {
+            .toc-item.toc-chapter, .toc-item.toc-part {
               font-family: var(--font-chapter-titles)$imp;
             }
             .quote-card, .quote-text, .quote-box, .pullquote, .wisdom-pearl, .manal-voice,
-            .heart-keepsake-card, blockquote, q {
+            .heart-keepsake-card, .heart-keepsake-card p, .hadith-box, .hadith-box p, blockquote, q {
               font-family: var(--font-quotes)$imp;
             }
-            .quran-verse, .ayah-box, .mushaf-verse, .quran-ayah, [data-role="quran"] {
+            .quran-verse, .ayah-box, .mushaf-verse, .quran-ayah, .quran-box, .quran-box p, [data-role="quran"] {
               font-family: var(--font-quran)$imp;
             }
             .top-bar, .topbar, .brand, .icon-btn, .nav-btn, .running-header, .eyebrow, .primary-btn,

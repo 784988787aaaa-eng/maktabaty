@@ -538,6 +538,53 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 accentGoldHex = accentGoldHex,
                 accentRoseHex = accentRoseHex
             )
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching {
+                    val updatedBook = repository.getBookOnce(bookId) ?: return@withContext
+                    val bookDir = repository.getBookDirectory(updatedBook)
+                    val snapshotFile = com.example.data.importer.HtmlCoverSnapshotGenerator.getCoverSnapshotFile(bookDir)
+                    if (snapshotFile.exists()) {
+                        val entryFile = repository.getBookAbsoluteFile(updatedBook)
+                        val htmlContent = if (entryFile.isFile) entryFile.readText(Charsets.UTF_8) else ""
+                        val tempCheckFile = File(bookDir, ".explicit_cover_check.tmp")
+                        val hasExplicitImage = com.example.data.importer.HtmlCoverSnapshotGenerator.tryExtractExplicitCoverImage(
+                            bookDir = bookDir,
+                            htmlContent = htmlContent,
+                            targetSnapshotFile = tempCheckFile
+                        )
+                        if (tempCheckFile.exists()) tempCheckFile.delete()
+
+                        if (!hasExplicitImage) {
+                            val metadata = com.example.data.importer.ParsedHtmlMetadata(
+                                title = title,
+                                subtitle = subtitle,
+                                author = author,
+                                description = updatedBook.description,
+                                language = updatedBook.language,
+                                isRtl = updatedBook.isRtl,
+                                pageCount = updatedBook.pageCount,
+                                accentRoseHex = accentRoseHex,
+                                accentGoldHex = accentGoldHex,
+                                bgPrimaryHex = bgPrimaryHex,
+                                coverGradientStart = updatedBook.coverGradientStart,
+                                coverGradientEnd = updatedBook.coverGradientEnd,
+                                hasExternalCss = updatedBook.hasExternalCss,
+                                hasExternalJs = updatedBook.hasExternalJs,
+                                tableOfContents = emptyList(),
+                                hasCoverPage = true
+                            )
+                            val rendered = com.example.data.importer.HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
+                                htmlContent = htmlContent,
+                                metadata = metadata,
+                                targetFile = snapshotFile
+                            )
+                            if (rendered) {
+                                com.example.data.importer.HtmlCoverSnapshotGenerator.notifySnapshotUpdated()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
