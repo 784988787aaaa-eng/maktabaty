@@ -106,4 +106,14 @@ interface BookDao {
 
     @Delete
     suspend fun deleteBookmark(bookmark: Bookmark)
+
+    // One-shot Snapshot Queries for Cloud Backup & Restore
+    @Query("SELECT * FROM books ORDER BY lastReadTimestamp DESC")
+    suspend fun getAllBooksOnce(): List<Book>
+
+    @Query("SELECT * FROM shelves ORDER BY sortOrder ASC, createdAt ASC")
+    suspend fun getAllShelvesOnce(): List<Shelf>
+
+    @Query("SELECT * FROM bookmarks ORDER BY createdAt ASC")
+    suspend fun getAllBookmarksOnce(): List<Bookmark>
 }

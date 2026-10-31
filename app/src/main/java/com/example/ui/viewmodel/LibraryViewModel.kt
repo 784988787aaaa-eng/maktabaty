@@ -7,6 +7,9 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.backup.CloudBackupManager
+import com.example.data.backup.CloudSyncState
+import com.example.data.backup.SignInOutcome
 import com.example.data.db.AppDatabase
 import com.example.data.importer.ImportUriResult
 import com.example.data.importer.MultiBookArchiveProposal
@@ -19,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -48,6 +52,18 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private val preferences = application.getSharedPreferences("maktabati_preferences", android.content.Context.MODE_PRIVATE)
     private val db = AppDatabase.getInstance(application)
     val repository = BookRepository(db.bookDao(), application)
+    val cloudBackupManager = CloudBackupManager(application, db.bookDao(), preferences)
+
+    private val _connectedGoogleEmail = MutableStateFlow(cloudBackupManager.getConnectedEmail())
+    val connectedGoogleEmail: StateFlow<String?> = _connectedGoogleEmail.asStateFlow()
+
+    private val _lastBackupTimeText = MutableStateFlow(cloudBackupManager.getLastBackupTimeText())
+    val lastBackupTimeText: StateFlow<String?> = _lastBackupTimeText.asStateFlow()
+
+    private val _cloudSyncState = MutableStateFlow<CloudSyncState>(CloudSyncState.Idle)
+    val cloudSyncState: StateFlow<CloudSyncState> = _cloudSyncState.asStateFlow()
+
+    private var autoBackupJob: Job? = null
 
     val shelves: StateFlow<List<Shelf>> = repository.allShelves
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -123,6 +139,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 delay(600)
             }
             repository.initializeDefaultDataIfNeeded()
+            _connectedGoogleEmail.value = cloudBackupManager.getConnectedEmail()
+            _lastBackupTimeText.value = cloudBackupManager.getLastBackupTimeText()
         }
     }
 
@@ -209,6 +227,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                         }
                         isOpeningExternalFile.value = false
                         observeBookmarksFor(fullBook.id)
+                        if (_connectedGoogleEmail.value != null) {
+                            triggerAutoCloudBackup()
+                        }
                     }
                     is ImportUriResult.MultiBookArchiveDetected -> {
                         isOpeningExternalFile.value = false
@@ -231,6 +252,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                     is ImportUriResult.SingleBookImported -> {
                         importState.value = ImportState.Success(outcome.book, 1)
                         onComplete?.invoke(outcome.book)
+                        if (_connectedGoogleEmail.value != null) {
+                            triggerAutoCloudBackup()
+                        }
                     }
                     is ImportUriResult.MultiBookArchiveDetected -> {
                         importState.value = ImportState.Idle
@@ -262,6 +286,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 }
                 if (batch.importedSingleBooks.isNotEmpty()) {
                     importState.value = ImportState.Success(batch.importedSingleBooks.first(), batch.importedSingleBooks.size)
+                    if (_connectedGoogleEmail.value != null) {
+                        triggerAutoCloudBackup()
+                    }
                 } else {
                     importState.value = ImportState.Idle
                 }
@@ -285,6 +312,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 advanceNextProposalOrClear()
                 if (books.isNotEmpty()) {
                     importState.value = ImportState.Success(books.first(), books.size)
+                    if (_connectedGoogleEmail.value != null) {
+                        triggerAutoCloudBackup()
+                    }
                 } else {
                     importState.value = ImportState.Idle
                 }
@@ -305,6 +335,9 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 advanceNextProposalOrClear()
                 if (books.isNotEmpty()) {
                     importState.value = ImportState.Success(books.first(), books.size)
+                    if (_connectedGoogleEmail.value != null) {
+                        triggerAutoCloudBackup()
+                    }
                 } else {
                     importState.value = ImportState.Idle
                 }
@@ -323,6 +356,119 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun clearImportState() {
         importState.value = ImportState.Idle
+    }
+
+    // =========================================================================
+    // Google Cloud Backup & Restore Actions
+    // =========================================================================
+
+    fun prepareGoogleSignInIntent(): Intent? {
+        if (!cloudBackupManager.isInternetAvailable()) {
+            _cloudSyncState.value = CloudSyncState.Error(CloudBackupManager.MSG_NO_INTERNET)
+            return null
+        }
+        return cloudBackupManager.buildSignInIntent()
+    }
+
+    fun handleGoogleSignInResult(data: Intent?, resultCode: Int) {
+        when (val outcome = cloudBackupManager.handleSignInResult(data)) {
+            is SignInOutcome.Success -> {
+                _connectedGoogleEmail.value = outcome.email
+                _cloudSyncState.value = CloudSyncState.Success("تم الاتصال بحساب Google بنجاح ☁️")
+            }
+            is SignInOutcome.Cancelled -> {
+                // User cancelled account picker — do not show any error
+            }
+            is SignInOutcome.Error -> {
+                if (resultCode == android.app.Activity.RESULT_CANCELED && data == null) {
+                    // Silent cancel when user backed out without selecting an account
+                    return
+                }
+                _cloudSyncState.value = CloudSyncState.Error(outcome.arabicMessage)
+            }
+        }
+    }
+
+    fun signOutGoogleCloud() {
+        viewModelScope.launch {
+            cloudBackupManager.signOut()
+            _connectedGoogleEmail.value = null
+            _cloudSyncState.value = CloudSyncState.Idle
+        }
+    }
+
+    fun backupLibraryToCloudNow() {
+        if (_connectedGoogleEmail.value == null) return
+        if (!cloudBackupManager.isInternetAvailable()) {
+            _cloudSyncState.value = CloudSyncState.Error(CloudBackupManager.MSG_NO_INTERNET)
+            return
+        }
+        viewModelScope.launch {
+            _cloudSyncState.value = CloudSyncState.Syncing("جاري حفظ النسخة الاحتياطية في السحابة...")
+            val result = cloudBackupManager.createAndUploadBackup()
+            result.onSuccess { timestampText ->
+                _lastBackupTimeText.value = timestampText
+                _cloudSyncState.value = CloudSyncState.Success("تم حفظ النسخة الاحتياطية في السحابة بنجاح ✨")
+            }.onFailure { err ->
+                _cloudSyncState.value = CloudSyncState.Error(
+                    err.message ?: CloudBackupManager.MSG_GENERIC_CLOUD_ERROR
+                )
+            }
+        }
+    }
+
+    fun restoreLibraryFromCloudNow() {
+        if (_connectedGoogleEmail.value == null) return
+        if (!cloudBackupManager.isInternetAvailable()) {
+            _cloudSyncState.value = CloudSyncState.Error(CloudBackupManager.MSG_NO_INTERNET)
+            return
+        }
+        viewModelScope.launch {
+            _cloudSyncState.value = CloudSyncState.Syncing("جاري استرداد النسخة الاحتياطية من السحابة...")
+            val result = cloudBackupManager.downloadAndRestoreBackup()
+            result.onSuccess { restoredCount ->
+                // Refresh preferences states immediately without restarting app
+                isDarkTheme.value = preferences.getBoolean("isDarkTheme", false)
+                viewMode.value = runCatching {
+                    ViewMode.valueOf(preferences.getString("viewMode", ViewMode.GRID.name) ?: ViewMode.GRID.name)
+                }.getOrDefault(ViewMode.GRID)
+                gridCardWidthDp.value = preferences.getFloat("gridCardWidthDp", 112f).coerceIn(82f, 175f)
+                userTypographyPreferences.value =
+                    com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(
+                        preferences,
+                        getApplication()
+                    )
+                _lastBackupTimeText.value = cloudBackupManager.getLastBackupTimeText()
+                _cloudSyncState.value = CloudSyncState.Success(
+                    "تم استرداد النسخة الاحتياطية ($restoredCount كتاب) بنجاح ✨"
+                )
+            }.onFailure { err ->
+                _cloudSyncState.value = CloudSyncState.Error(
+                    err.message ?: CloudBackupManager.MSG_GENERIC_CLOUD_ERROR
+                )
+            }
+        }
+    }
+
+    /**
+     * Quiet background auto-backup triggered automatically whenever a new book is added
+     * while the user's Google account is connected.
+     */
+    fun triggerAutoCloudBackup() {
+        if (_connectedGoogleEmail.value == null) return
+        if (!cloudBackupManager.isInternetAvailable()) return
+        autoBackupJob?.cancel()
+        autoBackupJob = viewModelScope.launch {
+            val result = cloudBackupManager.createAndUploadBackup()
+            result.onSuccess { timestampText ->
+                _lastBackupTimeText.value = timestampText
+            }
+            // Quiet in background: do not interrupt reader with error dialogs on silent auto-sync
+        }
+    }
+
+    fun dismissCloudSyncState() {
+        _cloudSyncState.value = CloudSyncState.Idle
     }
 
     private fun observeBookmarksFor(bookId: String) {

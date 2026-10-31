@@ -9,6 +9,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,17 +35,26 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewList
@@ -54,10 +64,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -87,9 +100,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.backup.CloudSyncState
 import com.example.data.importer.MultiBookArchiveProposal
 import com.example.data.model.Book
 import com.example.ui.components.BookDetailDialog
@@ -102,6 +117,7 @@ import com.example.ui.viewmodel.FilterType
 import com.example.ui.viewmodel.ImportState
 import com.example.ui.viewmodel.LibraryViewModel
 import com.example.ui.viewmodel.ViewMode
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,11 +139,21 @@ fun LibraryScreen(
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val pendingMultiBookProposal by viewModel.pendingMultiBookProposal.collectAsStateWithLifecycle()
     val userTypographyPreferences by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
+    val connectedGoogleEmail by viewModel.connectedGoogleEmail.collectAsStateWithLifecycle()
+    val lastBackupTimeText by viewModel.lastBackupTimeText.collectAsStateWithLifecycle()
+    val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
     val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
 
     LaunchedEffect(allRawBooks.size) {
         if (allRawBooks.isNotEmpty()) {
             viewModel.ensureLibraryCoversAndPalettes()
+        }
+    }
+
+    LaunchedEffect(cloudSyncState) {
+        if (cloudSyncState is CloudSyncState.Success) {
+            delay(4000)
+            viewModel.dismissCloudSyncState()
         }
     }
 
@@ -137,6 +163,13 @@ fun LibraryScreen(
     var bookPendingDelete by remember { mutableStateOf<Book?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showTypographySettingsDialog by remember { mutableStateOf(false) }
+    var showMoreOptionsMenu by remember { mutableStateOf(false) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        viewModel.handleGoogleSignInResult(result.data, result.resultCode)
+    }
 
     val gridState = rememberLazyGridState()
     val listState = rememberLazyListState()
@@ -250,14 +283,282 @@ fun LibraryScreen(
                         )
                     }
 
-                    IconButton(
-                        onClick = { showAboutDialog = true },
-                        modifier = Modifier.testTag("about_icon_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "عن منصة مكتبتي"
-                        )
+                    // Three-dots Options Menu (Google Cloud Backup & Restore + About)
+                    Box {
+                        IconButton(
+                            onClick = { showMoreOptionsMenu = true },
+                            modifier = Modifier.testTag("about_icon_button")
+                        ) {
+                            Box(contentAlignment = Alignment.TopEnd) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "خيارات السحابة ومعلومات المنصة"
+                                )
+                                if (connectedGoogleEmail != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF10B981))
+                                    )
+                                }
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showMoreOptionsMenu,
+                            onDismissRequest = { showMoreOptionsMenu = false },
+                            shape = RoundedCornerShape(18.dp),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            tonalElevation = 8.dp,
+                            shadowElevation = 14.dp,
+                            modifier = Modifier
+                                .width(290.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                                    shape = RoundedCornerShape(18.dp)
+                                )
+                                .testTag("more_options_dropdown_menu")
+                        ) {
+                            // Section 1: Google Cloud Backup & Restore
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (connectedGoogleEmail != null) {
+                                                Icons.Default.CloudDone
+                                            } else {
+                                                Icons.Default.Cloud
+                                            },
+                                            contentDescription = null,
+                                            tint = if (connectedGoogleEmail != null) {
+                                                Color(0xFF10B981)
+                                            } else {
+                                                MaterialTheme.colorScheme.primary
+                                            },
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Text(
+                                            text = "السحابة والنسخ الاحتياطي",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+
+                                    if (connectedGoogleEmail != null) {
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = Color(0xFF10B981).copy(alpha = 0.14f),
+                                            border = BorderStroke(0.8.dp, Color(0xFF10B981).copy(alpha = 0.45f)),
+                                            modifier = Modifier.testTag("cloud_connected_badge")
+                                        ) {
+                                            Text(
+                                                text = "متصل بالسحابة ☁️",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF059669),
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (connectedGoogleEmail == null) {
+                                    // Before Sign-In: Only show Google Sign-In button (Backup/Restore hidden!)
+                                    Text(
+                                        text = "اربط حساب Google لحفظ كتبك ورفوفك وتقدم قراءتك تلقائياً في سحابتك الخاصة.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        lineHeight = 16.sp
+                                    )
+
+                                    Button(
+                                        onClick = {
+                                            showMoreOptionsMenu = false
+                                            val signInIntent = viewModel.prepareGoogleSignInIntent()
+                                            if (signInIntent != null) {
+                                                googleSignInLauncher.launch(signInIntent)
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        ),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("google_sign_in_button")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Cloud,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "تسجيل الدخول بحساب Google",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                } else {
+                                    // After Sign-In: Connected Email + Last Backup Time + Backup Now + Restore + Sign out
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = connectedGoogleEmail.orEmpty(),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = if (!lastBackupTimeText.isNullOrBlank()) {
+                                                    "آخر نسخة احتياطية: $lastBackupTimeText"
+                                                } else {
+                                                    "النسخ التلقائي مفعل عند إضافة أي كتاب"
+                                                },
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
+
+                                    // 1. Save Backup Now Button
+                                    Button(
+                                        onClick = {
+                                            showMoreOptionsMenu = false
+                                            viewModel.backupLibraryToCloudNow()
+                                        },
+                                        shape = RoundedCornerShape(11.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        ),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("cloud_backup_now_button")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CloudUpload,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "حفظ نسخة احتياطية الآن",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    // 2. Restore Backup Button
+                                    OutlinedButton(
+                                        onClick = {
+                                            showMoreOptionsMenu = false
+                                            viewModel.restoreLibraryFromCloudNow()
+                                        },
+                                        shape = RoundedCornerShape(11.dp),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("cloud_restore_backup_button")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CloudDownload,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "استرداد النسخة الاحتياطية",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    // 3. Calm Sign-Out / Switch Account Button
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        TextButton(
+                                            onClick = {
+                                                showMoreOptionsMenu = false
+                                                viewModel.signOutGoogleCloud()
+                                            },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                            modifier = Modifier
+                                                .height(28.dp)
+                                                .testTag("cloud_sign_out_button")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = "تسجيل الخروج أو تبديل الحساب",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                            )
+
+                            // Section 2: About Maktabati Platform
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "عن منصة مكتبتي",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                onClick = {
+                                    showMoreOptionsMenu = false
+                                    showAboutDialog = true
+                                },
+                                modifier = Modifier.testTag("about_menu_item")
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -293,6 +594,109 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // Elegant Cloud Sync Progress / Notification Banner
+            AnimatedVisibility(
+                visible = cloudSyncState !is CloudSyncState.Idle,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                val bannerState = cloudSyncState
+                if (bannerState !is CloudSyncState.Idle) {
+                    val containerColor = when (bannerState) {
+                        is CloudSyncState.Syncing -> MaterialTheme.colorScheme.secondaryContainer
+                        is CloudSyncState.Success -> Color(0xFFECFDF5)
+                        is CloudSyncState.Error -> MaterialTheme.colorScheme.errorContainer
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+                    val contentColor = when (bannerState) {
+                        is CloudSyncState.Syncing -> MaterialTheme.colorScheme.onSecondaryContainer
+                        is CloudSyncState.Success -> Color(0xFF065F46)
+                        is CloudSyncState.Error -> MaterialTheme.colorScheme.onErrorContainer
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    val messageText = when (bannerState) {
+                        is CloudSyncState.Syncing -> bannerState.message
+                        is CloudSyncState.Success -> bannerState.message
+                        is CloudSyncState.Error -> bannerState.message
+                        else -> ""
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = containerColor,
+                        border = BorderStroke(
+                            0.8.dp,
+                            contentColor.copy(alpha = 0.28f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .testTag("cloud_sync_status_banner")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                when (bannerState) {
+                                    is CloudSyncState.Syncing -> {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            strokeWidth = 2.dp,
+                                            color = contentColor
+                                        )
+                                    }
+                                    is CloudSyncState.Success -> {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = Color(0xFF059669),
+                                            modifier = Modifier.size(17.dp)
+                                        )
+                                    }
+                                    is CloudSyncState.Error -> {
+                                        Icon(
+                                            imageVector = Icons.Default.ErrorOutline,
+                                            contentDescription = null,
+                                            tint = contentColor,
+                                            modifier = Modifier.size(17.dp)
+                                        )
+                                    }
+                                    else -> Unit
+                                }
+                                Text(
+                                    text = messageText,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = contentColor
+                                )
+                            }
+
+                            if (bannerState !is CloudSyncState.Syncing) {
+                                IconButton(
+                                    onClick = { viewModel.dismissCloudSyncState() },
+                                    modifier = Modifier.size(22.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "إغلاق التنبيه",
+                                        tint = contentColor,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Micro 32.dp single-line reading statistics bar that auto-collapses on scroll or when library is empty
             val readingBooksCount = allRawBooks.count { it.readingProgress > 0f && it.readingProgress < 0.95f }
             val averageProgress = if (allRawBooks.isEmpty()) 0f else allRawBooks.map { it.readingProgress.coerceIn(0f, 1f) }.average().toFloat()
