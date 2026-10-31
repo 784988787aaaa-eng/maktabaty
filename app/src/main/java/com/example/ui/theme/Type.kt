@@ -35,6 +35,19 @@ val MarkaziTextFontFamily = FontFamily(Font(R.font.markazi_text, FontWeight.Norm
 val VibesFontFamily = FontFamily(Font(R.font.vibes, FontWeight.Normal))
 
 fun fontFamilyForName(familyName: String): FontFamily {
+    val registeredFont = com.example.data.typography.MaktabatiFontRegistry.findFont(familyName)
+    if (registeredFont?.isUserCustom == true && !registeredFont.customFilePath.isNullOrBlank()) {
+        val customFile = java.io.File(registeredFont.customFilePath)
+        if (customFile.exists() && customFile.canRead()) {
+            val loadedFamily = runCatching {
+                FontFamily(Font(customFile, FontWeight.Normal))
+            }.getOrNull()
+            if (loadedFamily != null) {
+                return loadedFamily
+            }
+        }
+    }
+
     return when (familyName.trim().lowercase()) {
         "amiri" -> AmiriFontFamily
         "amiri quran" -> AmiriQuranFontFamily
