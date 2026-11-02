@@ -171,6 +171,7 @@ fun LibraryScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showTypographySettingsDialog by remember { mutableStateOf(false) }
     var showMoreOptionsMenu by remember { mutableStateOf(false) }
+    var showAddBookMenu by remember { mutableStateOf(false) }
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -543,34 +544,7 @@ fun LibraryScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
                             )
 
-                            // Section 2: Clipboard-to-Masterpiece Studio
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "صياغة كتاب من نصوص الحافظة ✦",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                },
-                                onClick = {
-                                    showMoreOptionsMenu = false
-                                    viewModel.openClipboardStudio()
-                                },
-                                modifier = Modifier.testTag("clipboard_studio_menu_item")
-                            )
-
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-                            )
-
-                            // Section 3: About Maktabati Platform
+                            // Section 2: About Maktabati Platform
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -600,48 +574,172 @@ fun LibraryScreen(
                 )
             )
         },
-        floatingActionButtonPosition = FabPosition.Start,
+        floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        multiFilePickerLauncher.launch(
-                            arrayOf(
-                                "text/html",
-                                "application/xhtml+xml",
-                                "application/zip",
-                                "application/x-zip-compressed",
-                                "text/plain",
-                                "text/markdown",
-                                "application/msword",
-                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                "application/vnd.oasis.opendocument.text",
-                                "application/rtf",
-                                "text/rtf",
-                                "application/epub+zip",
-                                "application/pdf",
-                                "*/*"
-                            )
-                        )
-                    },
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("إضافة كتاب HTML", fontWeight = FontWeight.Bold) },
-                    containerColor = MaterialTheme.colorScheme.primary,
+            Box {
+                Surface(
+                    onClick = { showAddBookMenu = true },
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.testTag("import_book_fab")
-                )
+                    tonalElevation = 6.dp,
+                    shadowElevation = 10.dp,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = Color(0xFFF59E0B).copy(alpha = 0.45f)
+                    ),
+                    modifier = Modifier
+                        .height(44.dp)
+                        .testTag("import_book_fab")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(start = 10.dp, end = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                        Text(
+                            text = "إضافة",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp
+                        )
+                    }
+                }
 
-                ExtendedFloatingActionButton(
-                    onClick = { viewModel.openClipboardStudio() },
-                    icon = { Icon(Icons.Default.ContentPaste, contentDescription = null) },
-                    text = { Text("نص من الحافظة ✦", fontWeight = FontWeight.Bold) },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.testTag("clipboard_studio_fab")
-                )
+                DropdownMenu(
+                    expanded = showAddBookMenu,
+                    onDismissRequest = { showAddBookMenu = false },
+                    shape = RoundedCornerShape(18.dp),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 16.dp,
+                    modifier = Modifier
+                        .width(248.dp)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                            shape = RoundedCornerShape(18.dp)
+                        )
+                        .testTag("add_book_options_menu")
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = "لصق من الحافظة",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "تحويل النص المنسوخ مباشرة لقوالب الكتب",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 10.5.sp
+                                )
+                            }
+                        },
+                        leadingIcon = {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentPaste,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        },
+                        onClick = {
+                            showAddBookMenu = false
+                            viewModel.pasteFromClipboardAsBook()
+                        },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.testTag("add_option_clipboard_paste")
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = "ملفات محلية",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "استيراد ملفات الجهاز (HTML, PDF, Word, نص)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 10.5.sp
+                                )
+                            }
+                        },
+                        leadingIcon = {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FolderOpen,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        },
+                        onClick = {
+                            showAddBookMenu = false
+                            multiFilePickerLauncher.launch(
+                                arrayOf(
+                                    "text/html",
+                                    "application/xhtml+xml",
+                                    "application/zip",
+                                    "application/x-zip-compressed",
+                                    "text/plain",
+                                    "text/markdown",
+                                    "application/msword",
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    "application/vnd.oasis.opendocument.text",
+                                    "application/rtf",
+                                    "text/rtf",
+                                    "application/epub+zip",
+                                    "application/pdf",
+                                    "*/*"
+                                )
+                            )
+                        },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.testTag("add_option_local_files")
+                    )
+                }
             }
         },
         modifier = modifier
@@ -860,7 +958,7 @@ fun LibraryScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "اضغط على «إضافة كتاب HTML» لاستيراد كتاب واحد أو عدة كتب تفاعلية دفعة واحدة",
+                            text = "اضغط على زر «إضافة» للصق نص مباشرة من الحافظة أو استيراد ملفاتك المحلية",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                             textAlign = TextAlign.Center

@@ -84,6 +84,7 @@ import com.example.ui.theme.fontFamilyForName
 private data class TypographyRoleItem(
     val index: Int,
     val labelAr: String,
+    val roleDescriptionAr: String,
     val samplePhrase: String,
     val preferredCategory: FontCategory,
     val getSelectedFont: (BookTypographyProfile) -> String,
@@ -101,7 +102,12 @@ fun TypographySettingsDialog(
         context.getSharedPreferences("maktabati_preferences", Context.MODE_PRIVATE)
     }
 
-    var draftPrefs by remember(currentPreferences) { mutableStateOf(currentPreferences) }
+    var draftPrefs by remember(currentPreferences) {
+        val cleanCustomText = currentPreferences.customPreviewText.trim().let { raw ->
+            if (raw == UserTypographyPreferences.LEGACY_PREFILLED_PREVIEW_TEXT) "" else raw
+        }
+        mutableStateOf(currentPreferences.copy(customPreviewText = cleanCustomText))
+    }
     var selectedRoleIndex by remember { mutableIntStateOf(0) }
     var isEditingPreviewText by remember { mutableStateOf(false) }
     var importFeedbackMessage by remember { mutableStateOf<String?>(null) }
@@ -112,7 +118,8 @@ fun TypographySettingsDialog(
             TypographyRoleItem(
                 index = 0,
                 labelAr = "المتن والسرد",
-                samplePhrase = "وَمَا السَّكِينَةُ إِلَّا خَيْمَةٌ تُضْرَبُ فِي أَعْمَاقِ القَلْبِ",
+                roleDescriptionAr = "خط الفقرات والنصوص السردية الطويلة داخل صفحات الكتاب",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_BODY,
                 preferredCategory = FontCategory.BOOKS_NARRATIVE,
                 getSelectedFont = { it.body },
                 updateFont = { prof, f -> prof.copy(body = f) }
@@ -120,39 +127,44 @@ fun TypographySettingsDialog(
             TypographyRoleItem(
                 index = 1,
                 labelAr = "آيات القرآن",
-                samplePhrase = "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾",
+                roleDescriptionAr = "خط الآيات القرآنية الكريمة بالرسم والتشكيل المصحفي الكامل",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_QURAN,
                 preferredCategory = FontCategory.QURAN_HERITAGE,
                 getSelectedFont = { it.quran },
                 updateFont = { prof, f -> prof.copy(quran = f) }
             ),
             TypographyRoleItem(
                 index = 2,
+                labelAr = "الأحاديث والدرر",
+                roleDescriptionAr = "خط الأحاديث النبوية الشريفة والمأثورات والاقتباسات والخواطر",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_HADITH_QUOTES,
+                preferredCategory = FontCategory.QURAN_HERITAGE,
+                getSelectedFont = { it.quotes },
+                updateFont = { prof, f -> prof.copy(quotes = f) }
+            ),
+            TypographyRoleItem(
+                index = 3,
                 labelAr = "العناوين",
-                samplePhrase = "خَيْمَةٌ فِي القَلْبِ — إِشْرَاقَةُ اليَقِينِ",
+                roleDescriptionAr = "خط عنوان الغلاف والترويسات والعناوين البارزة في الصفحات",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_HEADINGS,
                 preferredCategory = FontCategory.HEADINGS_DISPLAY,
                 getSelectedFont = { it.headings },
                 updateFont = { prof, f -> prof.copy(headings = f) }
             ),
             TypographyRoleItem(
-                index = 3,
+                index = 4,
                 labelAr = "الأبواب والفصول",
-                samplePhrase = "البَابُ الأَوَّلُ: مَلاذُ السَّكِينَةِ",
+                roleDescriptionAr = "خط فواتح الأبواب وعناوين الفصول والمباحث الكبرى",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_CHAPTERS,
                 preferredCategory = FontCategory.HEADINGS_DISPLAY,
                 getSelectedFont = { it.chapterTitles },
                 updateFont = { prof, f -> prof.copy(chapterTitles = f) }
             ),
             TypographyRoleItem(
-                index = 4,
-                labelAr = "المذكرات والدرر",
-                samplePhrase = "«إِنَّ القُلُوبَ إِذَا اتَّصَلَتْ بِبَارِئِهَا أَزْهَرَتْ»",
-                preferredCategory = FontCategory.DIARIES_CALLIGRAPHY,
-                getSelectedFont = { it.quotes },
-                updateFont = { prof, f -> prof.copy(quotes = f) }
-            ),
-            TypographyRoleItem(
                 index = 5,
                 labelAr = "الفهارس والواجهة",
-                samplePhrase = "فهرس الكتاب • البحث الفوري • العلامات",
+                roleDescriptionAr = "خط فهرس الكتاب المبوب، شريط العنوان، البحث، والشارات",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_TOC_INTERFACE,
                 preferredCategory = FontCategory.BOOKS_NARRATIVE,
                 getSelectedFont = { it.interfaceFont },
                 updateFont = { prof, f -> prof.copy(interfaceFont = f) }
@@ -160,7 +172,8 @@ fun TypographySettingsDialog(
             TypographyRoleItem(
                 index = 6,
                 labelAr = "الأرقام",
-                samplePhrase = "صفحة ١٢ من ١٠٥ • 100%",
+                roleDescriptionAr = "خط أرقام الصفحات، الإحصاءات، التواريخ الهجرية والميلادية، والفهارس الرقمية",
+                samplePhrase = BookTypographyProfile.DEFAULT_SAMPLE_NUMBERS,
                 preferredCategory = FontCategory.BOOKS_NARRATIVE,
                 getSelectedFont = { it.numbers },
                 updateFont = { prof, f -> prof.copy(numbers = f) }
@@ -205,8 +218,12 @@ fun TypographySettingsDialog(
         )
     }
 
-    val customPreviewActive = draftPrefs.customPreviewText.isNotBlank() &&
-        draftPrefs.customPreviewText.trim() != UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT
+    val customPreviewActive = draftPrefs.customPreviewText.isNotBlank()
+    val effectiveSampleText = if (customPreviewActive) {
+        draftPrefs.customPreviewText
+    } else {
+        activeRole.samplePhrase
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -272,7 +289,7 @@ fun TypographySettingsDialog(
                             )
                             Text(
                                 text = if (draftPrefs.useCustomTypography) {
-                                    "التخصيص مفعّل"
+                                    "التخصيص مفعّل لجميع أجزاء الكتاب"
                                 } else {
                                     "الخط الأصلي للكتاب"
                                 },
@@ -328,12 +345,9 @@ fun TypographySettingsDialog(
                     // Focused Live Preview Card (Always visible, calm & uncluttered)
                     FocusedRolePreviewCard(
                         roleLabel = activeRole.labelAr,
+                        roleDescription = activeRole.roleDescriptionAr,
                         selectedFontName = selectedFontForRole,
-                        previewText = if (customPreviewActive) {
-                            draftPrefs.customPreviewText
-                        } else {
-                            activeRole.samplePhrase
-                        },
+                        previewText = effectiveSampleText,
                         customPreviewText = draftPrefs.customPreviewText,
                         isEditingPreview = isEditingPreviewText,
                         onToggleEditPreview = { isEditingPreviewText = !isEditingPreviewText },
@@ -395,7 +409,7 @@ fun TypographySettingsDialog(
                         }
                     }
 
-                    // Single Clean Role Selector Bar (No duplicate category filter bars!)
+                    // Single Clean Role Selector Bar
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -451,11 +465,7 @@ fun TypographySettingsDialog(
                             selectedFontForRole.equals(fontSpec.familyName, ignoreCase = true)
                         FontOptionSimpleCard(
                             fontSpec = fontSpec,
-                            sampleText = if (customPreviewActive) {
-                                draftPrefs.customPreviewText
-                            } else {
-                                activeRole.samplePhrase
-                            },
+                            sampleText = effectiveSampleText,
                             isSelected = isFontSelected,
                             dimmed = !draftPrefs.useCustomTypography,
                             onSelect = {
@@ -549,6 +559,7 @@ fun TypographySettingsDialog(
 @Composable
 private fun FocusedRolePreviewCard(
     roleLabel: String,
+    roleDescription: String,
     selectedFontName: String,
     previewText: String,
     customPreviewText: String,
@@ -586,15 +597,25 @@ private fun FocusedRolePreviewCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "$roleLabel: $arabicFontName",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF732E41),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "$roleLabel: $arabicFontName",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF732E41),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = roleDescription,
+                        fontSize = 10.sp,
+                        color = Color(0xFF6B565C),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -603,7 +624,11 @@ private fun FocusedRolePreviewCard(
                     Surface(
                         onClick = onToggleEditPreview,
                         shape = RoundedCornerShape(50),
-                        color = if (isEditingPreview) Color(0xFF732E41) else Color(0xFFEDE4D8),
+                        color = if (isEditingPreview || customPreviewText.isNotBlank()) {
+                            Color(0xFF732E41)
+                        } else {
+                            Color(0xFFEDE4D8)
+                        },
                         modifier = Modifier.testTag("typography_edit_preview_toggle")
                     ) {
                         Row(
@@ -614,14 +639,22 @@ private fun FocusedRolePreviewCard(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "نص معاينة حر",
-                                tint = if (isEditingPreview) Color.White else Color(0xFF732E41),
+                                tint = if (isEditingPreview || customPreviewText.isNotBlank()) {
+                                    Color.White
+                                } else {
+                                    Color(0xFF732E41)
+                                },
                                 modifier = Modifier.size(11.dp)
                             )
                             Text(
                                 text = if (isEditingPreview) "إغلاق" else "نص معاينة",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isEditingPreview) Color.White else Color(0xFF732E41)
+                                color = if (isEditingPreview || customPreviewText.isNotBlank()) {
+                                    Color.White
+                                } else {
+                                    Color(0xFF732E41)
+                                }
                             )
                         }
                     }
@@ -662,14 +695,33 @@ private fun FocusedRolePreviewCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 6.dp)
+                        .padding(top = 8.dp)
                 ) {
                     OutlinedTextField(
                         value = customPreviewText,
                         onValueChange = onCustomPreviewTextChange,
-                        label = {
-                            Text("اكتب عبارة لمعاينتها:", fontSize = 11.sp)
+                        placeholder = {
+                            Text(
+                                text = "اكتب نصك الخاص هنا بحرية لمعاينته فوراً على جميع الخطوط...",
+                                fontSize = 11.sp,
+                                color = Color(0xFF8C777D)
+                            )
                         },
+                        trailingIcon = if (customPreviewText.isNotEmpty()) {
+                            {
+                                IconButton(
+                                    onClick = onResetPreviewText,
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "مسح النص المخصص",
+                                        tint = Color(0xFF732E41),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        } else null,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFFFFDF9),
                             unfocusedContainerColor = Color(0xFFFFFDF9),
@@ -684,20 +736,22 @@ private fun FocusedRolePreviewCard(
                             .fillMaxWidth()
                             .testTag("typography_custom_preview_input")
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(
-                            onClick = onResetPreviewText,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                            modifier = Modifier.height(24.dp)
+                    if (customPreviewText.isNotBlank()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            Text(
-                                text = "استعادة النص الافتراضي",
-                                fontSize = 10.sp,
-                                color = Color(0xFF732E41)
-                            )
+                            TextButton(
+                                onClick = onResetPreviewText,
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                modifier = Modifier.height(24.dp)
+                            ) {
+                                Text(
+                                    text = "مسح النص واستعادة عبارات الأقسام",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF732E41)
+                                )
+                            }
                         }
                     }
                 }
@@ -710,14 +764,15 @@ private fun FocusedRolePreviewCard(
                 text = previewText,
                 fontFamily = activeFontFamily,
                 fontSize = 17.sp,
-                lineHeight = 26.sp,
+                lineHeight = 27.sp,
                 color = Color(0xFF2C1E23),
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .testTag("typography_live_preview_specimen_text")
             )
         }
     }
@@ -796,15 +851,15 @@ private fun FontOptionSimpleCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = sampleText,
                     fontFamily = fontComposeFamily,
-                    fontSize = 14.sp,
-                    lineHeight = 21.sp,
+                    fontSize = 15.sp,
+                    lineHeight = 23.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }

@@ -60,6 +60,22 @@ data class BookTypographyProfile(
         const val DEFAULT_QURAN_FONT = "Amiri Quran"
         const val DEFAULT_INTERFACE_FONT = "Noto Sans Arabic"
         const val DEFAULT_NUMBERS_FONT = "Noto Sans Arabic"
+
+        // نصوص نموذجية احترافية ومحققة لكل تفصيلة في الكتاب (المتن، القرآن، الأحاديث، العناوين، الأبواب، الفهرس، الأرقام)
+        const val DEFAULT_SAMPLE_BODY =
+            "إِنَّمَا الكُتُبُ مَنَائِرُ الحِكْمَةِ، وَرِيَاضُ العُقُولِ البَصِيرَةِ؛ تُزْهِرُ بِهَا المَعَانِي وَتَسْمُو بِبَيَانِهَا الأَرْوَاحُ."
+        const val DEFAULT_SAMPLE_QURAN =
+            "﴿ اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ ۚ مَثَلُ نُورِهِ كَمِشْكَاةٍ فِيهَا مِصْبَاحٌ ﴾ [النور: ٣٥]"
+        const val DEFAULT_SAMPLE_HADITH_QUOTES =
+            "قالَ رسولُ اللهِ ﷺ: «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»"
+        const val DEFAULT_SAMPLE_HEADINGS =
+            "مَدارِجُ البَيانِ وَجَوامِعُ الحِكْمَةِ الخَالِدَةِ"
+        const val DEFAULT_SAMPLE_CHAPTERS =
+            "البَابُ الأَوَّلُ — الفَصْلُ الثَّانِي: فِي أَدَبِ العِلْمِ وَالبَصِيرَةِ"
+        const val DEFAULT_SAMPLE_TOC_INTERFACE =
+            "الفهرس العام: ١. فاتحة الكتاب (ص ٥) • ٢. مقاصد البيان (ص ٢٤)"
+        const val DEFAULT_SAMPLE_NUMBERS =
+            "الأرقام: ٠١٢٣٤٥٦٧٨٩ • ص ١٤٨ من ٣٢٠ • ١٤٤٦هـ / 2025م"
     }
 }
 
@@ -77,7 +93,8 @@ data class UserTypographyPreferences(
     val customPreviewText: String = DEFAULT_CUSTOM_PREVIEW_TEXT
 ) {
     companion object {
-        const val DEFAULT_CUSTOM_PREVIEW_TEXT =
+        const val DEFAULT_CUSTOM_PREVIEW_TEXT = ""
+        const val LEGACY_PREFILLED_PREVIEW_TEXT =
             "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾ — وَمَا السَّكِينَةُ إِلَّا خَيْمَةٌ تُضْرَبُ فِي أَعْمَاقِ القَلْبِ فَتَسْكُنُ إِلَيْهَا الرُّوحُ."
     }
 }
@@ -812,10 +829,17 @@ object MaktabatiFontRegistry {
         }
         val useCustom = prefs.getBoolean("typo_use_custom", false)
         val presetId = prefs.getString("typo_preset_id", "editorial_narrative") ?: "editorial_narrative"
-        val customPreview = prefs.getString(
+        val rawSavedPreview = prefs.getString(
             "typo_custom_preview_text",
             UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT
-        )?.takeIf { it.isNotBlank() } ?: UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT
+        )?.trim().orEmpty()
+        val customPreview = if (rawSavedPreview.isBlank() ||
+            rawSavedPreview == UserTypographyPreferences.LEGACY_PREFILLED_PREVIEW_TEXT
+        ) {
+            UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT
+        } else {
+            rawSavedPreview
+        }
 
         val profile = BookTypographyProfile(
             body = validateOrFallback(prefs.getString("typo_body", null), BookTypographyProfile.DEFAULT_BODY_FONT),
@@ -877,7 +901,7 @@ object MaktabatiFontRegistry {
               --reader-family: var(--font-body)$imp;
             }
             html, body, .page, .book-page, .page-body, .page-content, #pageInnerContent,
-            p, li, .reading p, .dedication p, .closing p, .subtitle {
+            p, li, .reading p, .dedication p, .closing p, .subtitle, .step-content {
               font-family: var(--font-body)$imp;
             }
             h1, h2, h3, h4, h5, h6, .page-heading, .section-title, .reading .section-opening,
@@ -885,11 +909,12 @@ object MaktabatiFontRegistry {
               font-family: var(--font-headings)$imp;
             }
             .opener h1, .chapter-opener h1, .chapter-title, .chapter-number, .chapter-badge,
-            .toc-item.toc-chapter, .toc-item.toc-part {
+            .toc-item.toc-chapter, .toc-item.toc-part, .letter-envelope-title {
               font-family: var(--font-chapter-titles)$imp;
             }
             .quote-card, .quote-text, .quote-box, .pullquote, .wisdom-pearl, .manal-voice,
-            .heart-keepsake-card, .heart-keepsake-card p, .hadith-box, .hadith-box p, blockquote, q {
+            .heart-keepsake-card, .heart-keepsake-card p, .hadith-box, .hadith-box p,
+            .hadith-quote, .poetry-stanza, .poetry-shatr, blockquote, q {
               font-family: var(--font-quotes)$imp;
             }
             .quran-verse, .ayah-box, .mushaf-verse, .quran-ayah, .quran-box, .quran-box p, [data-role="quran"] {
@@ -897,10 +922,12 @@ object MaktabatiFontRegistry {
             }
             .top-bar, .topbar, .brand, .icon-btn, .nav-btn, .running-header, .eyebrow, .primary-btn,
             .panel-head h2, .field, #searchInput, .search-result, .search-result strong,
-            .toc-item, .wisdom-badge, .manal-badge, .quote-caption, .cover-page .author {
+            .toc-list, #tocPanelList, .toc-item, .wisdom-badge, .heart-badge, .manal-badge,
+            .quote-caption, .ayah-source, .cover-page .author {
               font-family: var(--font-interface)$imp;
             }
-            .page-counter, .page-number, .search-result-page, .toc-item small, .search-result small {
+            .page-counter, .page-number, .search-result-page, .toc-item small, .search-result small,
+            .step-num, .num-badge, [data-role="numbers"] {
               font-family: var(--font-numbers)$imp;
               font-variant-numeric: tabular-nums;
             }

@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (!sharedText.isNullOrBlank()) {
-                    viewModel.openClipboardStudio(sharedText)
+                    viewModel.pasteFromClipboardAsBook(sharedText)
                 }
             }
         }

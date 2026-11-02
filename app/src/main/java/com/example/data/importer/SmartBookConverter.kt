@@ -2773,10 +2773,11 @@ object SmartBookConverter {
         val unvocalized = stripArabicDiacriticsForMatching(trimmed)
 
         // 2. Quranic Verse Detection (`﴿...﴾` or starts with `قال تعالى` / `قال الله تعالى`)
-        if ((trimmed.contains("﴿") && trimmed.contains("﴾")) ||
+        if ((trimmed.contains("﴿") && trimmed.contains("﴾") && trimmed.length <= 320) ||
             unvocalized.startsWith("قال تعالى") ||
             unvocalized.startsWith("قال الله تعالى") ||
-            unvocalized.startsWith("يقول الله تعالى")
+            unvocalized.startsWith("يقول الله تعالى") ||
+            unvocalized.startsWith("قوله تعالى")
         ) {
             val sourceMatch = Regex("\\[([^\\]]+)\\]").find(trimmed)
             val sourceText = sourceMatch?.groupValues?.get(1)?.trim()
@@ -2784,7 +2785,9 @@ object SmartBookConverter {
                 trimmed.removeRange(sourceMatch.range).trim()
             } else {
                 trimmed
-            }
+            }.replace(Regex("\\{\\s*([^}]+)\\s*\\}"), "﴿ $1 ﴾")
+                .replace(Regex("\\(\\(\\s*([^)]+)\\s*\\)\\)"), "﴿ $1 ﴾")
+
             val formattedVerse = if (mainVerse.contains("﴿")) {
                 escapeHtml(mainVerse)
             } else {
@@ -2796,7 +2799,7 @@ object SmartBookConverter {
                 ""
             }
             return """
-                <div class="quran-box">
+                <div class="quran-box" data-role="quran">
                   <p>$formattedVerse</p>$sourceHtml
                 </div>
             """.trimIndent()
@@ -2807,15 +2810,20 @@ object SmartBookConverter {
             unvocalized.startsWith("قال رسول الله") ||
             unvocalized.startsWith("قال النبي") ||
             unvocalized.startsWith("وفي الحديث") ||
+            unvocalized.startsWith("حديث شريف") ||
             unvocalized.startsWith("عن أبي ") ||
             unvocalized.startsWith("عن عائشة") ||
+            unvocalized.startsWith("عن ابن ") ||
+            unvocalized.startsWith("عن أنس") ||
             unvocalized.startsWith("عن عمر") ||
             (trimmed.contains("«") && trimmed.contains("»") && trimmed.length <= 280)
 
         if (isHadithOrQuote) {
+            val upgradedHadith = trimmed
+                .replace(Regex("\\(\\(\\s*([^)]+)\\s*\\)\\)"), "« $1 »")
             return """
-                <div class="hadith-box">
-                  <p>${escapeHtml(trimmed)}</p>
+                <div class="hadith-box" data-role="hadith">
+                  <p>${escapeHtml(upgradedHadith)}</p>
                 </div>
             """.trimIndent()
         }
@@ -2904,14 +2912,20 @@ object SmartBookConverter {
             """.trimIndent()
         }
 
-        // 7. Standard Narrative Paragraph (with inline Quranic/Quote highlighting)
+        // 7. Standard Narrative Paragraph (with inline Quranic/Quote/Numbers highlighting)
         return "<p dir=\"auto\">${formatInlineHighlights(escapeHtml(trimmed))}</p>"
     }
 
     private fun formatInlineHighlights(escapedText: String): String {
         return escapedText
             .replace(Regex("﴿([^﴾]+)﴾")) { m ->
-                "<span class=\"quran-verse\">﴿${m.groupValues[1]}﴾</span>"
+                "<span class=\"quran-verse\" data-role=\"quran\">﴿${m.groupValues[1]}﴾</span>"
+            }
+            .replace(Regex("«([^»]+)»")) { m ->
+                "<span class=\"hadith-quote\" data-role=\"hadith\">«${m.groupValues[1]}»</span>"
+            }
+            .replace(Regex("\\[([0-9٠-٩]{1,4})\\]")) { m ->
+                "<span class=\"num-badge\" data-role=\"numbers\">[${m.groupValues[1]}]</span>"
             }
             .replace(Regex("\\*\\*([^*]+)\\*\\*")) { m ->
                 "<strong>${m.groupValues[1]}</strong>"
@@ -3159,29 +3173,11 @@ object SmartBookConverter {
   color-scheme: light;
 }
 
-@font-face {
-  font-family: "Amiri";
-  src: url("https://maktabati.app/fonts/amiri.ttf") format("truetype"),
-       url("https://maktabati.app/assets/fonts/amiri/amiri-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Cairo";
-  src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype"),
-       url("https://maktabati.app/assets/fonts/cairo/cairo-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Amiri Quran";
-  src: url("https://maktabati.app/fonts/amiri_quran.ttf") format("truetype"),
-       url("https://maktabati.app/assets/fonts/amiri-quran/amiri-quran-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+${com.example.data.typography.MaktabatiFontRegistry.buildOfflineFontFacesCss("https://maktabati.app/assets")}
+
+.hadith-quote {
+  font-family: var(--font-quotes);
+  color: var(--accent-sage-dark);
 }
 ${buildLayoutVariantCss(theme)}
 

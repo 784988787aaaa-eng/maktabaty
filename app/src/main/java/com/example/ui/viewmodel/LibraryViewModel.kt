@@ -364,22 +364,49 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             val clipboard = getApplication<Application>().getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
             val clip = clipboard?.primaryClip
             if (clip != null && clip.itemCount > 0) {
-                val text = clip.getItemAt(0).coerceToText(getApplication())?.toString().orEmpty()
-                text.trim()
+                val item = clip.getItemAt(0)
+                val directText = item.text?.toString()
+                val coercedText = if (directText.isNullOrBlank()) {
+                    item.coerceToText(getApplication())?.toString()
+                } else {
+                    directText
+                }
+                coercedText.orEmpty().trim()
             } else {
                 ""
             }
         }.getOrDefault("")
     }
 
-    fun openClipboardStudio(initialText: String = "") {
-        val resolvedText = if (initialText.isNotBlank()) {
-            initialText.trim()
+    /**
+     * Reads text directly from the system clipboard (or uses [explicitText] if provided),
+     * treats it immediately as an imported book document, and opens the template selection
+     * dialog ([pendingConversionProposal]) without any intermediate studio step.
+     */
+    fun pasteFromClipboardAsBook(explicitText: String? = null) {
+        val resolvedText = if (!explicitText.isNullOrBlank()) {
+            explicitText.trim()
         } else {
             readSystemClipboardText()
         }
-        clipboardStudioInitialText.value = resolvedText
-        isClipboardStudioOpen.value = true
+        if (resolvedText.isBlank()) {
+            importState.value = ImportState.Error("الحافظة فارغة حالياً. انسخ أي نص أولاً ثم اختر «لصق من الحافظة» لتحويله مباشرة إلى كتاب.")
+            return
+        }
+        runCatching {
+            com.example.data.importer.SmartBookConverter.inspectRawText(
+                rawText = resolvedText,
+                sourceLabel = "الحافظة"
+            )
+        }.onSuccess { proposal ->
+            enqueueConversionProposals(listOf(proposal))
+        }.onFailure { err ->
+            importState.value = ImportState.Error(err.message ?: "تعذر تحليل النص المنسوخ من الحافظة")
+        }
+    }
+
+    fun openClipboardStudio(initialText: String = "") {
+        pasteFromClipboardAsBook(initialText)
     }
 
     fun closeClipboardStudio() {

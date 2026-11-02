@@ -479,19 +479,19 @@ $typographyCss
               const sub = pageObj.subtitle || '';
 
               if (badge) {
-                parts.push('<div style="display:inline-block;align-self:center;padding:3px 12px;border-radius:99px;font-size:0.8em;font-weight:bold;opacity:0.88;border:1px solid currentColor;margin-bottom:8px;">' + badge + '</div>');
+                parts.push('<div class="chapter-badge" style="display:inline-block;align-self:center;padding:3px 12px;border-radius:99px;font-size:0.8em;font-weight:bold;opacity:0.88;border:1px solid currentColor;margin-bottom:8px;">' + badge + '</div>');
               }
               if (heading) {
-                parts.push('<h2 style="margin:0 0 8px 0;line-height:1.45;text-align:center;font-size:1.32em;">' + heading + '</h2>');
+                parts.push('<h2 class="page-heading" style="margin:0 0 8px 0;line-height:1.45;text-align:center;font-size:1.32em;">' + heading + '</h2>');
               }
               if (sub && sub !== heading) {
-                parts.push('<div style="text-align:center;opacity:0.8;font-size:0.92em;margin-bottom:10px;">' + sub + '</div>');
+                parts.push('<div class="subtitle" style="text-align:center;opacity:0.8;font-size:0.92em;margin-bottom:10px;">' + sub + '</div>');
               }
               if (pageObj.ayah || pageObj.verse) {
-                parts.push('<div class="quote-box" style="margin:8px 0;padding:10px 14px;border-right:3px solid #D97706;background:rgba(217,119,6,0.08);border-radius:10px;text-align:center;font-weight:bold;font-size:1.05em;line-height:1.8;">' + (pageObj.ayah || pageObj.verse) + '</div>');
+                parts.push('<div class="quran-box" data-role="quran" style="margin:8px 0;padding:10px 14px;border-right:3px solid #D97706;background:rgba(217,119,6,0.08);border-radius:10px;text-align:center;font-weight:bold;font-size:1.08em;line-height:2.05;">' + (pageObj.ayah || pageObj.verse) + '</div>');
               }
               if (pageObj.hadith) {
-                parts.push('<div class="quote-box" style="margin:8px 0;padding:9px 13px;border-right:3px solid #B94F7A;background:rgba(185,79,122,0.07);border-radius:10px;font-size:0.96em;line-height:1.7;">' + pageObj.hadith + '</div>');
+                parts.push('<div class="hadith-box" data-role="hadith" style="margin:8px 0;padding:9px 13px;border-right:3px solid #B94F7A;background:rgba(185,79,122,0.07);border-radius:10px;font-size:1.02em;line-height:1.95;">' + pageObj.hadith + '</div>');
               }
               if (typeof pageObj.content === 'string' && pageObj.content.trim()) {
                 parts.push('<div style="line-height:1.85;font-size:1em;text-align:justify;">' + pageObj.content + '</div>');
@@ -522,13 +522,81 @@ $typographyCss
 
             // =========================================================================
             // 1. SILENT FLUID REFLOW ZOOM ENGINE & SILENT LAYOUT CONTAINMENT
-            //    (Zero DOM HUD elements or warning toasts inside WebView)
+            //    + AUTOMATIC SEMANTIC TYPOGRAPHY UPGRADER FOR WEAK BOOK FILES
             // =========================================================================
             let currentZoomPercent = 100;
+
+            function upgradeWeakBookTypography() {
+              try {
+                const root = document.body;
+                if (!root) return;
+
+                // 1. Strip weak legacy desktop font-family inline overrides (Arial, Tahoma, Times New Roman, etc.)
+                const weakFontRegex = /\b(arial|tahoma|times new roman|calibri|verdana|courier|simplified arabic|traditional arabic|segoe ui|sans-serif|monospace)\b/i;
+                const styledEls = root.querySelectorAll('[style*="font-family"], font[face]');
+                for (let i = 0; i < styledEls.length; i++) {
+                  const el = styledEls[i];
+                  if (el.tagName === 'FONT' && el.hasAttribute('face')) {
+                    el.removeAttribute('face');
+                  }
+                  const inlineFont = el.style && el.style.fontFamily ? el.style.fontFamily : '';
+                  if (inlineFont && weakFontRegex.test(inlineFont)) {
+                    el.style.removeProperty('font-family');
+                  }
+                }
+
+                // 2. Upgrade plain paragraphs & blocks containing Quran, Hadith, TOC entries, and Numbers
+                const blocks = root.querySelectorAll('p, li, blockquote, div.paragraph, .page-body > div');
+                for (let i = 0; i < blocks.length; i++) {
+                  const el = blocks[i];
+                  if (!el || el.getAttribute('data-typo-upgraded') === '1') continue;
+                  if (el.closest('.top-bar, .topbar, .bottom-nav-dock, .quran-box, .hadith-box, .toc-item, script, style')) {
+                    el.setAttribute('data-typo-upgraded', '1');
+                    continue;
+                  }
+                  const txt = (el.textContent || '').trim();
+                  if (!txt) {
+                    el.setAttribute('data-typo-upgraded', '1');
+                    continue;
+                  }
+                  const cleanTxt = txt.replace(/[\u064B-\u065F\u0670]/g, '');
+
+                  // Standalone Quranic verse paragraph
+                  if ((txt.indexOf('﴿') !== -1 && txt.indexOf('﴾') !== -1 && txt.length <= 280) ||
+                      /^(قال تعالى|قال الله تعالى|يقول الله تعالى|قوله تعالى)\s*[:：]?\s*[﴿{]/.test(cleanTxt)) {
+                    el.classList.add('quran-verse');
+                    el.setAttribute('data-role', 'quran');
+                    el.setAttribute('data-typo-upgraded', '1');
+                    continue;
+                  }
+
+                  // Standalone Prophetic Hadith paragraph
+                  if (/^(قال رسول الله|قال النبي|عن أبي |عن عائشة|عن ابن |عن أنس|عن عمر|وفي الحديث|حديث شريف)/.test(cleanTxt) ||
+                      (txt.charAt(0) === '«' && txt.charAt(txt.length - 1) === '»' && txt.length <= 320)) {
+                    el.classList.add('hadith-quote');
+                    el.setAttribute('data-role', 'hadith');
+                    el.setAttribute('data-typo-upgraded', '1');
+                    continue;
+                  }
+
+                  // Inline Quranic verses ﴿...﴾, inline Hadiths «...», and reference numbers [١] inside simple text blocks
+                  if (el.childElementCount === 0 && (txt.indexOf('﴿') !== -1 || txt.indexOf('«') !== -1 || /\[[0-9٠-٩]{1,4}\]/.test(txt))) {
+                    let html = el.innerHTML;
+                    html = html.replace(/﴿([^﴾]+)﴾/g, '<span class="quran-verse" data-role="quran">﴿$1﴾</span>');
+                    html = html.replace(/«([^»]{6,})»/g, '<span class="hadith-quote" data-role="hadith">«$1»</span>');
+                    html = html.replace(/\[([0-9٠-٩]{1,4})\]/g, '<span class="num-badge" data-role="numbers">[$1]</span>');
+                    el.innerHTML = html;
+                  }
+                  el.setAttribute('data-typo-upgraded', '1');
+                }
+              } catch (e) {}
+            }
+            window.__maktabatiUpgradeWeakBookTypography = upgradeWeakBookTypography;
 
             const MaktabatiLayoutGuard = {
               inspectAndHeal: function() {
                 try {
+                  upgradeWeakBookTypography();
                   const canvas = getActivePageCanvas();
                   if (!canvas) return { healedCount: 0 };
                   const canvasWidth = canvas.clientWidth || window.innerWidth || 360;
@@ -1009,6 +1077,7 @@ $typographyCss
 
         val resolvedTypography = typographyProfile
             ?: bookDir?.let { MaktabatiFontRegistry.parseManifestTypography(File(it, "manifest.json")) }
+            ?: if (!cleanedHtml.contains("--font-body")) BookTypographyProfile() else null
 
         val snippet = buildInjectedSnippet(
             bookId = bookId,

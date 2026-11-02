@@ -937,6 +937,29 @@ class ExampleRobolectricTest {
         val defaultPrefs = com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(prefs)
         assertFalse(defaultPrefs.useCustomTypography)
         assertEquals("Noto Naskh Arabic", defaultPrefs.profile.body)
+        assertEquals("", defaultPrefs.customPreviewText)
+
+        // Verify legacy pre-filled preview text is sanitized to empty string on load
+        prefs.edit().putString(
+            "typo_custom_preview_text",
+            com.example.data.typography.UserTypographyPreferences.LEGACY_PREFILLED_PREVIEW_TEXT
+        ).commit()
+        val sanitizedPrefs = com.example.data.typography.MaktabatiFontRegistry.loadUserTypographyPreferences(prefs)
+        assertEquals("", sanitizedPrefs.customPreviewText)
+
+        // Verify curated default specimens for every book role (Body, Quran, Hadith, Headings, Chapters, TOC, Numbers)
+        assertTrue(com.example.data.typography.BookTypographyProfile.DEFAULT_SAMPLE_BODY.contains("الحِكْمَةِ"))
+        assertTrue(com.example.data.typography.BookTypographyProfile.DEFAULT_SAMPLE_QURAN.contains("﴿"))
+        assertTrue(com.example.data.typography.BookTypographyProfile.DEFAULT_SAMPLE_HADITH_QUOTES.contains("ﷺ"))
+        assertTrue(com.example.data.typography.BookTypographyProfile.DEFAULT_SAMPLE_TOC_INTERFACE.contains("الفهرس"))
+        assertTrue(com.example.data.typography.BookTypographyProfile.DEFAULT_SAMPLE_NUMBERS.contains("٠١٢٣٤٥٦٧٨٩"))
+
+        // Verify unstyled HTML automatically receives Maktabati default typography CSS & weak book upgrader
+        assertTrue(injected.contains("--font-body:"))
+        assertTrue(injected.contains("--font-quran:"))
+        assertTrue(injected.contains("--font-quotes:"))
+        assertTrue(injected.contains("--font-numbers:"))
+        assertTrue(injected.contains("__maktabatiUpgradeWeakBookTypography"))
 
         val customPrefs = com.example.data.typography.UserTypographyPreferences(
             useCustomTypography = true,
@@ -948,7 +971,8 @@ class ExampleRobolectricTest {
                 quotes = "Amiri",
                 interfaceFont = "IBM Plex Sans Arabic",
                 numbers = "Noto Sans Arabic"
-            )
+            ),
+            customPreviewText = "نص خاص يكتبه القارئ للمعاينة"
         )
         com.example.data.typography.MaktabatiFontRegistry.saveUserTypographyPreferences(prefs, customPrefs)
 
@@ -959,6 +983,7 @@ class ExampleRobolectricTest {
         assertEquals("Aref Ruqaa", loadedPrefs.profile.headings)
         assertEquals("Reem Kufi", loadedPrefs.profile.chapterTitles)
         assertEquals("IBM Plex Sans Arabic", loadedPrefs.profile.interfaceFont)
+        assertEquals("نص خاص يكتبه القارئ للمعاينة", loadedPrefs.customPreviewText)
 
         val liveJs = com.example.data.typography.MaktabatiFontRegistry.buildLiveTypographyOverrideJs(loadedPrefs)
         assertTrue(liveJs.contains("maktabati-user-typography-override"))
@@ -1315,6 +1340,18 @@ class ExampleRobolectricTest {
         assertTrue(beigeHtml.contains("action-callout"))
         assertTrue(beigeHtml.contains("poetry-stanza"))
         assertTrue(beigeHtml.contains("--font-body: \"Noto Naskh Arabic\""))
+
+        // Verify unified Add button's "لصق من الحافظة" flow: reads system clipboard and opens templates dialog directly
+        val clipboardManager = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboardManager.setPrimaryClip(android.content.ClipData.newPlainText("book", clipboardText))
+
+        val viewModel = com.example.ui.viewmodel.LibraryViewModel(context as android.app.Application)
+        viewModel.pasteFromClipboardAsBook()
+
+        val activeProposal = viewModel.pendingConversionProposal.value
+        assertNotNull("Pasting from clipboard must directly populate pendingConversionProposal to show template dialog", activeProposal)
+        assertEquals("الحافظة", activeProposal?.sourceFormatLabel)
+        assertTrue(activeProposal!!.detectedTitle.contains("خُطُوَاتٌ نَحْوَ السَّكِينَةِ"))
     }
 }
 
