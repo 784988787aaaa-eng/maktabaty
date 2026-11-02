@@ -170,6 +170,52 @@ class BookRepository(
         }
     }
 
+    suspend fun inspectRawText(
+        rawText: String,
+        sourceLabel: String = "CLIPBOARD • نصوص الحافظة"
+    ): Result<ConvertibleBookProposal> = withContext(Dispatchers.IO) {
+        try {
+            val proposal = SmartBookConverter.inspectRawText(
+                rawText = rawText,
+                sourceLabel = sourceLabel
+            )
+            Result.success(proposal)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun convertAndImportRawText(
+        rawText: String,
+        customTitle: String? = null,
+        customSubtitle: String? = null,
+        customAuthor: String? = null,
+        theme: BookVisualTheme? = null,
+        sourceLabel: String = "CLIPBOARD • نصوص الحافظة"
+    ): Result<Book> = withContext(Dispatchers.IO) {
+        try {
+            val proposal = SmartBookConverter.inspectRawText(
+                rawText = rawText,
+                sourceLabel = sourceLabel,
+                preferredTitle = customTitle,
+                preferredAuthor = customAuthor
+            )
+            val chosenTheme = theme ?: proposal.recommendedTheme
+            val book = BookImporter.importConvertedProposal(
+                context = context,
+                proposal = proposal,
+                customTitle = customTitle,
+                customSubtitle = customSubtitle,
+                customAuthor = customAuthor,
+                theme = chosenTheme
+            )
+            bookDao.insertBook(book)
+            Result.success(book)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun convertAndImportProposal(
         proposal: ConvertibleBookProposal,
         customTitle: String? = null,

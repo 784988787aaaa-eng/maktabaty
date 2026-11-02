@@ -41,12 +41,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FolderOpen
@@ -110,6 +112,7 @@ import com.example.data.model.Book
 import com.example.ui.components.BookDetailDialog
 import com.example.ui.components.BookGridItem
 import com.example.ui.components.BookListItem
+import com.example.ui.components.ClipboardBookStudioDialog
 import com.example.ui.components.ConvertTextBookDialog
 import com.example.ui.components.CreateShelfDialog
 import com.example.ui.components.TypographySettingsDialog
@@ -140,6 +143,8 @@ fun LibraryScreen(
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val pendingMultiBookProposal by viewModel.pendingMultiBookProposal.collectAsStateWithLifecycle()
     val pendingConversionProposal by viewModel.pendingConversionProposal.collectAsStateWithLifecycle()
+    val isClipboardStudioOpen by viewModel.isClipboardStudioOpen.collectAsStateWithLifecycle()
+    val clipboardStudioInitialText by viewModel.clipboardStudioInitialText.collectAsStateWithLifecycle()
     val userTypographyPreferences by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
     val connectedGoogleEmail by viewModel.connectedGoogleEmail.collectAsStateWithLifecycle()
     val lastBackupTimeText by viewModel.lastBackupTimeText.collectAsStateWithLifecycle()
@@ -538,7 +543,34 @@ fun LibraryScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
                             )
 
-                            // Section 2: About Maktabati Platform
+                            // Section 2: Clipboard-to-Masterpiece Studio
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "صياغة كتاب من نصوص الحافظة ✦",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                onClick = {
+                                    showMoreOptionsMenu = false
+                                    viewModel.openClipboardStudio()
+                                },
+                                modifier = Modifier.testTag("clipboard_studio_menu_item")
+                            )
+
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                            )
+
+                            // Section 3: About Maktabati Platform
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -570,33 +602,47 @@ fun LibraryScreen(
         },
         floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    multiFilePickerLauncher.launch(
-                        arrayOf(
-                            "text/html",
-                            "application/xhtml+xml",
-                            "application/zip",
-                            "application/x-zip-compressed",
-                            "text/plain",
-                            "text/markdown",
-                            "application/msword",
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "application/vnd.oasis.opendocument.text",
-                            "application/rtf",
-                            "text/rtf",
-                            "application/epub+zip",
-                            "application/pdf",
-                            "*/*"
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        multiFilePickerLauncher.launch(
+                            arrayOf(
+                                "text/html",
+                                "application/xhtml+xml",
+                                "application/zip",
+                                "application/x-zip-compressed",
+                                "text/plain",
+                                "text/markdown",
+                                "application/msword",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/rtf",
+                                "text/rtf",
+                                "application/epub+zip",
+                                "application/pdf",
+                                "*/*"
+                            )
                         )
-                    )
-                },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("إضافة كتاب HTML", fontWeight = FontWeight.Bold) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.testTag("import_book_fab")
-            )
+                    },
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("إضافة كتاب HTML", fontWeight = FontWeight.Bold) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.testTag("import_book_fab")
+                )
+
+                ExtendedFloatingActionButton(
+                    onClick = { viewModel.openClipboardStudio() },
+                    icon = { Icon(Icons.Default.ContentPaste, contentDescription = null) },
+                    text = { Text("نص من الحافظة ✦", fontWeight = FontWeight.Bold) },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.testTag("clipboard_studio_fab")
+                )
+            }
         },
         modifier = modifier
     ) { innerPadding ->
@@ -1150,6 +1196,27 @@ fun LibraryScreen(
                 )
             },
             onDismiss = { viewModel.cancelConversionProposal() }
+        )
+    }
+
+    // Clipboard-to-Masterpiece Studio Dialog
+    if (isClipboardStudioOpen) {
+        ClipboardBookStudioDialog(
+            initialText = clipboardStudioInitialText,
+            onConfirmCreateBook = { rawText, title, subtitle, author, theme ->
+                viewModel.convertRawTextAndImportBook(
+                    rawText = rawText,
+                    customTitle = title,
+                    customSubtitle = subtitle,
+                    customAuthor = author,
+                    theme = theme
+                ) { createdBook ->
+                    if (createdBook != null) {
+                        onOpenBook(createdBook)
+                    }
+                }
+            },
+            onDismiss = { viewModel.closeClipboardStudio() }
         )
     }
 

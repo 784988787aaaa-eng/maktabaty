@@ -19,13 +19,49 @@ import java.util.zip.InflaterInputStream
 import java.util.zip.ZipInputStream
 
 /**
- * Represents one of the 5 luxury interactive HTML5 visual themes supported by SmartBookConverter.
+ * Categories of visual book publishing templates covering all genres and reader tastes.
+ */
+enum class BookTemplateCategory(
+    val id: String,
+    val titleAr: String,
+    val emoji: String
+) {
+    ALL("all", "جميع القوالب", "✦"),
+    RELIGIOUS("religious", "دينية وإيمانية", "🕌"),
+    BEIGE_CLASSIC("beige_classic", "ورق بيج وكلاسيكي", "📜"),
+    GIRLS_AESTHETIC("girls_aesthetic", "ذوق الفتيات", "🌸"),
+    STORIES_LITERATURE("stories_literature", "قصصية وأدبية", "📖"),
+    SELF_DEVELOPMENT("self_development", "تنمية الذات", "🚀"),
+    FAMILY_SOCIAL("family_social", "أسرية واجتماعية", "🏡"),
+    EDUCATIONAL_ACADEMIC("educational_academic", "تعليمية وبحوث", "🎓"),
+    MAGAZINE_MINIMAL("magazine_minimal", "مجلات وبساطة", "📰")
+}
+
+/**
+ * Defines the structural and editorial CSS styling of a publishing template beyond colors.
+ */
+enum class PublishingLayoutStyle {
+    HERITAGE_ORNATE,      // إطار تراثي مذهب ومزدوج للمخطوطات والحديث والتفسير والكتب الدينية الوقورة
+    SOFT_BOTANICAL,       // بطاقات ناعمة وزوايا انسيابية للكتب النسائية وذوق الفتيات والأسرة
+    DAWAH_MOTIVATIONAL,   // إخراج حيوي مشرق ببطاقات مواقف وإشراقات وخطوات عملية (طراز العريفي/عمرو خالد/أبو شادي/تنمية الذات)
+    CLASSIC_BOOK_PRESS,   // إخراج المطابع الكلاسيكية والورق البيج والكتب القياسية بترويسة كتاب مطبوع وظل ورقي دافئ
+    NARRATIVE_STORY,      // إخراج سردي للقصص والروايات والخواطر مع فواصل مشاهد وإبراز الحوارات والشعر
+    ACADEMIC_STRUCTURED,  // إخراج منهجي منظم للكتب التعليمية والبحوث العلمية المحكّمة
+    EDITORIAL_MAGAZINE,   // إخراج مجلات ثقافية وصحفية بعناوين بارزة واقتباسات جانبية كبيرة
+    PURE_MINIMAL          // تجرد بصري أنيق وهادئ لعشاق البساطة والصفاء
+}
+
+/**
+ * Represents the 26 luxury interactive HTML5 publishing templates supported by SmartBookConverter.
+ * Named clearly by book genre and visual aesthetic rather than internal book titles.
  */
 enum class BookVisualTheme(
     val id: String,
     val titleAr: String,
     val subtitleAr: String,
     val badgeEmoji: String,
+    val category: BookTemplateCategory,
+    val layoutStyle: PublishingLayoutStyle,
     val bgPrimaryHex: String,
     val bgSecondaryHex: String,
     val bgSoftAccentHex: String,
@@ -39,53 +75,23 @@ enum class BookVisualTheme(
     val accentGoldHex: String,
     val textPrimaryHex: String,
     val textSecondaryHex: String,
-    val paperEdgeHex: String
+    val paperEdgeHex: String,
+    val fontBody: String = "Noto Naskh Arabic",
+    val fontHeadings: String = "Aref Ruqaa",
+    val fontChapterTitles: String = "Reem Kufi",
+    val fontQuotes: String = "Amiri",
+    val fontQuran: String = "Amiri Quran"
 ) {
-    ROSE_HEART(
-        id = "rose_heart",
-        titleAr = "حلة «رسائل القلب»",
-        subtitleAr = "وردي لؤلؤي وذهبي وأخضر مريمي • شعار الزهرة المذهبة",
-        badgeEmoji = "🌸",
-        bgPrimaryHex = "#FAF6F0",
-        bgSecondaryHex = "#FFFDF9",
-        bgSoftAccentHex = "#FCF2F5",
-        bgSoftSecondaryHex = "#EFF5F0",
-        bgPearlGoldHex = "#FDF7EC",
-        accentPrimaryHex = "#BD6B80",
-        accentPrimaryDarkHex = "#732E41",
-        accentPrimaryLightHex = "#D98C9F",
-        accentSecondaryHex = "#6B856E",
-        accentSecondaryDarkHex = "#445946",
-        accentGoldHex = "#C69A4E",
-        textPrimaryHex = "#38272C",
-        textSecondaryHex = "#6B565C",
-        paperEdgeHex = "#DDD1C4"
-    ),
-    VELVET_TENT(
-        id = "velvet_tent",
-        titleAr = "حلة «خيمة السكينة»",
-        subtitleAr = "زهري مخملي وذهبي وعاجي دافئ • شعار الخيمة المضيئة",
-        badgeEmoji = "⛺",
-        bgPrimaryHex = "#FFF1F6",
-        bgSecondaryHex = "#FFFDFB",
-        bgSoftAccentHex = "#FDE8F0",
-        bgSoftSecondaryHex = "#F5EFE6",
-        bgPearlGoldHex = "#FDF6E7",
-        accentPrimaryHex = "#B94F7A",
-        accentPrimaryDarkHex = "#6D2343",
-        accentPrimaryLightHex = "#E089AD",
-        accentSecondaryHex = "#8C583A",
-        accentSecondaryDarkHex = "#5E3720",
-        accentGoldHex = "#B88945",
-        textPrimaryHex = "#331824",
-        textSecondaryHex = "#6E4556",
-        paperEdgeHex = "#E6CBD7"
-    ),
+    // =========================================================================
+    // 1. الكتب الدينية والإيمانية (Religious & Spiritual)
+    // =========================================================================
     ISLAMIC_EMERALD(
         id = "islamic_emerald",
-        titleAr = "حلة «المخطوطة الإيمانية»",
-        subtitleAr = "زمردي إسلامي وورق مخطوطات بيج عتيق وذهبي مملوكي",
+        titleAr = "كتاب ديني (طابع رجالي وقور)",
+        subtitleAr = "زمردي أصيل وورق بيج تراثي مع تذهيب كلاسيكي رصين",
         badgeEmoji = "🕌",
+        category = BookTemplateCategory.RELIGIOUS,
+        layoutStyle = PublishingLayoutStyle.HERITAGE_ORNATE,
         bgPrimaryHex = "#F8F4E8",
         bgSecondaryHex = "#FFFDF7",
         bgSoftAccentHex = "#ECF6F1",
@@ -99,13 +105,549 @@ enum class BookVisualTheme(
         accentGoldHex = "#B47B26",
         textPrimaryHex = "#1E2923",
         textSecondaryHex = "#4B5E54",
-        paperEdgeHex = "#D8CEB8"
+        paperEdgeHex = "#D8CEB8",
+        fontBody = "Amiri",
+        fontHeadings = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    ROSE_HEART(
+        id = "rose_heart",
+        titleAr = "كتاب ديني (طابع نسائي ناعم)",
+        subtitleAr = "وردي لؤلؤي هادئ وذهبي دافئ وأخضر ريحاني مريح للعين",
+        badgeEmoji = "🌸",
+        category = BookTemplateCategory.RELIGIOUS,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#FAF6F0",
+        bgSecondaryHex = "#FFFDF9",
+        bgSoftAccentHex = "#FCF2F5",
+        bgSoftSecondaryHex = "#EFF5F0",
+        bgPearlGoldHex = "#FDF7EC",
+        accentPrimaryHex = "#BD6B80",
+        accentPrimaryDarkHex = "#732E41",
+        accentPrimaryLightHex = "#D98C9F",
+        accentSecondaryHex = "#6B856E",
+        accentSecondaryDarkHex = "#445946",
+        accentGoldHex = "#C69A4E",
+        textPrimaryHex = "#38272C",
+        textSecondaryHex = "#6B565C",
+        paperEdgeHex = "#DDD1C4",
+        fontBody = "Noto Naskh Arabic",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    FAITH_REVIVAL(
+        id = "faith_revival",
+        titleAr = "الرقائق والخواطر الإيمانية",
+        subtitleAr = "أسلوب كتب خالد أبو شادي • جرعات إيمانية وصناديق تزكية ومحاسبة",
+        badgeEmoji = "✨",
+        category = BookTemplateCategory.RELIGIOUS,
+        layoutStyle = PublishingLayoutStyle.DAWAH_MOTIVATIONAL,
+        bgPrimaryHex = "#FCF8F2",
+        bgSecondaryHex = "#FFFDF9",
+        bgSoftAccentHex = "#FEF3E6",
+        bgSoftSecondaryHex = "#F4F1EA",
+        bgPearlGoldHex = "#FDF6E2",
+        accentPrimaryHex = "#9A3412",
+        accentPrimaryDarkHex = "#7C2D12",
+        accentPrimaryLightHex = "#EA580C",
+        accentSecondaryHex = "#3F6212",
+        accentSecondaryDarkHex = "#365314",
+        accentGoldHex = "#D97706",
+        textPrimaryHex = "#291D18",
+        textSecondaryHex = "#665247",
+        paperEdgeHex = "#E5D5C3",
+        fontBody = "Noto Naskh Arabic",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "El Messiri",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    DAWAH_INSPIRATION(
+        id = "dawah_inspiration",
+        titleAr = "الدعوة والقصص الإيماني المشوق",
+        subtitleAr = "أسلوب كتب العريفي وعمرو خالد • حيوي ومشرق ببطاقات مواقف وعِبر",
+        badgeEmoji = "🌿",
+        category = BookTemplateCategory.RELIGIOUS,
+        layoutStyle = PublishingLayoutStyle.DAWAH_MOTIVATIONAL,
+        bgPrimaryHex = "#F4F9F8",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#E6F4F1",
+        bgSoftSecondaryHex = "#FEF9EE",
+        bgPearlGoldHex = "#FEF5E1",
+        accentPrimaryHex = "#0F766E",
+        accentPrimaryDarkHex = "#115E59",
+        accentPrimaryLightHex = "#14B8A6",
+        accentSecondaryHex = "#B45309",
+        accentSecondaryDarkHex = "#78350F",
+        accentGoldHex = "#D97706",
+        textPrimaryHex = "#132A28",
+        textSecondaryHex = "#486562",
+        paperEdgeHex = "#C6DDD9",
+        fontBody = "Tajawal",
+        fontHeadings = "Cairo",
+        fontChapterTitles = "Changa",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    HADITH_SUNNAH(
+        id = "hadith_sunnah",
+        titleAr = "كتب الحديث والسنة والمتون",
+        subtitleAr = "إخراج علمي تراثي للأحاديث النبوية مع تمييز المتن والشرح",
+        badgeEmoji = "📜",
+        category = BookTemplateCategory.RELIGIOUS,
+        layoutStyle = PublishingLayoutStyle.HERITAGE_ORNATE,
+        bgPrimaryHex = "#F9F5EB",
+        bgSecondaryHex = "#FFFDF8",
+        bgSoftAccentHex = "#EEF6F0",
+        bgSoftSecondaryHex = "#F5EFE0",
+        bgPearlGoldHex = "#FCF4DE",
+        accentPrimaryHex = "#14532D",
+        accentPrimaryDarkHex = "#052E16",
+        accentPrimaryLightHex = "#22C55E",
+        accentSecondaryHex = "#854D0E",
+        accentSecondaryDarkHex = "#713F12",
+        accentGoldHex = "#A16207",
+        textPrimaryHex = "#1A241E",
+        textSecondaryHex = "#4A584F",
+        paperEdgeHex = "#D9CEB8",
+        fontBody = "Scheherazade New",
+        fontHeadings = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    QURAN_TAFSIR(
+        id = "quran_tafsir",
+        titleAr = "التفسير وتدبر القرآن الكريم",
+        subtitleAr = "حُلّة المصاحف وكتب التدبر مع إبراز الآيات بالرسم العثماني",
+        badgeEmoji = "🕋",
+        category = BookTemplateCategory.RELIGIOUS,
+        layoutStyle = PublishingLayoutStyle.HERITAGE_ORNATE,
+        bgPrimaryHex = "#FAF6ED",
+        bgSecondaryHex = "#FFFDF8",
+        bgSoftAccentHex = "#EEF2F6",
+        bgSoftSecondaryHex = "#F6F1E3",
+        bgPearlGoldHex = "#FCF3DC",
+        accentPrimaryHex = "#1E3A5F",
+        accentPrimaryDarkHex = "#0F2542",
+        accentPrimaryLightHex = "#3B6998",
+        accentSecondaryHex = "#065F46",
+        accentSecondaryDarkHex = "#044332",
+        accentGoldHex = "#B8860B",
+        textPrimaryHex = "#1B2430",
+        textSecondaryHex = "#4B5666",
+        paperEdgeHex = "#D6CBB5",
+        fontBody = "Amiri",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri Quran",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 2. الورق البيج والكتب الكلاسيكية (Warm Beige Paper & Classic Books)
+    // =========================================================================
+    CREAM_BEIGE_PAPER(
+        id = "cream_beige_paper",
+        titleAr = "كتاب بورق بيج مريح للعين",
+        subtitleAr = "ورق بيج طبيعي دافئ كأوراق المطابع الفاخرة للقراءة الطويلة دون إجهاد",
+        badgeEmoji = "📖",
+        category = BookTemplateCategory.BEIGE_CLASSIC,
+        layoutStyle = PublishingLayoutStyle.CLASSIC_BOOK_PRESS,
+        bgPrimaryHex = "#F2E9D8",
+        bgSecondaryHex = "#FAF3E4",
+        bgSoftAccentHex = "#F5EBDD",
+        bgSoftSecondaryHex = "#EFE4D2",
+        bgPearlGoldHex = "#F8EDD6",
+        accentPrimaryHex = "#7C4D2B",
+        accentPrimaryDarkHex = "#4E2E16",
+        accentPrimaryLightHex = "#A66E45",
+        accentSecondaryHex = "#5C6B57",
+        accentSecondaryDarkHex = "#3D4839",
+        accentGoldHex = "#B47B26",
+        textPrimaryHex = "#2B2118",
+        textSecondaryHex = "#5E4D3E",
+        paperEdgeHex = "#D8C8B0",
+        fontBody = "Noto Naskh Arabic",
+        fontHeadings = "Amiri",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    WARM_CHAMOMILE_BEIGE(
+        id = "warm_chamomile_beige",
+        titleAr = "ورق كريمي دافئ (قراءة هادئة)",
+        subtitleAr = "درجة البيج الكريمي المهدئة للبصر مع حبر بني داكن متوازن",
+        badgeEmoji = "🕯️",
+        category = BookTemplateCategory.BEIGE_CLASSIC,
+        layoutStyle = PublishingLayoutStyle.CLASSIC_BOOK_PRESS,
+        bgPrimaryHex = "#F4EFE6",
+        bgSecondaryHex = "#FCF9F2",
+        bgSoftAccentHex = "#F7F1E5",
+        bgSoftSecondaryHex = "#EFE8DC",
+        bgPearlGoldHex = "#FAF1DF",
+        accentPrimaryHex = "#6B4423",
+        accentPrimaryDarkHex = "#432810",
+        accentPrimaryLightHex = "#9C6B3F",
+        accentSecondaryHex = "#6E5A4F",
+        accentSecondaryDarkHex = "#4A3B33",
+        accentGoldHex = "#C28840",
+        textPrimaryHex = "#261F1A",
+        textSecondaryHex = "#5C5046",
+        paperEdgeHex = "#DCD2C2",
+        fontBody = "Markazi Text",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "El Messiri",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    VINTAGE_PARCHMENT(
+        id = "vintage_parchment",
+        titleAr = "ورق الكتب القديمة والتراث",
+        subtitleAr = "طابع المخطوطات والكتب العتيقة بلون الرقّ المعتّق وحبر الوراقين",
+        badgeEmoji = "🏺",
+        category = BookTemplateCategory.BEIGE_CLASSIC,
+        layoutStyle = PublishingLayoutStyle.HERITAGE_ORNATE,
+        bgPrimaryHex = "#EBE0C8",
+        bgSecondaryHex = "#F6EEDF",
+        bgSoftAccentHex = "#EFE4CD",
+        bgSoftSecondaryHex = "#E5D8BD",
+        bgPearlGoldHex = "#F3E5C8",
+        accentPrimaryHex = "#693617",
+        accentPrimaryDarkHex = "#421F0B",
+        accentPrimaryLightHex = "#945630",
+        accentSecondaryHex = "#7A5C32",
+        accentSecondaryDarkHex = "#523B1E",
+        accentGoldHex = "#9C6B30",
+        textPrimaryHex = "#24170E",
+        textSecondaryHex = "#594331",
+        paperEdgeHex = "#CBB999",
+        fontBody = "Amiri",
+        fontHeadings = "Rakkas",
+        fontChapterTitles = "Aref Ruqaa",
+        fontQuotes = "Scheherazade New",
+        fontQuran = "Amiri Quran"
+    ),
+    STANDARD_CLEAN_BOOK(
+        id = "standard_clean_book",
+        titleAr = "كتاب عادي قياسي",
+        subtitleAr = "الإخراج الكلاسيكي المتوازن والمألوف في دور النشر العربية والعالمية",
+        badgeEmoji = "📘",
+        category = BookTemplateCategory.BEIGE_CLASSIC,
+        layoutStyle = PublishingLayoutStyle.CLASSIC_BOOK_PRESS,
+        bgPrimaryHex = "#F6F5F2",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#F0EFEA",
+        bgSoftSecondaryHex = "#F3F4F6",
+        bgPearlGoldHex = "#FAF6EC",
+        accentPrimaryHex = "#2D3748",
+        accentPrimaryDarkHex = "#1A202C",
+        accentPrimaryLightHex = "#4A5568",
+        accentSecondaryHex = "#4A5568",
+        accentSecondaryDarkHex = "#2D3748",
+        accentGoldHex = "#8B6F47",
+        textPrimaryHex = "#1A202C",
+        textSecondaryHex = "#4A5568",
+        paperEdgeHex = "#DCDAD3",
+        fontBody = "Noto Naskh Arabic",
+        fontHeadings = "Noto Kufi Arabic",
+        fontChapterTitles = "Cairo",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    CLASSIC_DIWAN(
+        id = "classic_diwan",
+        titleAr = "مجلد أدبي وتراثي فخم",
+        subtitleAr = "طابع أمهات الكتب والمجلدات السلطانية بالعنابي والذهب",
+        badgeEmoji = "👑",
+        category = BookTemplateCategory.BEIGE_CLASSIC,
+        layoutStyle = PublishingLayoutStyle.HERITAGE_ORNATE,
+        bgPrimaryHex = "#F9F4EF",
+        bgSecondaryHex = "#FFFDFB",
+        bgSoftAccentHex = "#F8ECEE",
+        bgSoftSecondaryHex = "#F4EFEA",
+        bgPearlGoldHex = "#FDF5E6",
+        accentPrimaryHex = "#7A1C2E",
+        accentPrimaryDarkHex = "#4F0E1B",
+        accentPrimaryLightHex = "#A8384E",
+        accentSecondaryHex = "#6E4F32",
+        accentSecondaryDarkHex = "#47311D",
+        accentGoldHex = "#B8860B",
+        textPrimaryHex = "#261519",
+        textSecondaryHex = "#5E4348",
+        paperEdgeHex = "#DFD1C5",
+        fontBody = "Amiri",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 3. ذوق الفتيات والألوان الزاهية والناعمة (Girls' Aesthetic & Pastel)
+    // =========================================================================
+    VELVET_TENT(
+        id = "velvet_tent",
+        titleAr = "كتاب أنثوي (وردي مخملي)",
+        subtitleAr = "زهري مخملي وذهبي وعاجي دافئ يناسب ذوق الفتيات والرسائل الوجدانية",
+        badgeEmoji = "🌷",
+        category = BookTemplateCategory.GIRLS_AESTHETIC,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#FFF1F6",
+        bgSecondaryHex = "#FFFDFB",
+        bgSoftAccentHex = "#FDE8F0",
+        bgSoftSecondaryHex = "#F5EFE6",
+        bgPearlGoldHex = "#FDF6E7",
+        accentPrimaryHex = "#B94F7A",
+        accentPrimaryDarkHex = "#6D2343",
+        accentPrimaryLightHex = "#E089AD",
+        accentSecondaryHex = "#8C583A",
+        accentSecondaryDarkHex = "#5E3720",
+        accentGoldHex = "#B88945",
+        textPrimaryHex = "#331824",
+        textSecondaryHex = "#6E4556",
+        paperEdgeHex = "#E6CBD7",
+        fontBody = "Noto Naskh Arabic",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    GIRLS_BLUSH_DIARY(
+        id = "girls_blush_diary",
+        titleAr = "مذكرات ودفاتر الفتيات",
+        subtitleAr = "ألوان الباستيل الوردية والزهور الرقيقة مع خطوط انسيابية أنيقة",
+        badgeEmoji = "🎀",
+        category = BookTemplateCategory.GIRLS_AESTHETIC,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#FFF5F8",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#FCE7F3",
+        bgSoftSecondaryHex = "#FDF2F8",
+        bgPearlGoldHex = "#FEF9EB",
+        accentPrimaryHex = "#DB2777",
+        accentPrimaryDarkHex = "#9D174D",
+        accentPrimaryLightHex = "#F472B6",
+        accentSecondaryHex = "#9333EA",
+        accentSecondaryDarkHex = "#6B21A8",
+        accentGoldHex = "#D97706",
+        textPrimaryHex = "#3B1329",
+        textSecondaryHex = "#75465F",
+        paperEdgeHex = "#F3C6DC",
+        fontBody = "Tajawal",
+        fontHeadings = "Lemonada",
+        fontChapterTitles = "El Messiri",
+        fontQuotes = "Aref Ruqaa",
+        fontQuran = "Amiri Quran"
+    ),
+    GIRLS_LAVENDER_DREAM(
+        id = "girls_lavender_dream",
+        titleAr = "إشراقة الخزامى (بنفسجي ناعم)",
+        subtitleAr = "بنفسجي لافندر هادئ وورق لؤلؤي ناعم لذوق الفتيات الرفيع",
+        badgeEmoji = "🪻",
+        category = BookTemplateCategory.GIRLS_AESTHETIC,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#F7F4FF",
+        bgSecondaryHex = "#FDFCFF",
+        bgSoftAccentHex = "#EDE9FE",
+        bgSoftSecondaryHex = "#F5F3FF",
+        bgPearlGoldHex = "#FEF8E8",
+        accentPrimaryHex = "#7C3AED",
+        accentPrimaryDarkHex = "#4C1D95",
+        accentPrimaryLightHex = "#A78BFA",
+        accentSecondaryHex = "#C026D3",
+        accentSecondaryDarkHex = "#86198F",
+        accentGoldHex = "#C69249",
+        textPrimaryHex = "#25173B",
+        textSecondaryHex = "#5A4975",
+        paperEdgeHex = "#D8CEEE",
+        fontBody = "Readex Pro",
+        fontHeadings = "El Messiri",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    GIRLS_PEACH_BLOSSOM(
+        id = "girls_peach_blossom",
+        titleAr = "زهور الخوخ والماتشا",
+        subtitleAr = "تدرجات الخوخي الدافئ مع الأخضر الفستقي الناعم لإخراج مبهج وعصري",
+        badgeEmoji = "🍑",
+        category = BookTemplateCategory.GIRLS_AESTHETIC,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#FFF6F0",
+        bgSecondaryHex = "#FFFDFB",
+        bgSoftAccentHex = "#FFEDD5",
+        bgSoftSecondaryHex = "#ECFDF5",
+        bgPearlGoldHex = "#FEF7E6",
+        accentPrimaryHex = "#C2410C",
+        accentPrimaryDarkHex = "#7C2D12",
+        accentPrimaryLightHex = "#FB923C",
+        accentSecondaryHex = "#4D7C0F",
+        accentSecondaryDarkHex = "#365314",
+        accentGoldHex = "#CA8A04",
+        textPrimaryHex = "#331D14",
+        textSecondaryHex = "#6B4E40",
+        paperEdgeHex = "#EBD1C1",
+        fontBody = "Tajawal",
+        fontHeadings = "Marhey",
+        fontChapterTitles = "El Messiri",
+        fontQuotes = "Aref Ruqaa",
+        fontQuran = "Amiri Quran"
+    ),
+    GIRLS_TIFFANY_PEARL(
+        id = "girls_tiffany_pearl",
+        titleAr = "لؤلؤ وفيروز ناعم (تيفاني أنيق)",
+        subtitleAr = "تركواز باستيل هادئ مع ذهبي وردي لإصدارات الفتيات المميزة",
+        badgeEmoji = "💎",
+        category = BookTemplateCategory.GIRLS_AESTHETIC,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#F0FDFB",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#CCFBF1",
+        bgSoftSecondaryHex = "#FDF2F8",
+        bgPearlGoldHex = "#FEF9EC",
+        accentPrimaryHex = "#0D9488",
+        accentPrimaryDarkHex = "#115E59",
+        accentPrimaryLightHex = "#2DD4BF",
+        accentSecondaryHex = "#BE185D",
+        accentSecondaryDarkHex = "#831843",
+        accentGoldHex = "#C68B59",
+        textPrimaryHex = "#132E2B",
+        textSecondaryHex = "#486965",
+        paperEdgeHex = "#BCE3DF",
+        fontBody = "Readex Pro",
+        fontHeadings = "El Messiri",
+        fontChapterTitles = "Cairo",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 4. الكتب القصصية والروايات والأدب (Stories, Novels & Literature)
+    // =========================================================================
+    STORY_NARRATIVE(
+        id = "story_narrative",
+        titleAr = "كتاب قصصي وسرد مشوق",
+        subtitleAr = "تصميم سردي منساب للقصص والحكايات مع فواصل مشاهد وإبراز الحوارات",
+        badgeEmoji = "🪶",
+        category = BookTemplateCategory.STORIES_LITERATURE,
+        layoutStyle = PublishingLayoutStyle.NARRATIVE_STORY,
+        bgPrimaryHex = "#FAF6F0",
+        bgSecondaryHex = "#FFFDF9",
+        bgSoftAccentHex = "#EEF2FF",
+        bgSoftSecondaryHex = "#F5F0E6",
+        bgPearlGoldHex = "#FDF6E4",
+        accentPrimaryHex = "#3730A3",
+        accentPrimaryDarkHex = "#1E1B4B",
+        accentPrimaryLightHex = "#6366F1",
+        accentSecondaryHex = "#78350F",
+        accentSecondaryDarkHex = "#451A03",
+        accentGoldHex = "#B45309",
+        textPrimaryHex = "#1E1B2E",
+        textSecondaryHex = "#524E66",
+        paperEdgeHex = "#DBD3C5",
+        fontBody = "Amiri",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "Katibeh",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    LITERARY_NOVEL(
+        id = "literary_novel",
+        titleAr = "رواية أدبية عالمية",
+        subtitleAr = "هوية الروايات المطبوعة بهوامش مريحة وورق كريمي خفيف وعناوين فصول أنيقة",
+        badgeEmoji = "🎭",
+        category = BookTemplateCategory.STORIES_LITERATURE,
+        layoutStyle = PublishingLayoutStyle.NARRATIVE_STORY,
+        bgPrimaryHex = "#F7F4EE",
+        bgSecondaryHex = "#FDFBF7",
+        bgSoftAccentHex = "#F5EEF4",
+        bgSoftSecondaryHex = "#EFECE4",
+        bgPearlGoldHex = "#FAF2E1",
+        accentPrimaryHex = "#581C4F",
+        accentPrimaryDarkHex = "#3B0D34",
+        accentPrimaryLightHex = "#863A7A",
+        accentSecondaryHex = "#4A5D4E",
+        accentSecondaryDarkHex = "#2E3B30",
+        accentGoldHex = "#A37B45",
+        textPrimaryHex = "#221A20",
+        textSecondaryHex = "#594B55",
+        paperEdgeHex = "#D9D0C4",
+        fontBody = "Markazi Text",
+        fontHeadings = "El Messiri",
+        fontChapterTitles = "Reem Kufi",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    POETRY_THOUGHTS(
+        id = "poetry_thoughts",
+        titleAr = "خواطر وشعر وأدب وجداني",
+        subtitleAr = "مساحات بصرية شاعرية وإطارات مقتبسات تبرز جمال الكلمة والعاطفة",
+        badgeEmoji = "🕊️",
+        category = BookTemplateCategory.STORIES_LITERATURE,
+        layoutStyle = PublishingLayoutStyle.NARRATIVE_STORY,
+        bgPrimaryHex = "#FCF8F5",
+        bgSecondaryHex = "#FFFDFB",
+        bgSoftAccentHex = "#FEF2F2",
+        bgSoftSecondaryHex = "#F5EFEA",
+        bgPearlGoldHex = "#FDF6E7",
+        accentPrimaryHex = "#881337",
+        accentPrimaryDarkHex = "#4C0519",
+        accentPrimaryLightHex = "#BE123C",
+        accentSecondaryHex = "#6B5344",
+        accentSecondaryDarkHex = "#433228",
+        accentGoldHex = "#B47B26",
+        textPrimaryHex = "#2B181E",
+        textSecondaryHex = "#63474F",
+        paperEdgeHex = "#E2D2CC",
+        fontBody = "Amiri",
+        fontHeadings = "Aref Ruqaa",
+        fontChapterTitles = "Vibes",
+        fontQuotes = "Aref Ruqaa",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 5. كتب تنمية الذات والنجاح (Self-Development & Productivity)
+    // =========================================================================
+    SELF_DEVELOPMENT(
+        id = "self_development",
+        titleAr = "تنمية الذات وصناعة النجاح",
+        subtitleAr = "تصميم عصري محفز يبرز خطوات العمل، القواعد الذهبية، وخلاصات الفصول",
+        badgeEmoji = "🎯",
+        category = BookTemplateCategory.SELF_DEVELOPMENT,
+        layoutStyle = PublishingLayoutStyle.DAWAH_MOTIVATIONAL,
+        bgPrimaryHex = "#F8FAFC",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#FEF3C7",
+        bgSoftSecondaryHex = "#EFF6FF",
+        bgPearlGoldHex = "#FFFBEB",
+        accentPrimaryHex = "#B45309",
+        accentPrimaryDarkHex = "#0F172A",
+        accentPrimaryLightHex = "#F59E0B",
+        accentSecondaryHex = "#0369A1",
+        accentSecondaryDarkHex = "#0C4A6E",
+        accentGoldHex = "#D97706",
+        textPrimaryHex = "#0F172A",
+        textSecondaryHex = "#475569",
+        paperEdgeHex = "#CBD5E1",
+        fontBody = "IBM Plex Sans Arabic",
+        fontHeadings = "Cairo",
+        fontChapterTitles = "Changa",
+        fontQuotes = "Noto Naskh Arabic",
+        fontQuran = "Amiri Quran"
     ),
     YOUTH_HORIZON(
         id = "youth_horizon",
-        titleAr = "حلة «آفاق الشباب والعلوم»",
-        subtitleAr = "كحلي كوني وفيروزي مشرق وذهبي طموح",
+        titleAr = "كتاب شبابي وطموح معاصر",
+        subtitleAr = "كحلي وفيروزي مشرق يناسب كتب الشباب والمهارات وبناء العادات",
         badgeEmoji = "🚀",
+        category = BookTemplateCategory.SELF_DEVELOPMENT,
+        layoutStyle = PublishingLayoutStyle.DAWAH_MOTIVATIONAL,
         bgPrimaryHex = "#F4F7FB",
         bgSecondaryHex = "#FFFFFF",
         bgSoftAccentHex = "#EBF3FC",
@@ -119,13 +661,136 @@ enum class BookVisualTheme(
         accentGoldHex = "#D97706",
         textPrimaryHex = "#0F172A",
         textSecondaryHex = "#475569",
-        paperEdgeHex = "#CBD5E1"
+        paperEdgeHex = "#CBD5E1",
+        fontBody = "Readex Pro",
+        fontHeadings = "Cairo",
+        fontChapterTitles = "Noto Kufi Arabic",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    LEADERSHIP_PRODUCTIVITY(
+        id = "leadership_productivity",
+        titleAr = "القيادة والإنتاجية وإدارة الحياة",
+        subtitleAr = "إخراج احترافي رصين لكتب الإدارة، التخطيط، وتطوير المهارات",
+        badgeEmoji = "⚡",
+        category = BookTemplateCategory.SELF_DEVELOPMENT,
+        layoutStyle = PublishingLayoutStyle.ACADEMIC_STRUCTURED,
+        bgPrimaryHex = "#F4F7F5",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#E8F3EE",
+        bgSoftSecondaryHex = "#F1F5F9",
+        bgPearlGoldHex = "#FCF6E8",
+        accentPrimaryHex = "#1B4332",
+        accentPrimaryDarkHex = "#081C15",
+        accentPrimaryLightHex = "#2D6A4F",
+        accentSecondaryHex = "#334155",
+        accentSecondaryDarkHex = "#1E293B",
+        accentGoldHex = "#B07D3C",
+        textPrimaryHex = "#111D17",
+        textSecondaryHex = "#455A50",
+        paperEdgeHex = "#C9D6D0",
+        fontBody = "Almarai",
+        fontHeadings = "Cairo",
+        fontChapterTitles = "Noto Kufi Arabic",
+        fontQuotes = "Noto Naskh Arabic",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 6. كتب أسرية واجتماعية وتربوية (Family, Social & Parenting)
+    // =========================================================================
+    FAMILY_PARENTING(
+        id = "family_parenting",
+        titleAr = "كتاب أسري وتربوي",
+        subtitleAr = "ألوان دافئة وحانية تناسب كتب الأسرة، التربية، والعلاقات الزوجية",
+        badgeEmoji = "🏡",
+        category = BookTemplateCategory.FAMILY_SOCIAL,
+        layoutStyle = PublishingLayoutStyle.SOFT_BOTANICAL,
+        bgPrimaryHex = "#FDF8F4",
+        bgSecondaryHex = "#FFFDFB",
+        bgSoftAccentHex = "#FDEEE7",
+        bgSoftSecondaryHex = "#F0F5EE",
+        bgPearlGoldHex = "#FEF7E8",
+        accentPrimaryHex = "#9C4221",
+        accentPrimaryDarkHex = "#652B19",
+        accentPrimaryLightHex = "#DD6B20",
+        accentSecondaryHex = "#4D7C0F",
+        accentSecondaryDarkHex = "#365314",
+        accentGoldHex = "#C68B39",
+        textPrimaryHex = "#2B1E19",
+        textSecondaryHex = "#634C43",
+        paperEdgeHex = "#E4D3C8",
+        fontBody = "Tajawal",
+        fontHeadings = "El Messiri",
+        fontChapterTitles = "Cairo",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    SOCIAL_CULTURAL(
+        id = "social_cultural",
+        titleAr = "كتاب اجتماعي وفكري",
+        subtitleAr = "إخراج رصين وواضح للدراسات الاجتماعية، الفكر، والوعي المجتمعي",
+        badgeEmoji = "🤝",
+        category = BookTemplateCategory.FAMILY_SOCIAL,
+        layoutStyle = PublishingLayoutStyle.CLASSIC_BOOK_PRESS,
+        bgPrimaryHex = "#F6F6F4",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#EFECE6",
+        bgSoftSecondaryHex = "#F1F5F9",
+        bgPearlGoldHex = "#FAF5E8",
+        accentPrimaryHex = "#334155",
+        accentPrimaryDarkHex = "#1E293B",
+        accentPrimaryLightHex = "#64748B",
+        accentSecondaryHex = "#9A3412",
+        accentSecondaryDarkHex = "#7C2D12",
+        accentGoldHex = "#B45309",
+        textPrimaryHex = "#1E293B",
+        textSecondaryHex = "#475569",
+        paperEdgeHex = "#D6D6D2",
+        fontBody = "IBM Plex Sans Arabic",
+        fontHeadings = "Noto Kufi Arabic",
+        fontChapterTitles = "Cairo",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 7. الكتب التعليمية والبحوث العلمية (Educational & Academic Research)
+    // =========================================================================
+    EDUCATIONAL_TEXTBOOK(
+        id = "educational_textbook",
+        titleAr = "كتاب تعليمي ومنهجي",
+        subtitleAr = "منظم بصرياً بصناديق التعريفات، القواعد، الأمثلة، والملخصات التعليمية",
+        badgeEmoji = "🎓",
+        category = BookTemplateCategory.EDUCATIONAL_ACADEMIC,
+        layoutStyle = PublishingLayoutStyle.ACADEMIC_STRUCTURED,
+        bgPrimaryHex = "#F3F8F8",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#E6F3F3",
+        bgSoftSecondaryHex = "#FEF9EE",
+        bgPearlGoldHex = "#FEF6E4",
+        accentPrimaryHex = "#0F5257",
+        accentPrimaryDarkHex = "#093538",
+        accentPrimaryLightHex = "#0D9488",
+        accentSecondaryHex = "#B45309",
+        accentSecondaryDarkHex = "#78350F",
+        accentGoldHex = "#D97706",
+        textPrimaryHex = "#10282A",
+        textSecondaryHex = "#466366",
+        paperEdgeHex = "#C5D8D9",
+        fontBody = "IBM Plex Sans Arabic",
+        fontHeadings = "Noto Kufi Arabic",
+        fontChapterTitles = "Cairo",
+        fontQuotes = "Noto Naskh Arabic",
+        fontQuran = "Amiri Quran"
     ),
     ROYAL_ACADEMIC(
         id = "royal_academic",
-        titleAr = "حلة «الكتاب المعرفي والأكاديمي»",
-        subtitleAr = "أزرق معرفي وورق نقي للمتون العربية والإنجليزية",
+        titleAr = "بحث علمي وأكاديمي محكّم",
+        subtitleAr = "إخراج منهجي رصين للبحوث العلمية، الرسائل الجامعية، والدراسات المرجعية",
         badgeEmoji = "🏛️",
+        category = BookTemplateCategory.EDUCATIONAL_ACADEMIC,
+        layoutStyle = PublishingLayoutStyle.ACADEMIC_STRUCTURED,
         bgPrimaryHex = "#F9FAFB",
         bgSecondaryHex = "#FFFFFF",
         bgSoftAccentHex = "#EFF6FF",
@@ -139,7 +804,70 @@ enum class BookVisualTheme(
         accentGoldHex = "#B45309",
         textPrimaryHex = "#111827",
         textSecondaryHex = "#4B5563",
-        paperEdgeHex = "#D1D5DB"
+        paperEdgeHex = "#D1D5DB",
+        fontBody = "Noto Naskh Arabic",
+        fontHeadings = "Noto Kufi Arabic",
+        fontChapterTitles = "Cairo",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+
+    // =========================================================================
+    // 8. المجلات والبساطة العصرية (Magazines & Minimalist)
+    // =========================================================================
+    CULTURAL_MAGAZINE(
+        id = "cultural_magazine",
+        titleAr = "مجلة ثقافية وإخراج صحفي",
+        subtitleAr = "طابع المجلات الثقافية الفاخرة بعناوين بارزة واقتباسات مميزة",
+        badgeEmoji = "📰",
+        category = BookTemplateCategory.MAGAZINE_MINIMAL,
+        layoutStyle = PublishingLayoutStyle.EDITORIAL_MAGAZINE,
+        bgPrimaryHex = "#FAF8F6",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#FEF2F2",
+        bgSoftSecondaryHex = "#F5F5F4",
+        bgPearlGoldHex = "#FEF8EC",
+        accentPrimaryHex = "#991B1B",
+        accentPrimaryDarkHex = "#450A0A",
+        accentPrimaryLightHex = "#DC2626",
+        accentSecondaryHex = "#292524",
+        accentSecondaryDarkHex = "#1C1917",
+        accentGoldHex = "#B45309",
+        textPrimaryHex = "#1C1917",
+        textSecondaryHex = "#57534E",
+        paperEdgeHex = "#DFDBD7",
+        fontBody = "Almarai",
+        fontHeadings = "Lalezar",
+        fontChapterTitles = "El Messiri",
+        fontQuotes = "Amiri",
+        fontQuran = "Amiri Quran"
+    ),
+    PURE_MINIMALIST(
+        id = "pure_minimalist",
+        titleAr = "ذوق المحبين للبساطة والصفاء",
+        subtitleAr = "تجرد بصري أنيق، بياض هادئ، وتركيز خالص على جمال الحرف والفقرة",
+        badgeEmoji = "🏳️",
+        category = BookTemplateCategory.MAGAZINE_MINIMAL,
+        layoutStyle = PublishingLayoutStyle.PURE_MINIMAL,
+        bgPrimaryHex = "#FAFAFA",
+        bgSecondaryHex = "#FFFFFF",
+        bgSoftAccentHex = "#F4F4F5",
+        bgSoftSecondaryHex = "#F4F4F5",
+        bgPearlGoldHex = "#FAFAFA",
+        accentPrimaryHex = "#27272A",
+        accentPrimaryDarkHex = "#09090B",
+        accentPrimaryLightHex = "#71717A",
+        accentSecondaryHex = "#52525B",
+        accentSecondaryDarkHex = "#27272A",
+        accentGoldHex = "#71717A",
+        textPrimaryHex = "#18181B",
+        textSecondaryHex = "#52525B",
+        paperEdgeHex = "#E4E4E7",
+        fontBody = "Readex Pro",
+        fontHeadings = "Noto Sans Arabic",
+        fontChapterTitles = "IBM Plex Sans Arabic",
+        fontQuotes = "Noto Naskh Arabic",
+        fontQuran = "Amiri Quran"
     );
 
     val arabicName: String get() = titleAr
@@ -149,6 +877,11 @@ enum class BookVisualTheme(
     companion object {
         fun fromId(id: String?): BookVisualTheme {
             return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: ROSE_HEART
+        }
+
+        fun byCategory(category: BookTemplateCategory): List<BookVisualTheme> {
+            if (category == BookTemplateCategory.ALL) return entries
+            return entries.filter { it.category == category }
         }
     }
 }
@@ -285,6 +1018,51 @@ object SmartBookConverter {
             uri = uri,
             originalFileName = originalFileName,
             formatBadge = detectFormatBadge(originalFileName),
+            detectedTitle = semanticMeta.first,
+            detectedSubtitle = semanticMeta.second,
+            detectedAuthor = semanticMeta.third,
+            rawExtractedText = normalizedBody,
+            isRtl = isRtl,
+            language = language,
+            wordCount = words,
+            estimatedPages = estimatedPages,
+            recommendedTheme = recommendedTheme
+        )
+    }
+
+    /**
+     * Inspects raw text pasted from the Clipboard (or typed/shared directly) and produces
+     * a ready-to-customize `ConvertibleBookProposal` with smart genre & template detection.
+     */
+    fun inspectRawText(
+        rawText: String,
+        sourceLabel: String = "CLIPBOARD • نصوص الحافظة",
+        preferredTitle: String? = null,
+        preferredAuthor: String? = null
+    ): ConvertibleBookProposal {
+        val normalizedBody = normalizeArabicFidelity(rawText)
+        if (normalizedBody.isBlank()) {
+            throw IllegalArgumentException("النص المدخل فارغ. يرجى لصق أو كتابة نص لتحويله إلى كتاب.")
+        }
+
+        val (isRtl, language) = detectLanguageAndDirection(normalizedBody)
+        val fallbackTitle = if (isRtl) "إشراقات من الحافظة" else "Clipboard Anthology"
+
+        val semanticMeta = extractTitleSubtitleAndAuthor(
+            rawText = normalizedBody,
+            explicitTitle = preferredTitle?.takeIf { it.isNotBlank() },
+            explicitAuthor = preferredAuthor?.takeIf { it.isNotBlank() },
+            fallbackTitle = fallbackTitle
+        )
+
+        val words = normalizedBody.split(Regex("\\s+")).count { it.isNotBlank() }
+        val estimatedPages = ((words / 100) + 2).coerceAtLeast(2)
+        val recommendedTheme = suggestThemeForContent(semanticMeta.first, normalizedBody, isRtl)
+
+        return ConvertibleBookProposal(
+            uri = null,
+            originalFileName = if (isRtl) "نص_الحافظة.txt" else "clipboard_text.txt",
+            formatBadge = sourceLabel,
             detectedTitle = semanticMeta.first,
             detectedSubtitle = semanticMeta.second,
             detectedAuthor = semanticMeta.third,
@@ -1592,19 +2370,41 @@ object SmartBookConverter {
         }
     }
 
-    private fun suggestThemeForContent(title: String, body: String, isRtl: Boolean): BookVisualTheme {
+    fun suggestThemeForContent(title: String, body: String, isRtl: Boolean): BookVisualTheme {
         if (!isRtl) return BookVisualTheme.ROYAL_ACADEMIC
-        val sample = (title + " " + body.take(1500))
+        val sample = stripArabicDiacriticsForMatching(title + " " + body.take(2000)).lowercase()
         return when {
-            sample.contains("فتاة") || sample.contains("ابنتي") || sample.contains("قلب") || sample.contains("رسالة") ->
-                BookVisualTheme.ROSE_HEART
-            sample.contains("خيمة") || sample.contains("سكينة") || sample.contains("مودة") ->
+            sample.contains("حديث") || sample.contains("حدثنا") || sample.contains("روى البخاري") || sample.contains("روى مسلم") || sample.contains("متن") ->
+                BookVisualTheme.HADITH_SUNNAH
+            sample.contains("تفسير") || sample.contains("تدبر") || sample.contains("سورة ") || sample.contains("آية") ->
+                BookVisualTheme.QURAN_TAFSIR
+            sample.contains("فتاة") || sample.contains("ابنتي") || sample.contains("مذكرات") || sample.contains("يومياتي") ->
+                BookVisualTheme.GIRLS_BLUSH_DIARY
+            sample.contains("خيمة") || sample.contains("أنثى") || sample.contains("ملكة") ->
                 BookVisualTheme.VELVET_TENT
-            sample.contains("قرآن") || sample.contains("تفسير") || sample.contains("حديث") || sample.contains("فقه") || sample.contains("إيمان") ->
+            sample.contains("محاسبة") || sample.contains("جرعة") || sample.contains("توبة") || sample.contains("أبو شادي") ->
+                BookVisualTheme.FAITH_REVIVAL
+            sample.contains("موقف") || sample.contains("استمتع") || sample.contains("العريفي") || sample.contains("عمرو خالد") ->
+                BookVisualTheme.DAWAH_INSPIRATION
+            sample.contains("قرآن") || sample.contains("فقه") || sample.contains("إيمان") || sample.contains("عقيدة") || sample.contains("صلاة") ->
                 BookVisualTheme.ISLAMIC_EMERALD
-            sample.contains("شباب") || sample.contains("مستقبل") || sample.contains("نجاح") || sample.contains("علوم") ->
+            sample.contains("رواية") || sample.contains("كان يا ما كان") || sample.contains("قصة") || sample.contains("حكاية") ->
+                BookVisualTheme.STORY_NARRATIVE
+            sample.contains("قصيدة") || sample.contains("شعر") || sample.contains("خواطر") || sample.contains("ديوان") ->
+                BookVisualTheme.POETRY_THOUGHTS
+            sample.contains("أسرة") || sample.contains("تربية") || sample.contains("أبناء") || sample.contains("زواج") || sample.contains("بيت") ->
+                BookVisualTheme.FAMILY_PARENTING
+            sample.contains("بحث") || sample.contains("دراسة") || sample.contains("أكاديمي") || sample.contains("المراجع") || sample.contains("منهجية") ->
+                BookVisualTheme.ROYAL_ACADEMIC
+            sample.contains("درس") || sample.contains("تعريف") || sample.contains("منهج") || sample.contains("تعليم") ->
+                BookVisualTheme.EDUCATIONAL_TEXTBOOK
+            sample.contains("نجاح") || sample.contains("تنمية") || sample.contains("عادات") || sample.contains("أهداف") || sample.contains("إنتاجية") ->
+                BookVisualTheme.SELF_DEVELOPMENT
+            sample.contains("شباب") || sample.contains("مستقبل") || sample.contains("علوم") ->
                 BookVisualTheme.YOUTH_HORIZON
-            else -> BookVisualTheme.ROSE_HEART
+            sample.contains("قلب") || sample.contains("رسالة") || sample.contains("سكينة") || sample.contains("مودة") ->
+                BookVisualTheme.ROSE_HEART
+            else -> BookVisualTheme.CREAM_BEIGE_PAPER
         }
     }
 
@@ -2020,35 +2820,68 @@ object SmartBookConverter {
             """.trimIndent()
         }
 
-        // 4. Pearls, Whispers, Summaries, Keepsakes (`خلاصة`, `همسة`, `فائدة`, `درة`, `وصية`, `تقول `)
+        // 4. Pearls, Whispers, Summaries, Da'wah Stories, Self-Help Actions & Academic Definitions
         val pearlPrefixes = listOf(
             "خلاصة", "همسة", "فائدة", "درة", "وصية", "قاعدة", "إشراقة", "تأمل", "تقول ", "حكمة",
-            "note:", "key takeaway:", "summary:", "tip:", "reflection:"
+            "جرعة إيمانية", "محاسبة", "واجب عملي", "خطوة عملية", "تطبيق عملي", "تدريب",
+            "موقف وعبرة", "موقف", "عبرة", "قصة قصيرة", "إضاءة", "قاعدة ذهبية",
+            "تعريف", "مفهوم", "مثال تطبيقي", "مثال", "ملاحظة هامة", "ملاحظة", "نتيجة",
+            "note:", "key takeaway:", "summary:", "tip:", "reflection:", "definition:", "example:", "action step:"
         )
         val matchedPearlPrefix = pearlPrefixes.firstOrNull { unvocalized.lowercase().startsWith(it) }
         if (matchedPearlPrefix != null) {
             val parts = trimmed.split(Regex("[:：\\-—]"), limit = 2)
-            val badge = if (parts.size == 2 && parts[0].length <= 35) parts[0].trim() else (if (isRtl) "✦ درة وإشراقة" else "✦ Key Insight")
+            val badge = if (parts.size == 2 && parts[0].length <= 42) parts[0].trim() else (if (isRtl) "✦ درة وإشراقة" else "✦ Key Insight")
             val content = if (parts.size == 2 && parts[1].isNotBlank()) parts[1].trim() else trimmed
 
-            return if (unvocalized.startsWith("همسة") || unvocalized.startsWith("وصية")) {
-                """
-                <div class="heart-keepsake-card">
-                  <div class="heart-badge">🌸 ${escapeHtml(badge)}</div>
-                  <p>${escapeHtml(content)}</p>
-                </div>
-                """.trimIndent()
-            } else {
-                """
-                <div class="wisdom-pearl">
-                  <span class="wisdom-badge">✦ ${escapeHtml(badge)}</span>
-                  ${escapeHtml(content)}
-                </div>
+            return when {
+                unvocalized.startsWith("همسة") || unvocalized.startsWith("وصية") || unvocalized.startsWith("جرعة") ->
+                    """
+                    <div class="heart-keepsake-card">
+                      <div class="heart-badge">🌸 ${escapeHtml(badge)}</div>
+                      <p>${formatInlineHighlights(escapeHtml(content))}</p>
+                    </div>
+                    """.trimIndent()
+                unvocalized.startsWith("خطوة") || unvocalized.startsWith("واجب") || unvocalized.startsWith("تطبيق") || unvocalized.startsWith("تدريب") || unvocalized.startsWith("محاسبة") ->
+                    """
+                    <div class="wisdom-pearl action-callout">
+                      <span class="wisdom-badge">🎯 ${escapeHtml(badge)}</span>
+                      ${formatInlineHighlights(escapeHtml(content))}
+                    </div>
+                    """.trimIndent()
+                unvocalized.startsWith("تعريف") || unvocalized.startsWith("مفهوم") || unvocalized.startsWith("مثال") || unvocalized.startsWith("نتيجة") ->
+                    """
+                    <div class="wisdom-pearl academic-callout">
+                      <span class="wisdom-badge">📘 ${escapeHtml(badge)}</span>
+                      ${formatInlineHighlights(escapeHtml(content))}
+                    </div>
+                    """.trimIndent()
+                else ->
+                    """
+                    <div class="wisdom-pearl">
+                      <span class="wisdom-badge">✦ ${escapeHtml(badge)}</span>
+                      ${formatInlineHighlights(escapeHtml(content))}
+                    </div>
+                    """.trimIndent()
+            }
+        }
+
+        // 5. Poetry Bait / Stanza detection (lines containing `***` or `...` separating two hemistichs)
+        if (trimmed.contains(" *** ") || (trimmed.contains(" ... ") && trimmed.length <= 130 && !trimmed.endsWith("."))) {
+            val delimiter = if (trimmed.contains(" *** ")) " *** " else " ... "
+            val hemistichs = trimmed.split(delimiter, limit = 2).map { it.trim() }
+            if (hemistichs.size == 2 && hemistichs[0].isNotEmpty() && hemistichs[1].isNotEmpty()) {
+                return """
+                    <div class="poetry-stanza">
+                      <div class="poetry-shatr">${escapeHtml(hemistichs[0])}</div>
+                      <div class="poetry-ornament">✦</div>
+                      <div class="poetry-shatr">${escapeHtml(hemistichs[1])}</div>
+                    </div>
                 """.trimIndent()
             }
         }
 
-        // 5. Numbered or Bulleted Step Card
+        // 6. Numbered or Bulleted Step Card
         val stepMatch = Regex("^([0-9٠-٩]{1,2})[.)\\-]\\s+(.+)$", RegexOption.DOT_MATCHES_ALL).find(trimmed)
         if (stepMatch != null) {
             val num = stepMatch.groupValues[1]
@@ -2071,7 +2904,7 @@ object SmartBookConverter {
             """.trimIndent()
         }
 
-        // 6. Standard Narrative Paragraph (with inline Quranic/Quote highlighting)
+        // 7. Standard Narrative Paragraph (with inline Quranic/Quote highlighting)
         return "<p dir=\"auto\">${formatInlineHighlights(escapeHtml(trimmed))}</p>"
     }
 
@@ -2180,9 +3013,9 @@ object SmartBookConverter {
     }
 
     private fun buildThemeSvgEmblem(theme: BookVisualTheme): String {
-        return when (theme) {
-            BookVisualTheme.ROSE_HEART -> """
-                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار الزهرة المذهبة">
+        return when (theme.layoutStyle) {
+            PublishingLayoutStyle.SOFT_BOTANICAL -> """
+                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="${theme.titleAr}">
                   <circle cx="120" cy="120" r="108" fill="${theme.bgPrimaryHex}" stroke="${theme.accentGoldHex}" stroke-width="1.8" stroke-dasharray="4 3"/>
                   <circle cx="120" cy="120" r="95" fill="${theme.bgSecondaryHex}" stroke="${theme.accentPrimaryHex}" stroke-width="1.5"/>
                   <path d="M60 140 C 50 110, 70 75, 120 60 C 170 75, 190 110, 180 140" stroke="${theme.accentSecondaryHex}" stroke-width="2.2" stroke-linecap="round"/>
@@ -2199,19 +3032,8 @@ object SmartBookConverter {
                 </svg>
             """.trimIndent()
 
-            BookVisualTheme.VELVET_TENT -> """
-                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار خيمة السكينة">
-                  <circle cx="120" cy="120" r="108" fill="${theme.bgPrimaryHex}" stroke="${theme.accentGoldHex}" stroke-width="1.8" stroke-dasharray="5 3"/>
-                  <circle cx="120" cy="120" r="94" fill="${theme.bgSecondaryHex}" stroke="${theme.accentPrimaryHex}" stroke-width="1.5"/>
-                  <path d="M120 56 L62 162 H178 L120 56 Z" fill="${theme.bgSoftAccentHex}" stroke="${theme.accentPrimaryHex}" stroke-width="2"/>
-                  <path d="M120 56 L96 162 H144 L120 56 Z" fill="${theme.accentPrimaryHex}" fill-opacity="0.22" stroke="${theme.accentGoldHex}" stroke-width="1.4"/>
-                  <circle cx="120" cy="44" r="6" fill="${theme.accentGoldHex}"/>
-                  <path d="M52 164 H188" stroke="${theme.accentGoldHex}" stroke-width="2.2" stroke-linecap="round"/>
-                </svg>
-            """.trimIndent()
-
-            BookVisualTheme.ISLAMIC_EMERALD -> """
-                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شمسية المخطوطة الإيمانية">
+            PublishingLayoutStyle.HERITAGE_ORNATE -> """
+                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="${theme.titleAr}">
                   <circle cx="120" cy="120" r="108" fill="${theme.bgPrimaryHex}" stroke="${theme.accentGoldHex}" stroke-width="2"/>
                   <circle cx="120" cy="120" r="92" fill="${theme.bgSecondaryHex}" stroke="${theme.accentPrimaryHex}" stroke-width="1.6"/>
                   <rect x="74" y="74" width="92" height="92" rx="8" stroke="${theme.accentGoldHex}" stroke-width="1.8" fill="${theme.bgSoftAccentHex}"/>
@@ -2221,8 +3043,8 @@ object SmartBookConverter {
                 </svg>
             """.trimIndent()
 
-            BookVisualTheme.YOUTH_HORIZON -> """
-                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار آفاق الشباب والعلوم">
+            PublishingLayoutStyle.DAWAH_MOTIVATIONAL -> """
+                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="${theme.titleAr}">
                   <circle cx="120" cy="120" r="108" fill="${theme.bgPrimaryHex}" stroke="${theme.accentPrimaryHex}" stroke-width="1.8" stroke-dasharray="6 4"/>
                   <circle cx="120" cy="120" r="92" fill="${theme.bgSecondaryHex}" stroke="${theme.accentGoldHex}" stroke-width="1.5"/>
                   <polygon points="120,48 138,102 192,120 138,138 120,192 102,138 48,120 102,102" fill="${theme.bgSoftAccentHex}" stroke="${theme.accentPrimaryDarkHex}" stroke-width="1.8"/>
@@ -2231,8 +3053,18 @@ object SmartBookConverter {
                 </svg>
             """.trimIndent()
 
-            BookVisualTheme.ROYAL_ACADEMIC -> """
-                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="شعار الكتاب المعرفي والأكاديمي">
+            PublishingLayoutStyle.CLASSIC_BOOK_PRESS, PublishingLayoutStyle.NARRATIVE_STORY -> """
+                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="${theme.titleAr}">
+                  <rect x="28" y="28" width="184" height="184" rx="22" fill="${theme.bgPrimaryHex}" stroke="${theme.accentGoldHex}" stroke-width="2"/>
+                  <rect x="40" y="40" width="160" height="160" rx="16" fill="${theme.bgSecondaryHex}" stroke="${theme.accentPrimaryHex}" stroke-width="1.4" stroke-dasharray="4 3"/>
+                  <path d="M74 92 C 92 84, 112 88, 120 96 C 128 88, 148 84, 166 92 V 154 C 148 146, 128 150, 120 158 C 112 150, 92 146, 74 154 Z" fill="${theme.bgSoftAccentHex}" stroke="${theme.accentPrimaryDarkHex}" stroke-width="1.8"/>
+                  <line x1="120" y1="96" x2="120" y2="158" stroke="${theme.accentGoldHex}" stroke-width="1.8"/>
+                  <circle cx="120" cy="70" r="5.5" fill="${theme.accentGoldHex}"/>
+                </svg>
+            """.trimIndent()
+
+            PublishingLayoutStyle.ACADEMIC_STRUCTURED, PublishingLayoutStyle.EDITORIAL_MAGAZINE, PublishingLayoutStyle.PURE_MINIMAL -> """
+                <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="${theme.titleAr}">
                   <circle cx="120" cy="120" r="108" fill="${theme.bgPrimaryHex}" stroke="${theme.accentGoldHex}" stroke-width="1.8"/>
                   <circle cx="120" cy="120" r="94" fill="${theme.bgSecondaryHex}" stroke="${theme.accentPrimaryHex}" stroke-width="1.5"/>
                   <path d="M68 86 C 88 78, 112 82, 120 92 C 128 82, 152 78, 172 86 V 158 C 152 150, 128 154, 120 164 C 112 154, 88 150, 68 158 Z" fill="${theme.bgSoftAccentHex}" stroke="${theme.accentPrimaryDarkHex}" stroke-width="2"/>
@@ -2315,11 +3147,11 @@ object SmartBookConverter {
   --reader-font-size: 100%;
   --font-scale: 1;
 
-  --font-body: "Noto Naskh Arabic", "Amiri", serif;
-  --font-headings: "Aref Ruqaa", "Amiri", serif;
-  --font-chapter-titles: "Reem Kufi", "Noto Kufi Arabic", sans-serif;
-  --font-quotes: "Amiri", "Noto Naskh Arabic", serif;
-  --font-quran: "Amiri Quran", "Amiri", serif;
+  --font-body: "${theme.fontBody}", "Noto Naskh Arabic", "Amiri", serif;
+  --font-headings: "${theme.fontHeadings}", "Aref Ruqaa", "Amiri", serif;
+  --font-chapter-titles: "${theme.fontChapterTitles}", "Reem Kufi", "Noto Kufi Arabic", sans-serif;
+  --font-quotes: "${theme.fontQuotes}", "Amiri", "Noto Naskh Arabic", serif;
+  --font-quran: "${theme.fontQuran}", "Amiri Quran", "Amiri", serif;
   --font-interface: "Noto Sans Arabic", "Cairo", "IBM Plex Sans Arabic", sans-serif;
   --font-numbers: "Noto Sans Arabic", "Cairo", sans-serif;
   --reader-family: var(--font-body);
@@ -2351,6 +3183,7 @@ object SmartBookConverter {
   font-style: normal;
   font-display: swap;
 }
+${buildLayoutVariantCss(theme)}
 
 * {
   box-sizing: border-box;
@@ -3425,6 +4258,144 @@ mark.search-hit-mark, mark.page-search-highlight {
   </script>
 </body>
 </html>"""
+    }
+
+    private fun buildLayoutVariantCss(theme: BookVisualTheme): String {
+        val commonComponents = """
+.poetry-stanza {
+  margin: 16px 0;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--bg-soft-rose), var(--bg-secondary));
+  border: 1px dashed var(--accent-gold);
+  text-align: center;
+  font-family: var(--font-quotes);
+}
+.poetry-shatr {
+  font-size: 1.06em;
+  color: var(--accent-rose-dark);
+  line-height: 1.95;
+}
+.poetry-ornament {
+  color: var(--accent-gold);
+  font-size: 0.78em;
+  margin: 2px 0;
+}
+.action-callout {
+  background: linear-gradient(135deg, var(--bg-soft-rose), var(--bg-pearl-gold));
+  border-inline-start: 4px solid var(--accent-rose);
+}
+.academic-callout {
+  background: var(--bg-soft-sage);
+  border-inline-start: 4px solid var(--accent-sage-dark);
+  border-radius: 8px;
+}
+        """.trimIndent()
+
+        val styleSpecific = when (theme.layoutStyle) {
+            PublishingLayoutStyle.HERITAGE_ORNATE -> """
+.page-canvas {
+  border: 2px solid var(--accent-gold);
+  outline: 1px solid var(--accent-gold-soft);
+  outline-offset: -7px;
+  box-shadow: inset 0 0 28px rgba(180,123,38,0.06), var(--shadow-card);
+}
+.page h1 {
+  text-align: center;
+  border-bottom: 1.5px double var(--accent-gold-soft);
+  padding-bottom: 8px;
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.CLASSIC_BOOK_PRESS -> """
+.page-canvas {
+  border-radius: 10px;
+  box-shadow: inset 0 0 36px rgba(124,77,43,0.06), 0 12px 30px rgba(30,20,10,0.08);
+}
+.running-header {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-bottom: 1.5px double var(--paper-edge);
+}
+.running-header-mark {
+  color: var(--accent-rose-dark);
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.SOFT_BOTANICAL -> """
+.page-canvas {
+  border-radius: 22px;
+  border: 1.5px solid var(--paper-edge);
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.DAWAH_MOTIVATIONAL -> """
+.letter-envelope-header {
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-rose-dark));
+  border-color: var(--accent-gold);
+}
+.letter-envelope-title {
+  color: #FFFFFF;
+}
+.wisdom-pearl {
+  border-inline-start-width: 5px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.NARRATIVE_STORY -> """
+.page p {
+  text-indent: 1.1em;
+  line-height: 2.12;
+}
+.page h1 {
+  text-align: center;
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.ACADEMIC_STRUCTURED -> """
+.page-canvas {
+  border-radius: 8px;
+  border-top: 4px solid var(--accent-rose);
+}
+.page h1 {
+  border-inline-start: 4px solid var(--accent-rose);
+  padding-inline-start: 10px;
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.EDITORIAL_MAGAZINE -> """
+.page-canvas {
+  border-radius: 12px;
+  border-top: 5px solid var(--accent-rose);
+}
+.page h1 {
+  letter-spacing: 0.2px;
+  border-bottom: 2px solid var(--accent-rose);
+  padding-bottom: 6px;
+}
+            """.trimIndent()
+
+            PublishingLayoutStyle.PURE_MINIMAL -> """
+.app {
+  background: var(--bg-primary);
+}
+.page-canvas {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+}
+.running-header {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--paper-edge);
+}
+.running-header-mark {
+  color: var(--text-primary);
+}
+            """.trimIndent()
+        }
+
+        return "$commonComponents\n$styleSpecific"
     }
 
     private fun escapeHtml(text: String): String {

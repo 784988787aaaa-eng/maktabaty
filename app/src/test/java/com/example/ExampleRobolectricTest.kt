@@ -1254,6 +1254,69 @@ class ExampleRobolectricTest {
         docxFile.delete()
         rtfFile.delete()
     }
+
+    @Test
+    fun testPublishingTemplatesCatalogAndClipboardStudioConversion(): Unit = runBlocking {
+        val allThemes = com.example.data.importer.BookVisualTheme.entries
+        assertTrue("Catalog must contain at least 26 diverse publishing templates", allThemes.size >= 26)
+
+        // Verify no obscure internal book titles remain in template names
+        for (theme in allThemes) {
+            assertFalse("Template ${theme.id} should not use old book name رسائل القلب", theme.arabicName.contains("رسائل القلب"))
+            assertFalse("Template ${theme.id} should not use old book name خيمة السكينة", theme.arabicName.contains("خيمة السكينة"))
+            assertTrue("Template ${theme.id} must have a clear Arabic name", theme.arabicName.isNotBlank())
+            assertTrue("Template ${theme.id} must have a clear subtitle description", theme.subtitleDescription.isNotBlank())
+        }
+
+        // Verify all 8 specialized categories are populated
+        val nonAllCategories = com.example.data.importer.BookTemplateCategory.entries.filter {
+            it != com.example.data.importer.BookTemplateCategory.ALL
+        }
+        assertEquals(8, nonAllCategories.size)
+        for (cat in nonAllCategories) {
+            val countInCat = allThemes.count { it.category == cat }
+            assertTrue("Category ${cat.titleAr} must have templates", countInCat >= 2)
+        }
+
+        // Verify Clipboard-to-Masterpiece raw text inspection & conversion
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+
+        val clipboardText = """
+            خُطُوَاتٌ نَحْوَ السَّكِينَةِ وَالنَّجَاحِ
+            تأليف: د. سَامِي العُمَرِي
+
+            الفصل الأول: صِنَاعَةُ الأَثَرِ وَتَجْدِيدُ الإِيمَانِ
+            قال تعالى: ﴿ إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّى يُغَيِّرُوا مَا بِأَنْفُسِهِمْ ﴾
+
+            خطوة عملية: ابدأ يومك بدقائق من التدبر والتخطيط الهادئ قبل الانشغال بهاتفك، فالبدايات الصادقة تصنع النهايات المشرقة.
+
+            إِذَا غَامَرْتَ فِي شَرَفٍ مَرُومِ ... فَلَا تَقْنَعْ بِمَا دُونَ النُّجُومِ
+        """.trimIndent()
+
+        val proposal = repository.inspectRawText(clipboardText).getOrThrow()
+        assertTrue(proposal.detectedTitle.contains("خُطُوَاتٌ نَحْوَ السَّكِينَةِ"))
+        assertTrue(proposal.detectedAuthor.contains("سَامِي العُمَرِي"))
+        assertTrue(proposal.isRtl)
+
+        // Convert with Beige Paper template and Da'wah Inspiration template
+        val beigeBook = repository.convertAndImportRawText(
+            rawText = clipboardText,
+            customTitle = proposal.detectedTitle,
+            customSubtitle = "طبعة ورق بيج مريح للعين",
+            customAuthor = proposal.detectedAuthor,
+            theme = com.example.data.importer.BookVisualTheme.CREAM_BEIGE_PAPER
+        ).getOrThrow()
+
+        assertEquals("#F2E9D8", beigeBook.bgPrimaryHex)
+        val beigeHtmlFile = repository.getBookAbsoluteFile(beigeBook)
+        assertTrue(beigeHtmlFile.exists())
+        val beigeHtml = beigeHtmlFile.readText(Charsets.UTF_8)
+        assertTrue(beigeHtml.contains("action-callout"))
+        assertTrue(beigeHtml.contains("poetry-stanza"))
+        assertTrue(beigeHtml.contains("--font-body: \"Noto Naskh Arabic\""))
+    }
 }
+
 
 

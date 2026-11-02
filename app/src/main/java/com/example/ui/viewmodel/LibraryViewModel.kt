@@ -99,6 +99,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     val pendingConversionProposal = MutableStateFlow<ConvertibleBookProposal?>(null)
     private val conversionProposalQueue = ArrayDeque<ConvertibleBookProposal>()
 
+    // Interactive Clipboard & Raw Text to Luxury Book Studio state
+    val isClipboardStudioOpen = MutableStateFlow(false)
+    val clipboardStudioInitialText = MutableStateFlow("")
+
     // True when launched directly via ACTION_VIEW / ACTION_SEND so LibraryScreen never flashes
     val isOpeningExternalFile = MutableStateFlow(false)
 
@@ -353,6 +357,70 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun cancelConversionProposal() {
         advanceNextConversionProposalOrClear()
+    }
+
+    fun readSystemClipboardText(): String {
+        return runCatching {
+            val clipboard = getApplication<Application>().getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            val clip = clipboard?.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                val text = clip.getItemAt(0).coerceToText(getApplication())?.toString().orEmpty()
+                text.trim()
+            } else {
+                ""
+            }
+        }.getOrDefault("")
+    }
+
+    fun openClipboardStudio(initialText: String = "") {
+        val resolvedText = if (initialText.isNotBlank()) {
+            initialText.trim()
+        } else {
+            readSystemClipboardText()
+        }
+        clipboardStudioInitialText.value = resolvedText
+        isClipboardStudioOpen.value = true
+    }
+
+    fun closeClipboardStudio() {
+        isClipboardStudioOpen.value = false
+    }
+
+    fun convertRawTextAndImportBook(
+        rawText: String,
+        customTitle: String? = null,
+        customSubtitle: String? = null,
+        customAuthor: String? = null,
+        theme: BookVisualTheme? = null,
+        onComplete: ((Book?) -> Unit)? = null
+    ) {
+        val cleanText = rawText.trim()
+        if (cleanText.isBlank()) {
+            importState.value = ImportState.Error("يرجى لصق أو كتابة نص لتحويله إلى كتاب تفاعلي")
+            return
+        }
+        isClipboardStudioOpen.value = false
+        viewModelScope.launch {
+            val chosenName = theme?.arabicName ?: "قالب النشر المختار"
+            importState.value = ImportState.Loading("جاري صياغة الكتاب التفاعلي الفاخر بحلة «$chosenName»...")
+            val result = repository.convertAndImportRawText(
+                rawText = cleanText,
+                customTitle = customTitle,
+                customSubtitle = customSubtitle,
+                customAuthor = customAuthor,
+                theme = theme
+            )
+            result.onSuccess { book ->
+                importState.value = ImportState.Success(book, 1)
+                if (_connectedGoogleEmail.value != null) {
+                    triggerAutoCloudBackup()
+                }
+                onComplete?.invoke(book)
+            }.onFailure { err ->
+                importState.value = ImportState.Error(err.message ?: "تعذر صياغة وتحويل النص إلى كتاب")
+                onComplete?.invoke(null)
+            }
+        }
     }
 
     fun importMultipleBooks(uris: List<Uri>, onComplete: ((List<Book>) -> Unit)? = null) {

@@ -70,6 +70,11 @@ class MainActivity : ComponentActivity() {
             }
             if (streamUri != null) {
                 viewModel.openExternalUriImmediately(streamUri)
+            } else {
+                val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (!sharedText.isNullOrBlank()) {
+                    viewModel.openClipboardStudio(sharedText)
+                }
             }
         }
     }

@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,8 +42,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,7 +75,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.typography.BookTypographyProfile
-import com.example.data.typography.EditorialTypographyPreset
 import com.example.data.typography.FontCategory
 import com.example.data.typography.MaktabatiFontRegistry
 import com.example.data.typography.RegisteredArabicFont
@@ -88,8 +84,8 @@ import com.example.ui.theme.fontFamilyForName
 private data class TypographyRoleItem(
     val index: Int,
     val labelAr: String,
-    val descriptionAr: String,
     val samplePhrase: String,
+    val preferredCategory: FontCategory,
     val getSelectedFont: (BookTypographyProfile) -> String,
     val updateFont: (BookTypographyProfile, String) -> BookTypographyProfile
 )
@@ -107,7 +103,6 @@ fun TypographySettingsDialog(
 
     var draftPrefs by remember(currentPreferences) { mutableStateOf(currentPreferences) }
     var selectedRoleIndex by remember { mutableIntStateOf(0) }
-    var selectedCategory by remember { mutableStateOf(FontCategory.ALL) }
     var isEditingPreviewText by remember { mutableStateOf(false) }
     var importFeedbackMessage by remember { mutableStateOf<String?>(null) }
     var fontRegistryRefreshTick by remember { mutableIntStateOf(0) }
@@ -117,56 +112,56 @@ fun TypographySettingsDialog(
             TypographyRoleItem(
                 index = 0,
                 labelAr = "المتن والسرد",
-                descriptionAr = "خط الفقرات والنصوص السردية الطويلة داخل صفحات الكتاب",
-                samplePhrase = "وَمَا السَّكِينَةُ إِلَّا خَيْمَةٌ تُضْرَبُ فِي أَعْمَاقِ القَلْبِ فَتَسْكُنُ إِلَيْهَا الرُّوحُ.",
+                samplePhrase = "وَمَا السَّكِينَةُ إِلَّا خَيْمَةٌ تُضْرَبُ فِي أَعْمَاقِ القَلْبِ",
+                preferredCategory = FontCategory.BOOKS_NARRATIVE,
                 getSelectedFont = { it.body },
                 updateFont = { prof, f -> prof.copy(body = f) }
             ),
             TypographyRoleItem(
                 index = 1,
                 labelAr = "آيات القرآن",
-                descriptionAr = "خط الرسم المصحفي والآيات القرآنية الكريمة والتشكيل الكامل",
-                samplePhrase = "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾ • ﴿ وَقُلْ رَبِّ زِدْنِي عِلْمًا ﴾",
+                samplePhrase = "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾",
+                preferredCategory = FontCategory.QURAN_HERITAGE,
                 getSelectedFont = { it.quran },
                 updateFont = { prof, f -> prof.copy(quran = f) }
             ),
             TypographyRoleItem(
                 index = 2,
-                labelAr = "العناوين الرئيسية",
-                descriptionAr = "خط عناوين الصفحات والمباحث والرسائل الفرعية (H1, H2, H3)",
-                samplePhrase = "خَيْمَةٌ فِي القَلْبِ — إِشْرَاقَةُ البِنَاءِ وَاليَقِينِ",
+                labelAr = "العناوين",
+                samplePhrase = "خَيْمَةٌ فِي القَلْبِ — إِشْرَاقَةُ اليَقِينِ",
+                preferredCategory = FontCategory.HEADINGS_DISPLAY,
                 getSelectedFont = { it.headings },
                 updateFont = { prof, f -> prof.copy(headings = f) }
             ),
             TypographyRoleItem(
                 index = 3,
                 labelAr = "الأبواب والفصول",
-                descriptionAr = "خط شارات الأبواب وعناوين الفصول الكبرى وفواصل الأقسام",
-                samplePhrase = "البَابُ الأَوَّلُ: مَلاذُ السَّكِينَةِ وَطُمَأْنِينَةُ الرُّوحِ",
+                samplePhrase = "البَابُ الأَوَّلُ: مَلاذُ السَّكِينَةِ",
+                preferredCategory = FontCategory.HEADINGS_DISPLAY,
                 getSelectedFont = { it.chapterTitles },
                 updateFont = { prof, f -> prof.copy(chapterTitles = f) }
             ),
             TypographyRoleItem(
                 index = 4,
                 labelAr = "المذكرات والدرر",
-                descriptionAr = "خط بطاقات الاقتباس والمذكرات اليومية والهمسات والأبيات الشعرية",
-                samplePhrase = "«إِنَّ القُلُوبَ إِذَا اتَّصَلَتْ بِبَارِئِهَا أَزْهَرَتْ وَلَوْ أَحَاطَ بِهَا الرُّكَامُ»",
+                samplePhrase = "«إِنَّ القُلُوبَ إِذَا اتَّصَلَتْ بِبَارِئِهَا أَزْهَرَتْ»",
+                preferredCategory = FontCategory.DIARIES_CALLIGRAPHY,
                 getSelectedFont = { it.quotes },
                 updateFont = { prof, f -> prof.copy(quotes = f) }
             ),
             TypographyRoleItem(
                 index = 5,
                 labelAr = "الفهارس والواجهة",
-                descriptionAr = "خط الشريط العلوي، زر الفهرس المنبثق، البحث، وأزرار التنقل",
-                samplePhrase = "فهرس الكتاب • البحث الفوري • حفظ علامة مرجعية",
+                samplePhrase = "فهرس الكتاب • البحث الفوري • العلامات",
+                preferredCategory = FontCategory.BOOKS_NARRATIVE,
                 getSelectedFont = { it.interfaceFont },
                 updateFont = { prof, f -> prof.copy(interfaceFont = f) }
             ),
             TypographyRoleItem(
                 index = 6,
-                labelAr = "الأرقام والعدادات",
-                descriptionAr = "خط أرقام الصفحات وعدادات التقدم والفهارس المجدولة",
-                samplePhrase = "صفحة ١٢ من ١٠٥ • 105 / 12 • 100%",
+                labelAr = "الأرقام",
+                samplePhrase = "صفحة ١٢ من ١٠٥ • 100%",
+                preferredCategory = FontCategory.BOOKS_NARRATIVE,
                 getSelectedFont = { it.numbers },
                 updateFont = { prof, f -> prof.copy(numbers = f) }
             )
@@ -176,7 +171,6 @@ fun TypographySettingsDialog(
     val activeRole = roles[selectedRoleIndex.coerceIn(0, roles.lastIndex)]
     val selectedFontForRole = activeRole.getSelectedFont(draftPrefs.profile)
 
-    // Launcher for importing user custom font (.ttf / .otf / .woff2)
     val customFontPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -192,8 +186,7 @@ fun TypographySettingsDialog(
                 )
                 draftPrefs = updated
                 onUpdatePreferences(updated)
-                selectedCategory = FontCategory.ALL
-                importFeedbackMessage = "تمت إضافة الخط «${importedFont.arabicDisplayName}» وتطبيقه بنجاح ✨"
+                importFeedbackMessage = "تمت إضافة الخط «${cleanArabicFontTitle(importedFont.arabicDisplayName)}» وتطبيقه ✨"
             }.onFailure { err ->
                 importFeedbackMessage = err.message ?: "تعذر استيراد ملف الخط"
             }
@@ -204,12 +197,12 @@ fun TypographySettingsDialog(
         MaktabatiFontRegistry.registeredFonts
     }
 
-    val filteredFonts = remember(allFonts, selectedCategory) {
-        if (selectedCategory == FontCategory.ALL) {
-            allFonts
-        } else {
-            allFonts.filter { it.category == selectedCategory }
-        }
+    // Automatically sort fonts so user-imported fonts and fonts matching the active role appear first
+    val orderedFonts = remember(allFonts, activeRole) {
+        allFonts.sortedWith(
+            compareByDescending<RegisteredArabicFont> { it.isUserCustom }
+                .thenByDescending { it.category == activeRole.preferredCategory }
+        )
     }
 
     val customPreviewActive = draftPrefs.customPreviewText.isNotBlank() &&
@@ -220,28 +213,28 @@ fun TypographySettingsDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(26.dp),
+            shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp,
-            shadowElevation = 20.dp,
+            tonalElevation = 6.dp,
+            shadowElevation = 18.dp,
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.92f)
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.88f)
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
-                    shape = RoundedCornerShape(26.dp)
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(24.dp)
                 )
                 .testTag("typography_settings_dialog")
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // =========================================================================
-                // 1. Unified Compact Header (Title + Master Switch + Close Button)
+                // 1. Simple, Calm Header (Title + Master Switch + Close)
                 // =========================================================================
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 10.dp, top = 12.dp, bottom = 10.dp),
+                        .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -252,7 +245,7 @@ fun TypographySettingsDialog(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
                                 .background(
                                     Brush.linearGradient(
@@ -268,36 +261,34 @@ fun TypographySettingsDialog(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                         Column {
                             Text(
-                                text = "استوديو الخطوط الطباعية",
+                                text = "استوديو الخطوط",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = if (draftPrefs.useCustomTypography) {
-                                    "تخصيصك مفعل على جميع الكتب"
+                                    "التخصيص مفعّل"
                                 } else {
-                                    "الهوية الخطية الأصلية لكل كتاب"
+                                    "الخط الأصلي للكتاب"
                                 },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (draftPrefs.useCustomTypography) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                }
                             )
                         }
                     }
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Switch(
                             checked = draftPrefs.useCustomTypography,
@@ -323,325 +314,148 @@ fun TypographySettingsDialog(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                 // =========================================================================
-                // 2. Unified Scrollable Studio Body
+                // 2. Pinned Top Control Area (Focused Live Preview + Single Clean Role Bar)
+                // =========================================================================
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Focused Live Preview Card (Always visible, calm & uncluttered)
+                    FocusedRolePreviewCard(
+                        roleLabel = activeRole.labelAr,
+                        selectedFontName = selectedFontForRole,
+                        previewText = if (customPreviewActive) {
+                            draftPrefs.customPreviewText
+                        } else {
+                            activeRole.samplePhrase
+                        },
+                        customPreviewText = draftPrefs.customPreviewText,
+                        isEditingPreview = isEditingPreviewText,
+                        onToggleEditPreview = { isEditingPreviewText = !isEditingPreviewText },
+                        onCustomPreviewTextChange = { newText ->
+                            val updated = draftPrefs.copy(customPreviewText = newText)
+                            draftPrefs = updated
+                            onUpdatePreferences(updated)
+                        },
+                        onResetPreviewText = {
+                            val updated = draftPrefs.copy(
+                                customPreviewText = UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT
+                            )
+                            draftPrefs = updated
+                            onUpdatePreferences(updated)
+                        },
+                        onImportCustomFont = {
+                            customFontPickerLauncher.launch(
+                                arrayOf(
+                                    "font/ttf",
+                                    "font/otf",
+                                    "font/woff2",
+                                    "application/x-font-ttf",
+                                    "application/x-font-opentype",
+                                    "application/octet-stream",
+                                    "*/*"
+                                )
+                            )
+                        }
+                    )
+
+                    if (importFeedbackMessage != null) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = importFeedbackMessage!!,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = { importFeedbackMessage = null },
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Single Clean Role Selector Bar (No duplicate category filter bars!)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        roles.forEach { role ->
+                            val isSelected = role.index == selectedRoleIndex
+                            Surface(
+                                onClick = { selectedRoleIndex = role.index },
+                                shape = RoundedCornerShape(50),
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                },
+                                contentColor = if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                                modifier = Modifier.testTag("typography_role_tab_${role.index}")
+                            ) {
+                                Text(
+                                    text = role.labelAr,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+
+                // =========================================================================
+                // 3. Calm, Easy-to-Scan Font List (Only fonts scroll here)
                 // =========================================================================
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Calm informational banner when useCustomTypography == false
-                    if (!draftPrefs.useCustomTypography) {
-                        item(key = "original_identity_notice") {
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "التطبيق يعرض حالياً الهوية الخطية الأصلية لكل كتاب",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "اختر أي باقة أو خط بالأسفل لتفعيل تخصيصك تلقائياً",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    TextButton(
-                                        onClick = {
-                                            val updated = draftPrefs.copy(useCustomTypography = true)
-                                            draftPrefs = updated
-                                            onUpdatePreferences(updated)
-                                        },
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                                    ) {
-                                        Text(
-                                            text = "تفعيل الآن",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // A. Live Book Page Typography Preview Card (with collapsible free-form input)
-                    item(key = "live_preview_card") {
-                        LiveBookTypographyPreviewCard(
-                            profile = draftPrefs.profile,
-                            customPreviewText = draftPrefs.customPreviewText,
-                            isEditingPreview = isEditingPreviewText,
-                            onToggleEditPreview = { isEditingPreviewText = !isEditingPreviewText },
-                            onCustomPreviewTextChange = { newText ->
-                                val updated = draftPrefs.copy(customPreviewText = newText)
-                                draftPrefs = updated
-                                onUpdatePreferences(updated)
-                            },
-                            onResetPreviewText = {
-                                val updated = draftPrefs.copy(
-                                    customPreviewText = UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT
-                                )
-                                draftPrefs = updated
-                                onUpdatePreferences(updated)
-                            }
-                        )
-                    }
-
-                    // B. Ready One-Tap Editorial Presets Section
-                    item(key = "presets_section") {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.alpha(if (draftPrefs.useCustomTypography) 1f else 0.85f)
-                        ) {
-                            Text(
-                                text = "الباقات الخطية الجاهزة بلمسة واحدة:",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                MaktabatiFontRegistry.editorialPresets.forEach { preset ->
-                                    val isSelected =
-                                        draftPrefs.useCustomTypography && draftPrefs.presetId == preset.id
-                                    PresetQuickChipCard(
-                                        preset = preset,
-                                        isSelected = isSelected,
-                                        onClick = {
-                                            val updated = draftPrefs.copy(
-                                                useCustomTypography = true,
-                                                presetId = preset.id,
-                                                profile = preset.profile
-                                            )
-                                            draftPrefs = updated
-                                            onUpdatePreferences(updated)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // C. Fine-Tuning Role Selector + Import User Font + Category Filter
-                    item(key = "role_selector_section") {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.alpha(if (draftPrefs.useCustomTypography) 1f else 0.85f)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "تخصيص الخط لكل تفصيل وعنوان في الكتاب:",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                OutlinedButton(
-                                    onClick = {
-                                        customFontPickerLauncher.launch(
-                                            arrayOf(
-                                                "font/ttf",
-                                                "font/otf",
-                                                "font/woff2",
-                                                "application/x-font-ttf",
-                                                "application/x-font-opentype",
-                                                "application/octet-stream",
-                                                "*/*"
-                                            )
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(50),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                                    modifier = Modifier
-                                        .height(30.dp)
-                                        .testTag("typography_import_user_font_button")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "إضافة خط من جهازي",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            if (importFeedbackMessage != null) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = importFeedbackMessage!!,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        IconButton(
-                                            onClick = { importFeedbackMessage = null },
-                                            modifier = Modifier.size(20.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            // 7 Role Tabs
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                roles.forEach { role ->
-                                    val isSelected = role.index == selectedRoleIndex
-                                    val roleFontName = role.getSelectedFont(draftPrefs.profile)
-                                    Surface(
-                                        onClick = { selectedRoleIndex = role.index },
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = if (isSelected) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
-                                        },
-                                        contentColor = if (isSelected) {
-                                            MaterialTheme.colorScheme.onPrimary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurface
-                                        },
-                                        modifier = Modifier.testTag("typography_role_tab_${role.index}")
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.padding(
-                                                horizontal = 12.dp,
-                                                vertical = 6.dp
-                                            ),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Text(
-                                                text = role.labelAr,
-                                                style = MaterialTheme.typography.labelMedium,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = roleFontName,
-                                                fontSize = 10.sp,
-                                                maxLines = 1,
-                                                color = if (isSelected) {
-                                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f)
-                                                } else {
-                                                    MaterialTheme.colorScheme.primary
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Text(
-                                text = activeRole.descriptionAr,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            )
-
-                            // Category Filter Chips
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                FontCategory.entries.forEach { category ->
-                                    val count = if (category == FontCategory.ALL) {
-                                        allFonts.size
-                                    } else {
-                                        allFonts.count { it.category == category }
-                                    }
-                                    if (category != FontCategory.USER_CUSTOM || count > 0) {
-                                        val selected = selectedCategory == category
-                                        FilterChip(
-                                            selected = selected,
-                                            onClick = { selectedCategory = category },
-                                            label = {
-                                                Text(
-                                                    text = "${category.labelAr} ($count)",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                                )
-                                            },
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // D. Sleek, Non-Repetitive Font Option Cards
                     items(
-                        items = filteredFonts,
+                        items = orderedFonts,
                         key = { it.familyName }
                     ) { fontSpec ->
                         val isFontSelected =
                             selectedFontForRole.equals(fontSpec.familyName, ignoreCase = true)
-                        val previewSample = if (customPreviewActive) {
-                            draftPrefs.customPreviewText
-                        } else {
-                            activeRole.samplePhrase
-                        }
-                        FontOptionCleanCard(
+                        FontOptionSimpleCard(
                             fontSpec = fontSpec,
-                            previewSample = previewSample,
+                            sampleText = if (customPreviewActive) {
+                                draftPrefs.customPreviewText
+                            } else {
+                                activeRole.samplePhrase
+                            },
                             isSelected = isFontSelected,
                             dimmed = !draftPrefs.useCustomTypography,
                             onSelect = {
@@ -668,10 +482,10 @@ fun TypographySettingsDialog(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
                 // =========================================================================
-                // 3. Pinned Bottom Action Bar
+                // 4. Pinned Bottom Action Bar
                 // =========================================================================
                 Row(
                     modifier = Modifier
@@ -733,27 +547,29 @@ fun TypographySettingsDialog(
 }
 
 @Composable
-private fun LiveBookTypographyPreviewCard(
-    profile: BookTypographyProfile,
+private fun FocusedRolePreviewCard(
+    roleLabel: String,
+    selectedFontName: String,
+    previewText: String,
     customPreviewText: String,
     isEditingPreview: Boolean,
     onToggleEditPreview: () -> Unit,
     onCustomPreviewTextChange: (String) -> Unit,
-    onResetPreviewText: () -> Unit
+    onResetPreviewText: () -> Unit,
+    onImportCustomFont: () -> Unit
 ) {
-    val headingsFont = fontFamilyForName(profile.headings)
-    val bodyFont = fontFamilyForName(profile.body)
-    val quranFont = fontFamilyForName(profile.quran)
-    val quotesFont = fontFamilyForName(profile.quotes)
-    val interfaceFont = fontFamilyForName(profile.interfaceFont)
+    val activeFontFamily = fontFamilyForName(selectedFontName)
+    val selectedFontSpec = remember(selectedFontName) {
+        MaktabatiFontRegistry.findFont(selectedFontName)
+    }
+    val arabicFontName = selectedFontSpec?.let { cleanArabicFontTitle(it.arabicDisplayName) }
+        ?: selectedFontName
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFAF6F0)
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF6F0)),
         border = BorderStroke(1.dp, Color(0xFFDDD1C4)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("typography_live_preview_card")
@@ -764,56 +580,80 @@ private fun LiveBookTypographyPreviewCard(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top bar: Chapter Badge + Free-form Preview Toggle Button
+            // Top bar inside preview: Role + Current Font on right, Edit Text + Import Font on left
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = Color(0xFFF3E4EA),
-                    border = BorderStroke(0.8.dp, Color(0xFFBD6B80).copy(alpha = 0.40f))
-                ) {
-                    Text(
-                        text = "معاينة حية لصفحة الكتاب",
-                        fontFamily = interfaceFont,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        color = Color(0xFF732E41),
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 2.dp)
-                    )
-                }
+                Text(
+                    text = "$roleLabel: $arabicFontName",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF732E41),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
 
-                Surface(
-                    onClick = onToggleEditPreview,
-                    shape = RoundedCornerShape(50),
-                    color = if (isEditingPreview) Color(0xFF732E41) else Color(0xFFEDE4D8),
-                    modifier = Modifier.testTag("typography_edit_preview_toggle")
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    Surface(
+                        onClick = onToggleEditPreview,
+                        shape = RoundedCornerShape(50),
+                        color = if (isEditingPreview) Color(0xFF732E41) else Color(0xFFEDE4D8),
+                        modifier = Modifier.testTag("typography_edit_preview_toggle")
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "نص معاينة حر",
-                            tint = if (isEditingPreview) Color.White else Color(0xFF732E41),
-                            modifier = Modifier.size(11.dp)
-                        )
-                        Text(
-                            text = if (isEditingPreview) "إغلاق المحرر" else "✍️ نص معاينة حر",
-                            fontFamily = interfaceFont,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isEditingPreview) Color.White else Color(0xFF732E41)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "نص معاينة حر",
+                                tint = if (isEditingPreview) Color.White else Color(0xFF732E41),
+                                modifier = Modifier.size(11.dp)
+                            )
+                            Text(
+                                text = if (isEditingPreview) "إغلاق" else "نص معاينة",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isEditingPreview) Color.White else Color(0xFF732E41)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        onClick = onImportCustomFont,
+                        shape = RoundedCornerShape(50),
+                        color = Color(0xFFEDE4D8),
+                        modifier = Modifier.testTag("typography_import_user_font_button")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "إضافة خط من جهازي",
+                                tint = Color(0xFF732E41),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "خط من جهازي",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF732E41)
+                            )
+                        }
                     }
                 }
             }
 
-            // Expandable Free-Form Text Input (Only visible when toggled)
             AnimatedVisibility(
                 visible = isEditingPreview,
                 enter = expandVertically() + fadeIn(),
@@ -822,16 +662,13 @@ private fun LiveBookTypographyPreviewCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 6.dp, bottom = 4.dp)
+                        .padding(top = 6.dp)
                 ) {
                     OutlinedTextField(
                         value = customPreviewText,
                         onValueChange = onCustomPreviewTextChange,
                         label = {
-                            Text(
-                                "اكتب أي آية أو عبارة لمعاينتها فوراً بجميع الخطوط:",
-                                fontSize = 11.sp
-                            )
+                            Text("اكتب عبارة لمعاينتها:", fontSize = 11.sp)
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFFFFDF9),
@@ -866,182 +703,59 @@ private fun LiveBookTypographyPreviewCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Heading
+            // Single, calm, clear live sample rendered in the selected font
             Text(
-                text = "مِنَ القَلْبِ: مَلاذُ السَّكِينَةِ وَالبَيَانِ",
-                fontFamily = headingsFont,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                color = Color(0xFF732E41),
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            // Quranic Ayah pill
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFFEAF0EB),
-                border = BorderStroke(0.7.dp, Color(0xFF5A725C).copy(alpha = 0.30f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾",
-                    fontFamily = quranFont,
-                    fontSize = 14.sp,
-                    color = Color(0xFF445946),
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Body Text (uses customPreviewText)
-            Text(
-                text = customPreviewText.ifBlank { UserTypographyPreferences.DEFAULT_CUSTOM_PREVIEW_TEXT },
-                fontFamily = bodyFont,
-                fontSize = 13.sp,
-                lineHeight = 20.sp,
-                color = Color(0xFF38272C),
+                text = previewText,
+                fontFamily = activeFontFamily,
+                fontSize = 17.sp,
+                lineHeight = 26.sp,
+                color = Color(0xFF2C1E23),
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            // Quote / Pearl whisper
-            Text(
-                text = "«إِنَّ القُلُوبَ إِذَا اتَّصَلَتْ بِبَارِئِهَا أَزْهَرَتْ»",
-                fontFamily = quotesFont,
-                fontSize = 12.sp,
-                color = Color(0xFF732E41),
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
             )
         }
     }
 }
 
 @Composable
-private fun PresetQuickChipCard(
-    preset: EditorialTypographyPreset,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val borderColor by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
-        label = "presetBorder"
-    )
-    val headingFont = fontFamilyForName(preset.profile.headings)
-    val bodyFont = fontFamilyForName(preset.profile.body)
-
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
-        color = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-        },
-        border = BorderStroke(if (isSelected) 1.8.dp else 1.dp, borderColor),
-        modifier = Modifier
-            .width(178.dp)
-            .testTag("typography_preset_${preset.id}")
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = preset.titleAr,
-                    fontFamily = headingFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                if (isSelected) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(15.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = preset.subtitleAr,
-                fontFamily = bodyFont,
-                fontSize = 10.sp,
-                lineHeight = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(
-                text = "${preset.profile.body} • ${preset.profile.headings}",
-                style = MaterialTheme.typography.labelSmall,
-                fontSize = 9.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-@Composable
-private fun FontOptionCleanCard(
+private fun FontOptionSimpleCard(
     fontSpec: RegisteredArabicFont,
-    previewSample: String,
+    sampleText: String,
     isSelected: Boolean,
     dimmed: Boolean,
     onSelect: () -> Unit,
     onDeleteCustomFont: (() -> Unit)? = null
 ) {
     val fontComposeFamily = fontFamilyForName(fontSpec.familyName)
+    val cleanTitle = remember(fontSpec.arabicDisplayName) {
+        cleanArabicFontTitle(fontSpec.arabicDisplayName)
+    }
 
     Surface(
         onClick = onSelect,
         shape = RoundedCornerShape(14.dp),
         color = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
         } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         },
         border = BorderStroke(
-            width = if (isSelected) 1.6.dp else 0.8.dp,
+            width = if (isSelected) 1.5.dp else 0.7.dp,
             color = if (isSelected) {
                 MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
             }
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (dimmed) 0.85f else 1f)
+            .alpha(if (dimmed) 0.88f else 1f)
             .testTag("typography_font_option_${fontSpec.folderName}")
     ) {
         Row(
@@ -1054,32 +768,42 @@ private fun FontOptionCleanCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = fontSpec.arabicDisplayName,
+                        text = cleanTitle,
                         fontFamily = fontComposeFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontSize = 16.sp,
+                        color = if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
-                    Text(
-                        text = "• ${fontSpec.editorialUsage}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
+                    ) {
+                        Text(
+                            text = fontSpec.category.labelAr,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Text(
-                    text = previewSample,
+                    text = sampleText,
                     fontFamily = fontComposeFamily,
-                    fontSize = 16.sp,
-                    lineHeight = 24.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp,
+                    lineHeight = 21.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1108,7 +832,7 @@ private fun FontOptionCleanCard(
                 if (isSelected) {
                     Box(
                         modifier = Modifier
-                            .size(26.dp)
+                            .size(24.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
@@ -1117,11 +841,15 @@ private fun FontOptionCleanCard(
                             imageVector = Icons.Default.Check,
                             contentDescription = "محدد",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
             }
         }
     }
+}
+
+private fun cleanArabicFontTitle(rawTitle: String): String {
+    return rawTitle.substringBefore("(").trim().ifEmpty { rawTitle }
 }
