@@ -2659,7 +2659,6 @@ object SmartBookConverter {
                           <span class="letter-envelope-title">${escapeHtml(section.chapterTag)}</span>
                         </div>
                         <h1>${escapeHtml(section.chapterTitle)}</h1>
-                        <div class="letter-greeting">${if (isRtl) "تأمل وإشراقة" else "Reflection"} <span class="reader-name-slot" data-reader-name="true"></span></div>
                         """.trimIndent()
                     ).append("\n")
                 } else {
@@ -2672,11 +2671,6 @@ object SmartBookConverter {
 
                 for (blk in currentPageBlocks) {
                     pageHtmlBuilder.append(formatSemanticParagraphToHtml(blk, isRtl)).append("\n")
-                }
-
-                // On the first page of the first section, add the subtle Personal Reader Name input card
-                if (chapterCounter == 1 && sectionPageIndex == 1) {
-                    pageHtmlBuilder.append(buildReaderNameWelcomeBoxHtml(isRtl)).append("\n")
                 }
 
                 val pageTitle = if (sectionPageIndex == 1) {
@@ -2932,30 +2926,6 @@ object SmartBookConverter {
             }
     }
 
-    private fun buildReaderNameWelcomeBoxHtml(isRtl: Boolean): String {
-        return if (isRtl) {
-            """
-            <div class="interactive-box" style="margin-top: 18px;">
-              <h3 style="margin-bottom: 6px; font-size: 0.92em;">💌 اكتبي/اكتب اسمك الكريم لنخاطبك به بين صفحات الكتاب:</h3>
-              <div style="display: flex; gap: 8px;">
-                <input id="readerNameInput" class="field-input" type="text" placeholder="اكتب اسمك هنا..." oninput="saveReaderName(this.value)"/>
-                <button class="primary-btn" style="padding: 6px 16px; font-size: .75em;" onclick="alertSavedName()">حفظ</button>
-              </div>
-            </div>
-            """.trimIndent()
-        } else {
-            """
-            <div class="interactive-box" style="margin-top: 18px;">
-              <h3 style="margin-bottom: 6px; font-size: 0.92em;">💌 Personalize Your Reading Journey:</h3>
-              <div style="display: flex; gap: 8px;">
-                <input id="readerNameInput" class="field-input" type="text" placeholder="Enter your name..." oninput="saveReaderName(this.value)"/>
-                <button class="primary-btn" style="padding: 6px 16px; font-size: .75em;" onclick="alertSavedName()">Save</button>
-              </div>
-            </div>
-            """.trimIndent()
-        }
-    }
-
     private fun buildClosingReflectionPageHtml(
         bookTitle: String,
         theme: BookVisualTheme,
@@ -2969,7 +2939,7 @@ object SmartBookConverter {
             </div>
             <h1>خُلاَصَةُ رِحْلَتِي مَعَ الكِتَاب</h1>
             <div class="heart-keepsake-card">
-              <div class="heart-badge">${theme.badgeEmoji} مسك الختام <span class="reader-name-slot" data-reader-name="true"></span></div>
+              <div class="heart-badge">${theme.badgeEmoji} مسك الختام</div>
               <p>«كل كتاب تقرؤه يترك في قلبك بذرة نور، فاحرص على أن تسقيها بالعمل والتطبيق.»</p>
             </div>
             <div class="interactive-box" style="margin-top: 16px;">
@@ -2986,7 +2956,7 @@ object SmartBookConverter {
             </div>
             <h1>My Key Takeaways</h1>
             <div class="heart-keepsake-card">
-              <div class="heart-badge">${theme.badgeEmoji} Journey Completed <span class="reader-name-slot" data-reader-name="true"></span></div>
+              <div class="heart-badge">${theme.badgeEmoji} Journey Completed</div>
               <p>“Every great book plants a seed of wisdom—nurture it with reflection and action.”</p>
             </div>
             <div class="interactive-box" style="margin-top: 16px;">
@@ -3945,7 +3915,6 @@ mark.search-hit-mark, mark.page-search-highlight {
 
       bookStage.scrollTop = 0;
       restorePageInputs();
-      updateReaderNameInDom();
 
       if (highlightQuery) {
         applyCalmPageSearchHighlight(highlightQuery);
@@ -4204,29 +4173,6 @@ mark.search-hit-mark, mark.page-search-highlight {
         localStorage.setItem(STORAGE_PREFIX + "f_" + id, val);
       } catch (e) {}
     };
-
-    window.saveReaderName = function(name) {
-      try {
-        localStorage.setItem(STORAGE_PREFIX + "reader_name", name.trim());
-        updateReaderNameInDom();
-      } catch (e) {}
-    };
-
-    window.alertSavedName = function() {
-      updateReaderNameInDom();
-    };
-
-    function updateReaderNameInDom() {
-      const savedName = localStorage.getItem(STORAGE_PREFIX + "reader_name") || "";
-      const slots = document.querySelectorAll(".reader-name-slot, [data-reader-name]");
-      slots.forEach(slot => {
-        slot.textContent = savedName ? " «" + savedName + "»" : "";
-      });
-      const nameInput = document.getElementById("readerNameInput");
-      if (nameInput && savedName) {
-        nameInput.value = savedName;
-      }
-    }
 
     function restorePageInputs() {
       const inputs = activePageArticle.querySelectorAll("input, textarea");
