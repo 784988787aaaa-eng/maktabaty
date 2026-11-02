@@ -968,7 +968,11 @@ class ExampleRobolectricTest {
 
     @Test
     fun testAnaFatatWaLiRisalahBookMasterpieceAudit() {
-        val bookFile = File("/أَنَا فَتَاةٌ وَلِي رِسَالَة.html")
+        val bookFile = listOf(
+            File("/أَنَا فَتَاةٌ وَلِي رِسَالَة.html"),
+            File("../أَنَا فَتَاةٌ وَلِي رِسَالَة.html"),
+            File("أَنَا فَتَاةٌ وَلِي رِسَالَة.html")
+        ).firstOrNull { it.exists() } ?: File("../أَنَا فَتَاةٌ وَلِي رِسَالَة.html")
         assertTrue("Book HTML file must exist", bookFile.exists())
         assertTrue("Book HTML file must be substantial", bookFile.length() > 50000)
 
@@ -1016,7 +1020,11 @@ class ExampleRobolectricTest {
 
     @Test
     fun testMenAlQalbBookMasterpieceAudit() {
-        val bookFile = File("/من القلب.html")
+        val bookFile = listOf(
+            File("/من القلب.html"),
+            File("../من القلب.html"),
+            File("من القلب.html")
+        ).firstOrNull { it.exists() } ?: File("../من القلب.html")
         assertTrue("من القلب.html file must exist", bookFile.exists())
         assertTrue("من القلب.html file must be substantial", bookFile.length() > 50000)
 
@@ -1052,8 +1060,8 @@ class ExampleRobolectricTest {
             File("/books"),
             File("../books"),
             File("books"),
-            File(System.getProperty("user.dir", ".")).parentFile?.resolve("books") ?: File("books")
-        ).firstOrNull { it.exists() && it.isDirectory } ?: File("/books")
+            File(System.getProperty("user.dir") ?: ".").parentFile?.resolve("books") ?: File("books")
+        ).firstOrNull { it.exists() && it.isDirectory } ?: File("../books")
         assertTrue("books directory must exist", booksDir.exists() && booksDir.isDirectory)
         assertTrue(File(booksDir, "خيمة_في_القلب/خَيْمَةٌ فِي القَلْب.html").exists())
         assertTrue(File(booksDir, "أنا_فتاة_ولي_رسالة/أَنَا فَتَاةٌ وَلِي رِسَالَة.html").exists())
@@ -1063,6 +1071,188 @@ class ExampleRobolectricTest {
         // Verify that NO .zip files exist in the books directory (pure HTML format is sufficient)
         val zipsInBooks = booksDir.walkTopDown().filter { it.extension.lowercase() == "zip" }.toList()
         assertEquals("No ZIP archives should exist in the books directory", 0, zipsInBooks.size)
+    }
+
+    @Test
+    fun testSmartBookConverterArabicVocalizedAndEnglishTextToLuxuryHtml() {
+        val arabicRawText = """
+            نُورُ السَّكِينَةِ وَإِشْرَاقُ الْفُؤَادِ
+            تأليف: د. عَبْدُ الرَّحْمَنِ الأَمِينُ
+
+            مقدمة الكتاب
+            إِنَّ الْقَلْبَ إِذَا أَقْبَلَ عَلَى اللَّهِ بِصِدْقٍ وَإِخْلَاصٍ، أَشْرَقَتْ فِيهِ أَنْوَارُ السَّكِينَةِ وَالطُّمَأْنِينَةِ، وَتَبَدَّدَتْ ظُلُمَاتُ الْحَيْرَةِ وَالشَّتَاتِ. وَالمُؤْمِنُ يَسْتَضِيءُ بِآيَاتِ الوَحْيِ فِي كُلِّ شَأْنٍ مِنْ شُؤُونِهِ.
+
+            قال تعالى: ﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾
+
+            الفصل الأول: بِنَاءُ الرُّوحِ وَتَزْكِيَةُ النَّفْسِ
+            قَالَ رَسُولُ اللَّهِ ﷺ: « إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى »
+
+            همسة للقلب: لَا تَسْتَوْحِشْ طَرِيقَ الْحَقِّ لِقِلَّةِ السَّالِكِينَ، وَلَا تَغْتَرَّ بِكَثْرَةِ الهَالِكِينَ، فَإِنَّ العِبْرَةَ بِخَوَاتِيمِ الأَعْمَالِ وَصِدْقِ السَّرَائِرِ.
+        """.trimIndent()
+
+        val arabicHtml = com.example.data.importer.SmartBookConverter.convertRawTextToLuxuryHtml(
+            rawText = arabicRawText,
+            fallbackFileName = "نور_السكينة.txt",
+            theme = com.example.data.importer.BookVisualTheme.ISLAMIC_EMERALD
+        )
+
+        // Verify 100% preservation of Arabic Tashkeel, Hamzas (أ، إ، آ، ؤ، ئ، ء), and semantic boxes
+        assertTrue(arabicHtml.contains("dir=\"rtl\""))
+        assertTrue(arabicHtml.contains("lang=\"ar\""))
+        assertTrue(arabicHtml.contains("نُورُ السَّكِينَةِ وَإِشْرَاقُ الْفُؤَادِ"))
+        assertTrue(arabicHtml.contains("عَبْدُ الرَّحْمَنِ الأَمِينُ"))
+        assertTrue(arabicHtml.contains("أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ"))
+        assertTrue(arabicHtml.contains("إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ"))
+        assertTrue(arabicHtml.contains("بِآيَاتِ"))
+        assertTrue(arabicHtml.contains("شُؤُونِهِ"))
+        assertTrue(arabicHtml.contains("امْرِئٍ"))
+        assertTrue(arabicHtml.contains("quran-box"))
+        assertTrue(arabicHtml.contains("hadith-box"))
+        assertTrue(arabicHtml.contains("heart-keepsake-card"))
+        assertTrue(arabicHtml.contains("chapter-opener"))
+        assertTrue(arabicHtml.contains("normalizeArabicWithMap"))
+        assertTrue(arabicHtml.contains("__maktabatiSetFluidZoom"))
+
+        val parsedArabicMeta = HtmlBookParser.parseContent(arabicHtml, "افتراضي", quickMode = false)
+        assertTrue(parsedArabicMeta.isRtl)
+        assertEquals("ar", parsedArabicMeta.language)
+        assertTrue(parsedArabicMeta.pageCount >= 3)
+        assertEquals("#065F46", parsedArabicMeta.accentRoseHex)
+        assertEquals("#B47B26", parsedArabicMeta.accentGoldHex)
+        assertEquals("#F8F4E8", parsedArabicMeta.bgPrimaryHex)
+
+        // Verify Arabic Presentation Forms normalization (connecting isolated PDF glyphs)
+        val isolatedPdfForms = "\uFEFB\uFE91\uFE8E" // لَا + ب + ا in presentation forms
+        val normalizedForms = com.example.data.importer.SmartBookConverter.normalizeAndCleanExtractedText(isolatedPdfForms)
+        assertEquals("لابا", normalizedForms)
+
+        // Verify English LTR text conversion
+        val englishRawText = """
+            The Art of Deep Reading
+            By: Prof. Arthur Pendelton
+
+            Chapter 1: Foundations of Focus
+            Reading deeply in a distracted world requires deliberate stillness, intellectual curiosity, and a quiet sanctuary for the mind. Every great book is a conversation across centuries.
+
+            Summary: Cultivate daily moments of uninterrupted reflection to transform information into lasting wisdom.
+        """.trimIndent()
+
+        val englishHtml = com.example.data.importer.SmartBookConverter.convertRawTextToLuxuryHtml(
+            rawText = englishRawText,
+            fallbackFileName = "deep_reading.md",
+            theme = com.example.data.importer.BookVisualTheme.ROYAL_ACADEMIC
+        )
+        assertTrue(englishHtml.contains("dir=\"ltr\""))
+        assertTrue(englishHtml.contains("lang=\"en\""))
+        assertTrue(englishHtml.contains("The Art of Deep Reading"))
+        assertTrue(englishHtml.contains("Prof. Arthur Pendelton"))
+        assertTrue(englishHtml.contains("Foundations of Focus"))
+
+        val parsedEnglishMeta = HtmlBookParser.parseContent(englishHtml, "Default", quickMode = false)
+        assertFalse(parsedEnglishMeta.isRtl)
+        assertEquals("en", parsedEnglishMeta.language)
+        assertTrue(parsedEnglishMeta.pageCount >= 2)
+    }
+
+    @Test
+    fun testSmartBookConverterExtractsAndImportsDocxTxtAndRtfIntoLibrary(): Unit = runBlocking {
+        val dao = database.bookDao()
+        val repository = com.example.data.repository.BookRepository(dao, context)
+
+        // 1. Test .txt file extraction & library import
+        val txtFile = File(context.cacheDir, "رسالة_القلوب.txt")
+        txtFile.writeText(
+            """
+            رِسَالَةُ الْقُلُوبِ الصَّادِقَةِ
+            بقلم: مَنْصُور قَطِينَه
+
+            الفصل الأول: صَفَاءُ النِّيَّةِ
+            قال تعالى: ﴿ وَمَا أُمِرُوا إِلَّا لِيَعْبُدُوا اللَّهَ مُخْلِصِينَ لَهُ الدِّينَ ﴾
+            إِنَّ صَفَاءَ الْقَلْبِ هُوَ مِفْتَاحُ كُلِّ خَيْرٍ وَبَرَكَةٍ فِي الدُّنْيَا وَالآخِرَةِ.
+            """.trimIndent(),
+            Charsets.UTF_8
+        )
+        val txtUri = android.net.Uri.fromFile(txtFile)
+        val txtProposalResult = repository.inspectConvertibleDocument(txtUri)
+        assertTrue(txtProposalResult.isSuccess)
+        val txtProposal = txtProposalResult.getOrThrow()
+        assertEquals("TXT", txtProposal.sourceFormatLabel)
+        assertTrue(txtProposal.detectedTitle.contains("رِسَالَةُ الْقُلُوبِ"))
+        assertTrue(txtProposal.detectedAuthor.contains("مَنْصُور"))
+
+        val importedTxtBook = repository.convertAndImportProposal(
+            proposal = txtProposal,
+            customTitle = txtProposal.detectedTitle,
+            customSubtitle = txtProposal.detectedSubtitle,
+            customAuthor = txtProposal.detectedAuthor,
+            theme = com.example.data.importer.BookVisualTheme.ROSE_HEART
+        ).getOrThrow()
+        assertTrue(importedTxtBook.title.contains("رِسَالَةُ الْقُلُوبِ"))
+        assertTrue(importedTxtBook.pageCount >= 2)
+
+        // 2. Test .docx file (ZIP with word/document.xml) extraction & library import
+        val docxFile = File(context.cacheDir, "آفاق_المعرفة.docx")
+        java.util.zip.ZipOutputStream(java.io.FileOutputStream(docxFile)).use { zos ->
+            zos.putNextEntry(java.util.zip.ZipEntry("word/document.xml"))
+            val docXml = """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+                  <w:body>
+                    <w:p><w:r><w:t>آفَاقُ الْمَعْرِفَةِ وَالْإِبْدَاعِ</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>تأليف: د. خَالِد الْمَنْصُور</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>الفصل الأول: صناعة الأثر</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>قال تعالى: ﴿ وَقُلْ رَبِّ زِدْنِي عِلْمًا ﴾</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>الْعِلْمُ نُورٌ يَهْدِي الْعُقُولَ وَيَبْنِي الْحَضَارَاتِ الرَّاسِخَةَ.</w:t></w:r></w:p>
+                  </w:body>
+                </w:document>
+            """.trimIndent()
+            zos.write(docXml.toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+        }
+        val docxUri = android.net.Uri.fromFile(docxFile)
+        val docxProposal = repository.inspectConvertibleDocument(docxUri).getOrThrow()
+        assertEquals("DOCX", docxProposal.sourceFormatLabel)
+        assertTrue(docxProposal.detectedTitle.contains("آفَاقُ الْمَعْرِفَةِ"))
+        val importedDocxBook = repository.convertAndImportProposal(
+            proposal = docxProposal,
+            theme = com.example.data.importer.BookVisualTheme.YOUTH_HORIZON
+        ).getOrThrow()
+        assertTrue(importedDocxBook.title.contains("آفَاقُ الْمَعْرِفَةِ"))
+        assertEquals("#0284C7", importedDocxBook.accentRoseHex)
+
+        // 3. Test .rtf file extraction with Arabic Unicode escapes & library import
+        val rtfFile = File(context.cacheDir, "درر_الحكمة.rtf")
+        val rtfArabicLine1 = "دُرَرُ الْحِكْمَةِ وَالْبَيَانِ".map { "\\u${it.code}?" }.joinToString("")
+        val rtfArabicLine2 = "الفصل الأول: أدب الحوار والكلمة الطيبة".map { "\\u${it.code}?" }.joinToString("")
+        val rtfArabicLine3 = "« الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ »".map { "\\u${it.code}?" }.joinToString("")
+        val rtfContent = "{\\rtf1\\ansi\\deff0 $rtfArabicLine1\\par $rtfArabicLine2\\par $rtfArabicLine3\\par}"
+        rtfFile.writeText(rtfContent, Charsets.US_ASCII)
+
+        val rtfUri = android.net.Uri.fromFile(rtfFile)
+        val rtfProposal = repository.inspectConvertibleDocument(rtfUri).getOrThrow()
+        assertEquals("RTF", rtfProposal.sourceFormatLabel)
+        assertTrue(rtfProposal.detectedTitle.contains("دُرَرُ الْحِكْمَةِ"))
+        val importedRtfBook = repository.convertAndImportProposal(
+            proposal = rtfProposal,
+            theme = com.example.data.importer.BookVisualTheme.VELVET_TENT
+        ).getOrThrow()
+        assertTrue(importedRtfBook.title.contains("دُرَرُ الْحِكْمَةِ"))
+
+        // Verify all 3 converted books exist in database and have valid HTML files on disk
+        val allBooksInDb = dao.getAllBooks().first()
+        assertEquals(3, allBooksInDb.size)
+        val booksRoot = File(context.filesDir, "books")
+        for (book in allBooksInDb) {
+            val htmlFile = File(File(booksRoot, book.folderPath), book.entryHtmlPath)
+            assertTrue("Generated HTML file must exist for ${book.title}", htmlFile.exists())
+            val htmlText = htmlFile.readText(Charsets.UTF_8)
+            assertTrue(htmlText.contains("const BOOK_DATA ="))
+            assertTrue(htmlText.contains("maktabati-storage-isolation"))
+        }
+
+        txtFile.delete()
+        docxFile.delete()
+        rtfFile.delete()
     }
 }
 

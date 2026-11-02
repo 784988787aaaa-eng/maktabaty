@@ -110,6 +110,7 @@ import com.example.data.model.Book
 import com.example.ui.components.BookDetailDialog
 import com.example.ui.components.BookGridItem
 import com.example.ui.components.BookListItem
+import com.example.ui.components.ConvertTextBookDialog
 import com.example.ui.components.CreateShelfDialog
 import com.example.ui.components.TypographySettingsDialog
 import com.example.ui.components.UnifiedShelfAndFilterRow
@@ -138,6 +139,7 @@ fun LibraryScreen(
     val gridCardWidthDp by viewModel.gridCardWidthDp.collectAsStateWithLifecycle()
     val importState by viewModel.importState.collectAsStateWithLifecycle()
     val pendingMultiBookProposal by viewModel.pendingMultiBookProposal.collectAsStateWithLifecycle()
+    val pendingConversionProposal by viewModel.pendingConversionProposal.collectAsStateWithLifecycle()
     val userTypographyPreferences by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
     val connectedGoogleEmail by viewModel.connectedGoogleEmail.collectAsStateWithLifecycle()
     val lastBackupTimeText by viewModel.lastBackupTimeText.collectAsStateWithLifecycle()
@@ -576,6 +578,15 @@ fun LibraryScreen(
                             "application/xhtml+xml",
                             "application/zip",
                             "application/x-zip-compressed",
+                            "text/plain",
+                            "text/markdown",
+                            "application/msword",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            "application/vnd.oasis.opendocument.text",
+                            "application/rtf",
+                            "text/rtf",
+                            "application/epub+zip",
+                            "application/pdf",
                             "*/*"
                         )
                     )
@@ -1122,6 +1133,23 @@ fun LibraryScreen(
             onAddInNewShelf = { viewModel.confirmMultiBookImportWithNewShelf(proposal) },
             onAddStandalone = { viewModel.confirmMultiBookImportStandalone(proposal) },
             onCancel = { viewModel.cancelMultiBookImport(proposal) }
+        )
+    }
+
+    // Instant Book Conversion Studio Dialog (TXT, MD, DOC, DOCX, ODT, RTF, EPUB, PDF -> Luxury HTML5)
+    pendingConversionProposal?.let { proposal ->
+        ConvertTextBookDialog(
+            proposal = proposal,
+            onConfirmConvert = { title, subtitle, author, theme ->
+                viewModel.confirmConvertAndImportBook(
+                    proposal = proposal,
+                    customTitle = title,
+                    customSubtitle = subtitle,
+                    customAuthor = author,
+                    theme = theme
+                )
+            },
+            onDismiss = { viewModel.cancelConversionProposal() }
         )
     }
 

@@ -11,6 +11,9 @@ import com.example.data.backup.CloudBackupManager
 import com.example.data.backup.CloudSyncState
 import com.example.data.backup.SignInOutcome
 import com.example.data.db.AppDatabase
+import com.example.data.importer.BookImporter
+import com.example.data.importer.BookVisualTheme
+import com.example.data.importer.ConvertibleBookProposal
 import com.example.data.importer.ImportUriResult
 import com.example.data.importer.MultiBookArchiveProposal
 import com.example.data.model.Book
@@ -91,6 +94,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     // Multi-book ZIP archive user choice state
     val pendingMultiBookProposal = MutableStateFlow<MultiBookArchiveProposal?>(null)
     private val proposalQueue = ArrayDeque<MultiBookArchiveProposal>()
+
+    // Convertible text/office document studio proposal state
+    val pendingConversionProposal = MutableStateFlow<ConvertibleBookProposal?>(null)
+    private val conversionProposalQueue = ArrayDeque<ConvertibleBookProposal>()
 
     // True when launched directly via ACTION_VIEW / ACTION_SEND so LibraryScreen never flashes
     val isOpeningExternalFile = MutableStateFlow(false)
@@ -201,13 +208,40 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         pendingMultiBookProposal.value = proposalQueue.removeFirstOrNull()
     }
 
+    private fun enqueueConversionProposals(proposals: List<ConvertibleBookProposal>) {
+        if (proposals.isEmpty()) return
+        for (p in proposals) {
+            conversionProposalQueue.addLast(p)
+        }
+        if (pendingConversionProposal.value == null) {
+            pendingConversionProposal.value = conversionProposalQueue.removeFirstOrNull()
+        }
+    }
+
+    private fun advanceNextConversionProposalOrClear() {
+        pendingConversionProposal.value = conversionProposalQueue.removeFirstOrNull()
+    }
+
     /**
      * Direct-to-Reader fast path for external file intents (WhatsApp, Files, Telegram):
-     * Immediately stages single HTML/ZIP books on disk and opens ReaderScreen, or shows MultiBookZipDialog if a multi-book ZIP is opened.
+     * Immediately stages single HTML/ZIP books on disk and opens ReaderScreen,
+     * shows ConvertTextBookDialog if a convertible text/office file is opened,
+     * or shows MultiBookZipDialog if a multi-book ZIP is opened.
      */
     fun openExternalUriImmediately(uri: Uri) {
         isOpeningExternalFile.value = true
         viewModelScope.launch {
+            if (BookImporter.isConvertibleDocumentUri(getApplication(), uri)) {
+                val inspectResult = repository.inspectConvertibleDocument(uri)
+                isOpeningExternalFile.value = false
+                inspectResult.onSuccess { proposal ->
+                    enqueueConversionProposals(listOf(proposal))
+                }.onFailure { err ->
+                    importState.value = ImportState.Error(err.message ?: "تعذر تحليل وتحويل الملف المحدد")
+                }
+                return@launch
+            }
+
             val result = repository.importOrInspectBook(
                 uri = uri,
                 customTitle = null,
@@ -245,6 +279,20 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun importBook(uri: Uri, customTitle: String? = null, onComplete: ((Book?) -> Unit)? = null) {
         viewModelScope.launch {
+            if (customTitle == null && BookImporter.isConvertibleDocumentUri(getApplication(), uri)) {
+                importState.value = ImportState.Loading("جاري قراءة النص واستخراج الفصول والعناوين...")
+                val inspectResult = repository.inspectConvertibleDocument(uri)
+                inspectResult.onSuccess { proposal ->
+                    importState.value = ImportState.Idle
+                    enqueueConversionProposals(listOf(proposal))
+                    onComplete?.invoke(null)
+                }.onFailure { err ->
+                    importState.value = ImportState.Error(err.message ?: "تعذر قراءة وتحويل الملف النصي")
+                    onComplete?.invoke(null)
+                }
+                return@launch
+            }
+
             importState.value = ImportState.Loading("جاري فحص واستيراد الملف...")
             val result = repository.importOrInspectBook(uri, customTitle)
             result.onSuccess { outcome ->
@@ -267,6 +315,44 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 onComplete?.invoke(null)
             }
         }
+    }
+
+    fun confirmConvertAndImportBook(
+        proposal: ConvertibleBookProposal? = pendingConversionProposal.value,
+        customTitle: String? = null,
+        customSubtitle: String? = null,
+        customAuthor: String? = null,
+        theme: BookVisualTheme? = null,
+        onComplete: ((Book?) -> Unit)? = null
+    ) {
+        val activeProposal = proposal ?: return
+        viewModelScope.launch {
+            val chosenTheme = theme ?: activeProposal.recommendedTheme
+            importState.value = ImportState.Loading("جاري صياغة الكتاب التفاعلي الفاخر بحلة «${chosenTheme.arabicName}»...")
+            val result = repository.convertAndImportProposal(
+                proposal = activeProposal,
+                customTitle = customTitle,
+                customSubtitle = customSubtitle,
+                customAuthor = customAuthor,
+                theme = chosenTheme
+            )
+            result.onSuccess { book ->
+                advanceNextConversionProposalOrClear()
+                importState.value = ImportState.Success(book, 1)
+                if (_connectedGoogleEmail.value != null) {
+                    triggerAutoCloudBackup()
+                }
+                onComplete?.invoke(book)
+            }.onFailure { err ->
+                advanceNextConversionProposalOrClear()
+                importState.value = ImportState.Error(err.message ?: "تعذر إتمام تحويل الكتاب")
+                onComplete?.invoke(null)
+            }
+        }
+    }
+
+    fun cancelConversionProposal() {
+        advanceNextConversionProposalOrClear()
     }
 
     fun importMultipleBooks(uris: List<Uri>, onComplete: ((List<Book>) -> Unit)? = null) {

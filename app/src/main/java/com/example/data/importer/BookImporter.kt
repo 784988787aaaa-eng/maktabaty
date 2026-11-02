@@ -50,6 +50,45 @@ object BookImporter {
         "default.html"
     )
 
+    fun isConvertibleDocumentUri(context: Context, uri: Uri): Boolean {
+        val originalName = queryFileName(context, uri) ?: ""
+        val lowerName = originalName.lowercase()
+        if (lowerName.endsWith(".html") || lowerName.endsWith(".htm") || lowerName.endsWith(".xhtml") || lowerName.endsWith(".zip")) {
+            return false
+        }
+        if (SmartBookConverter.isConvertibleFileName(lowerName)) {
+            return true
+        }
+        val mimeType = runCatching { context.contentResolver.getType(uri)?.lowercase() }.getOrNull() ?: ""
+        return SmartBookConverter.isConvertibleMimeType(mimeType)
+    }
+
+    suspend fun importConvertedProposal(
+        context: Context,
+        proposal: ConvertibleBookProposal,
+        customTitle: String? = null,
+        customSubtitle: String? = null,
+        customAuthor: String? = null,
+        theme: BookVisualTheme = proposal.recommendedTheme,
+        onQuickBookStaged: ((Book) -> Unit)? = null
+    ): Book = withContext(Dispatchers.IO) {
+        val generatedHtml = SmartBookConverter.convertProposalToLuxuryHtml(
+            proposal = proposal,
+            customTitle = customTitle,
+            customSubtitle = customSubtitle,
+            customAuthor = customAuthor,
+            theme = theme
+        )
+        val finalTitle = customTitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedTitle
+        importRawHtmlString(
+            context = context,
+            rawHtml = generatedHtml,
+            fallbackName = finalTitle,
+            userCustomTitle = finalTitle,
+            onQuickBookStaged = onQuickBookStaged
+        )
+    }
+
     suspend fun importOrInspectUri(
         context: Context,
         uri: Uri,
@@ -59,33 +98,54 @@ object BookImporter {
         val originalName = queryFileName(context, uri) ?: "كتاب_مستورد.html"
         val lowerName = originalName.lowercase()
         val mimeType = runCatching { context.contentResolver.getType(uri)?.lowercase() }.getOrNull() ?: ""
-        val isZip = lowerName.endsWith(".zip") || mimeType.contains("zip")
+        val isZip = (lowerName.endsWith(".zip") || mimeType.contains("zip")) &&
+            !SmartBookConverter.isConvertibleFileName(lowerName)
         val isHtmlExt = lowerName.endsWith(".html") || lowerName.endsWith(".htm") || lowerName.endsWith(".xhtml")
+        val isConvertible = !isZip && !isHtmlExt && (
+            SmartBookConverter.isConvertibleFileName(lowerName) ||
+                SmartBookConverter.isConvertibleMimeType(mimeType)
+            )
 
-        if (!isZip && !isHtmlExt) {
+        if (!isZip && !isHtmlExt && !isConvertible) {
             if (!mimeType.contains("html") && !mimeType.contains("text")) {
-                throw IllegalArgumentException("صيغة الملف ($originalName) غير مدعومة. يرجى اختيار ملف كتاب بصيغة .html أو .htm أو حزمة .zip")
+                throw IllegalArgumentException(
+                    "صيغة الملف ($originalName) غير مدعومة. الصيغ المدعومة: HTML, ZIP, TXT, MD, DOC, DOCX, ODT, RTF, EPUB, PDF"
+                )
             }
         }
 
-        if (isZip) {
-            val inspection = context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                inspectZipArchive(
+        when {
+            isZip -> {
+                val inspection = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    inspectZipArchive(
+                        context = context,
+                        inputStream = inputStream,
+                        originalZipName = originalName,
+                        userCustomTitle = userCustomTitle,
+                        onQuickBookStaged = onQuickBookStaged
+                    )
+                } ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف المضغوط من الذاكرة")
+
+                when (inspection) {
+                    is ZipInspectionResult.SingleBook -> ImportUriResult.SingleBookImported(inspection.book)
+                    is ZipInspectionResult.MultiBookArchive -> ImportUriResult.MultiBookArchiveDetected(inspection.proposal)
+                }
+            }
+            isConvertible -> {
+                val proposal = SmartBookConverter.inspectDocumentUri(context, uri)
+                val convertedBook = importConvertedProposal(
                     context = context,
-                    inputStream = inputStream,
-                    originalZipName = originalName,
-                    userCustomTitle = userCustomTitle,
+                    proposal = proposal,
+                    customTitle = userCustomTitle,
+                    theme = proposal.recommendedTheme,
                     onQuickBookStaged = onQuickBookStaged
                 )
-            } ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف المضغوط من الذاكرة")
-
-            when (inspection) {
-                is ZipInspectionResult.SingleBook -> ImportUriResult.SingleBookImported(inspection.book)
-                is ZipInspectionResult.MultiBookArchive -> ImportUriResult.MultiBookArchiveDetected(inspection.proposal)
+                ImportUriResult.SingleBookImported(convertedBook)
             }
-        } else {
-            val singleBook = importSingleHtmlUri(context, uri, originalName, userCustomTitle, onQuickBookStaged)
-            ImportUriResult.SingleBookImported(singleBook)
+            else -> {
+                val singleBook = importSingleHtmlUri(context, uri, originalName, userCustomTitle, onQuickBookStaged)
+                ImportUriResult.SingleBookImported(singleBook)
+            }
         }
     }
 
@@ -473,28 +533,44 @@ object BookImporter {
         userCustomTitle: String?,
         onQuickBookStaged: ((Book) -> Unit)?
     ): Book {
+        val fallbackName = userCustomTitle ?: originalName.substringBeforeLast(".")
+        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف من الذاكرة")
+
+        if (bytes.isEmpty()) {
+            throw IllegalArgumentException("الملف المختار فارغ ولا يحتوي على بيانات")
+        }
+
+        val rawHtml = String(bytes, Charsets.UTF_8)
+        return importRawHtmlString(
+            context = context,
+            rawHtml = rawHtml,
+            fallbackName = fallbackName,
+            userCustomTitle = userCustomTitle,
+            onQuickBookStaged = onQuickBookStaged
+        )
+    }
+
+    fun importRawHtmlString(
+        context: Context,
+        rawHtml: String,
+        fallbackName: String,
+        userCustomTitle: String? = null,
+        onQuickBookStaged: ((Book) -> Unit)? = null
+    ): Book {
         val bookId = "book_" + UUID.randomUUID().toString().replace("-", "").take(10)
         val booksRoot = File(context.filesDir, "books").apply { mkdirs() }
         val targetDir = File(booksRoot, bookId).apply { mkdirs() }
 
         try {
-            val fallbackName = userCustomTitle ?: originalName.substringBeforeLast(".")
-            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف من الذاكرة")
-
-            if (bytes.isEmpty()) {
-                throw IllegalArgumentException("الملف المختار فارغ ولا يحتوي على بيانات")
-            }
-
             val fileCount = 1
-            val totalSize = bytes.size.toLong()
             val relativeEntryPath = "index.html"
-            val rawHtml = String(bytes, Charsets.UTF_8)
 
             val quickMeta = HtmlBookParser.parseQuickHeader(rawHtml, fallbackName)
             val injectedHtml = SandboxHtmlInjector.injectIntoHtml(rawHtml, bookId, quickMeta.pageCount)
             val destFile = File(targetDir, "index.html")
             destFile.writeText(injectedHtml, Charsets.UTF_8)
+            val totalSize = destFile.length()
 
             if (onQuickBookStaged != null) {
                 val quickTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else quickMeta.title

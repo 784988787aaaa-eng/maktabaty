@@ -4,10 +4,13 @@ import android.content.Context
 import android.net.Uri
 import com.example.data.db.BookDao
 import com.example.data.importer.BookImporter
+import com.example.data.importer.BookVisualTheme
+import com.example.data.importer.ConvertibleBookProposal
 import com.example.data.importer.HtmlBookParser
 import com.example.data.importer.ImportUriResult
 import com.example.data.importer.MultiBookArchiveProposal
 import com.example.data.importer.SampleBooksProvider
+import com.example.data.importer.SmartBookConverter
 import com.example.data.model.Book
 import com.example.data.model.Bookmark
 import com.example.data.model.Shelf
@@ -155,6 +158,38 @@ class BookRepository(
                     }
                 }
             }
+        }
+    }
+
+    suspend fun inspectConvertibleDocument(uri: Uri): Result<ConvertibleBookProposal> = withContext(Dispatchers.IO) {
+        try {
+            val proposal = SmartBookConverter.inspectDocumentUri(context, uri)
+            Result.success(proposal)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun convertAndImportProposal(
+        proposal: ConvertibleBookProposal,
+        customTitle: String? = null,
+        customSubtitle: String? = null,
+        customAuthor: String? = null,
+        theme: BookVisualTheme = proposal.recommendedTheme
+    ): Result<Book> = withContext(Dispatchers.IO) {
+        try {
+            val book = BookImporter.importConvertedProposal(
+                context = context,
+                proposal = proposal,
+                customTitle = customTitle,
+                customSubtitle = customSubtitle,
+                customAuthor = customAuthor,
+                theme = theme
+            )
+            bookDao.insertBook(book)
+            Result.success(book)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
