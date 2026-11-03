@@ -93,18 +93,23 @@ object SemanticBookPaginator {
             }
             .filter { it.isNotBlank() }
 
+        val hasExplicitChapters = rawBlocks.any { ArabicTextNormalizer.isChapterHeadingLine(it) }
+        val normalizedBookTitle = ArabicTextNormalizer.stripArabicDiacriticsForMatching(bookTitle).trim()
+
         val sections = mutableListOf<SemanticSection>()
         var currentChapterIndex = 0
         var activeSection = SemanticSection(
-            chapterTag = if (isRtl) "مدخل الكتاب" else "Introduction",
+            chapterTag = "",
             chapterTitle = bookTitle
         )
 
         for ((idx, block) in rawBlocks.withIndex()) {
             val clean = block.removePrefix("#").removePrefix("#").removePrefix("#").trim()
+            val normalizedClean = ArabicTextNormalizer.stripArabicDiacriticsForMatching(clean).trim()
 
             if (idx <= 2) {
                 if (clean.equals(bookTitle, ignoreCase = true) ||
+                    (normalizedBookTitle.isNotEmpty() && normalizedClean.equals(normalizedBookTitle, ignoreCase = true)) ||
                     ArabicTextNormalizer.TITLE_LINE_REGEX.matches(clean) ||
                     ArabicTextNormalizer.SUBTITLE_LINE_REGEX.matches(clean) ||
                     ArabicTextNormalizer.AUTHOR_LINE_REGEX.matches(clean)
@@ -144,7 +149,7 @@ object SemanticBookPaginator {
         if (sections.isEmpty()) {
             sections.add(
                 SemanticSection(
-                    chapterTag = if (isRtl) "متن الكتاب" else "Book Content",
+                    chapterTag = "",
                     chapterTitle = bookTitle,
                     paragraphs = mutableListOf(rawText)
                 )
@@ -163,37 +168,27 @@ object SemanticBookPaginator {
                 val pageHtmlBuilder = StringBuilder()
 
                 if (isFirstPageOfSection) {
-                    pageHtmlBuilder.append(
-                        """
-                        <div class="letter-envelope-header chapter-opener">
-                          <span class="letter-seal">${theme.badgeEmoji}</span>
-                          <span class="letter-envelope-title">${escapeHtml(section.chapterTag)}</span>
-                        </div>
-                        <h1>${escapeHtml(section.chapterTitle)}</h1>
-                        """.trimIndent()
-                    ).append("\n")
-                } else {
-                    pageHtmlBuilder.append(
-                        """
-                        <h2>${escapeHtml(section.chapterTitle)} <small style="font-size:0.65em;color:var(--accent-gold);">($sectionPageIndex)</small></h2>
-                        """.trimIndent()
-                    ).append("\n")
+                    if (hasExplicitChapters && section.chapterTag.isNotBlank()) {
+                        pageHtmlBuilder.append(
+                            """
+                            <div class="letter-envelope-header chapter-opener">
+                              <span class="letter-seal">${theme.badgeEmoji}</span>
+                              <span class="letter-envelope-title">${escapeHtml(section.chapterTag)}</span>
+                            </div>
+                            """.trimIndent()
+                        ).append("\n")
+                    }
+                    pageHtmlBuilder.append("<h1>${escapeHtml(section.chapterTitle)}</h1>\n")
                 }
 
                 for (blk in currentPageBlocks) {
                     pageHtmlBuilder.append(formatSemanticParagraphToHtml(blk, isRtl)).append("\n")
                 }
 
-                val pageTitle = if (sectionPageIndex == 1) {
-                    section.chapterTitle
-                } else {
-                    "${section.chapterTitle} ($sectionPageIndex)"
-                }
-
                 pages.add(
                     ConvertedPageItem(
-                        tag = section.chapterTag,
-                        title = pageTitle,
+                        tag = if (hasExplicitChapters) section.chapterTag else "",
+                        title = section.chapterTitle,
                         type = if (isFirstPageOfSection) "opener" else "reading",
                         html = pageHtmlBuilder.toString()
                     )
@@ -215,15 +210,6 @@ object SemanticBookPaginator {
             }
             flushSectionPage()
         }
-
-        pages.add(
-            ConvertedPageItem(
-                tag = if (isRtl) "مساحة التأمل" else "Reader Journal",
-                title = if (isRtl) "دفتر التأملات والخلاصة الشخصية" else "Personal Reflections & Notes",
-                type = "reading",
-                html = buildClosingReflectionPageHtml(bookTitle, theme, isRtl)
-            )
-        )
 
         return pages
     }

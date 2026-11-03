@@ -31,7 +31,7 @@ import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TextFormat
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -124,7 +124,10 @@ fun LibraryTopAppBar(
                     Text(
                         text = strings.appTitle,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -140,16 +143,6 @@ fun LibraryTopAppBar(
             }
 
             IconButton(
-                onClick = onToggleTheme,
-                modifier = Modifier.testTag("toggle_theme_button")
-            ) {
-                Icon(
-                    imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                    contentDescription = strings.toggleThemeModeContentDescription
-                )
-            }
-
-            IconButton(
                 onClick = onToggleViewMode,
                 modifier = Modifier.testTag("toggle_view_mode_button")
             ) {
@@ -160,21 +153,11 @@ fun LibraryTopAppBar(
             }
 
             IconButton(
-                onClick = onToggleLanguage,
-                modifier = Modifier.testTag("language_toggle_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Language,
-                    contentDescription = strings.toggleLanguageContentDescription
-                )
-            }
-
-            IconButton(
                 onClick = onOpenTypographySettings,
                 modifier = Modifier.testTag("typography_settings_button")
             ) {
                 Icon(
-                    imageVector = Icons.Default.Settings,
+                    imageVector = Icons.Default.TextFormat,
                     contentDescription = strings.typographyStudioContentDescription,
                     tint = if (useCustomTypography) {
                         MaterialTheme.colorScheme.primary
@@ -221,6 +204,58 @@ fun LibraryTopAppBar(
                         )
                         .testTag("more_options_dropdown_menu")
                 ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = if (isDarkTheme) {
+                                    if (isEn) "Light Mode" else "الوضع النهاري"
+                                } else {
+                                    if (isEn) "Dark Mode" else "الوضع الليلي"
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = strings.toggleThemeModeContentDescription,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = {
+                            showMoreOptionsMenu = false
+                            onToggleTheme()
+                        },
+                        modifier = Modifier.testTag("toggle_theme_button")
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = if (isEn) "Switch Language (${if (appLanguage == AppLanguage.AR) "English" else "العربية"})" else "تبديل اللغة (${if (appLanguage == AppLanguage.AR) "English" else "العربية"})",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Language,
+                                contentDescription = strings.toggleLanguageContentDescription,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = {
+                            showMoreOptionsMenu = false
+                            onToggleLanguage()
+                        },
+                        modifier = Modifier.testTag("language_toggle_button")
+                    )
+
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                    )
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -429,27 +464,6 @@ fun LibraryTopAppBar(
 
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-                    )
-
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = if (isEn) "Switch Language (${if (appLanguage == AppLanguage.AR) "English" else "العربية"})" else "تبديل اللغة (${if (appLanguage == AppLanguage.AR) "English" else "العربية"})",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Language,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        onClick = {
-                            showMoreOptionsMenu = false
-                            onToggleLanguage()
-                        }
                     )
 
                     DropdownMenuItem(

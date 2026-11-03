@@ -185,7 +185,7 @@ fun LibraryScreen(
                 onOpenAboutDialog = { showAboutDialog = true }
             )
         },
-        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
             AddBookFabMenu(
                 onPasteFromClipboard = { viewModel.pasteFromClipboardAsBook() },

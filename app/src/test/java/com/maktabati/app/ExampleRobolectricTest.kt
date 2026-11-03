@@ -1362,4 +1362,47 @@ class ExampleRobolectricTest {
         viewModel.toggleAppLanguage()
         assertEquals(AppLanguage.AR, viewModel.appLanguage.value)
     }
+
+    @Test
+    fun testCleanPastedBookWithoutFakeMetadataAndSinglePageTurnAndLtrCounter() {
+        val rawTextWithoutAuthorOrChapters = """
+            رِسَالَةٌ إِلَى القَلْبِ السَّلِيمِ
+            إِنَّ السَّكِينَةَ نُورٌ يُلْقِيهِ اللَّهُ فِي قَلْبِ العَبْدِ المُؤْمِنِ حِينَ يَصْدُقُ فِي تَوَكُّلِهِ وَإِخْلَاصِهِ، فَيَرَى الجَمَالَ فِي كُلِّ قَضَاءٍ وَقَدَرٍ.
+            وَمِنْ أَعْظَمِ أَسْبَابِ انْشِرَاحِ الصَّدْرِ كَثْرَةُ الذِّكْرِ وَالإِحْسَانُ إِلَى الخَلْقِ وَالتَّغَافُلُ عَنِ الزَّلَّاتِ.
+        """.trimIndent()
+
+        val extracted = ArabicTextNormalizer.extractTitleSubtitleAndAuthor(
+            rawText = rawTextWithoutAuthorOrChapters,
+            explicitTitle = null,
+            explicitAuthor = null,
+            fallbackTitle = "رسالة"
+        )
+        assertEquals("رِسَالَةٌ إِلَى القَلْبِ السَّلِيمِ", extracted.first)
+        assertEquals("Subtitle must be empty when not explicitly specified", "", extracted.second)
+        assertEquals("Author must be empty when not explicitly specified", "", extracted.third)
+
+        val generatedHtml = SmartBookConverter.convertRawTextToLuxuryHtml(
+            rawText = rawTextWithoutAuthorOrChapters,
+            fallbackFileName = "رسالة.txt",
+            theme = BookVisualTheme.ROSE_HEART
+        )
+
+        // Verify no fake author, subtitle, eyebrow, chapter tag, or closing reflection page
+        assertFalse(generatedHtml.contains("إصدارات مكتبتي الفاخرة"))
+        assertFalse(generatedHtml.contains("طبعة رقمية تفاعلية منسقة"))
+        assertFalse(generatedHtml.contains("طَبْعَةٌ رَقْمِيَّةٌ تَفَاعُلِيَّةٌ فَاخِرَة"))
+        assertFalse(generatedHtml.contains("مدخل الكتاب"))
+        assertFalse(generatedHtml.contains("دفتر التأملات والخلاصة الشخصية"))
+        assertFalse(generatedHtml.contains("(2)</h2>"))
+
+        // Verify LTR page counter & single-page turn guard
+        assertTrue(generatedHtml.contains("id=\"pageCounter\" class=\"page-counter\" dir=\"ltr\""))
+        assertTrue(generatedHtml.contains("unicode-bidi: isolate"))
+        assertTrue(generatedHtml.contains("__maktabatiLastPageTurnAt"))
+
+        val parsedMeta = HtmlBookParser.parseContent(generatedHtml, "افتراضي", quickMode = false)
+        assertEquals("", parsedMeta.author)
+        assertEquals("Cover + 1 content page = 2 pages total", 2, parsedMeta.pageCount)
+    }
 }
+

@@ -249,11 +249,13 @@ object SandboxJsRuntimeBuilder {
                   if (typeof state.page === 'number') return state.page;
                 }
               } catch (e) {}
+              try { if (typeof currentPageIndex === 'number') return currentPageIndex; } catch (e) {}
               try { if (typeof currentPage === 'number') return currentPage; } catch (e) {}
               if (window.state) {
                 if (typeof window.state.currentPage === 'number') return window.state.currentPage;
                 if (typeof window.state.page === 'number') return window.state.page;
               }
+              if (typeof window.currentPageIndex === 'number') return window.currentPageIndex;
               if (typeof window.currentPage === 'number') return window.currentPage;
               const domPages = getDomPageElements();
               if (domPages.length > 0) {
@@ -271,12 +273,15 @@ object SandboxJsRuntimeBuilder {
             function setCurrentPageIndex(newIdx) {
               window.__maktabatiFallbackPage = newIdx;
               window.__maktabatiLastSavedPage = newIdx;
+              window.currentPageIndex = newIdx;
+              window.currentPage = newIdx;
               try {
                 if (typeof state !== 'undefined' && state) {
                   state.currentPage = newIdx;
                   state.page = newIdx;
                 }
               } catch (e) {}
+              try { if (typeof currentPageIndex !== 'undefined') currentPageIndex = newIdx; } catch (e) {}
               try { if (typeof currentPage !== 'undefined') currentPage = newIdx; } catch (e) {}
               if (window.state) {
                 window.state.currentPage = newIdx;
@@ -554,8 +559,13 @@ object SandboxJsRuntimeBuilder {
                   container.innerHTML = html;
                 }
                 const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
-                if (counterEl && !(counterEl.textContent || '').trim()) {
-                  counterEl.textContent = (idx + 1) + ' / ' + pages.length;
+                if (counterEl) {
+                  counterEl.setAttribute('dir', 'ltr');
+                  counterEl.style.direction = 'ltr';
+                  counterEl.style.unicodeBidi = 'isolate';
+                  if (!(counterEl.textContent || '').trim()) {
+                    counterEl.textContent = (idx + 1) + ' / ' + pages.length;
+                  }
                 }
                 MaktabatiLayoutGuard.inspectAndHeal();
                 reportPageToBridge(idx + 1, pages.length);
@@ -563,11 +573,17 @@ object SandboxJsRuntimeBuilder {
             }
 
             window.__maktabatiTurn = function(delta) {
+              const now = Date.now();
+              if (window.__maktabatiLastPageTurnAt && (now - window.__maktabatiLastPageTurnAt) < 220) {
+                return;
+              }
+              window.__maktabatiLastPageTurnAt = now;
+              const step = delta >= 0 ? 1 : -1;
               const data = getBookData();
               const pages = getPagesArray(data);
               if (pages && pages.length) {
                 const curIdx = getCurrentPageIndex();
-                const nextIdx = Math.max(0, Math.min(pages.length - 1, curIdx + delta));
+                const nextIdx = Math.max(0, Math.min(pages.length - 1, curIdx + step));
                 if (nextIdx === curIdx) return;
                 setCurrentPageIndex(nextIdx);
                 const container = document.getElementById('pageInnerContent') || document.getElementById('pageContent') || document.getElementById('pageCanvas');
@@ -575,8 +591,11 @@ object SandboxJsRuntimeBuilder {
                   container.innerHTML = buildPageHtml(pages[nextIdx], nextIdx);
                 }
                 const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
-                if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
-                animateSubtlePageTransition(delta);
+                if (counterEl) {
+                  counterEl.setAttribute('dir', 'ltr');
+                  counterEl.textContent = (nextIdx + 1) + ' / ' + pages.length;
+                }
+                animateSubtlePageTransition(step);
                 MaktabatiLayoutGuard.inspectAndHeal();
                 reportPageToBridge(nextIdx + 1, pages.length);
                 return;
@@ -584,15 +603,19 @@ object SandboxJsRuntimeBuilder {
               const domPages = getDomPageElements();
               if (domPages.length > 0) {
                 const curIdx = getCurrentPageIndex();
-                const nextIdx = Math.max(0, Math.min(domPages.length - 1, curIdx + delta));
+                const nextIdx = Math.max(0, Math.min(domPages.length - 1, curIdx + step));
                 if (nextIdx === curIdx) return;
+                setCurrentPageIndex(nextIdx);
                 for (let i = 0; i < domPages.length; i++) {
                   if (i === nextIdx) domPages[i].classList.add('active');
                   else domPages[i].classList.remove('active');
                 }
                 const counterEl = document.getElementById('pageCount') || document.getElementById('pageCounter');
-                if (counterEl) counterEl.textContent = (nextIdx + 1) + ' / ' + domPages.length;
-                animateSubtlePageTransition(delta);
+                if (counterEl) {
+                  counterEl.setAttribute('dir', 'ltr');
+                  counterEl.textContent = (nextIdx + 1) + ' / ' + domPages.length;
+                }
+                animateSubtlePageTransition(step);
                 MaktabatiLayoutGuard.inspectAndHeal();
                 reportPageToBridge(nextIdx + 1, domPages.length);
               }
@@ -681,19 +704,26 @@ object SandboxJsRuntimeBuilder {
 
             function triggerUniversalPageTurn(delta) {
               try {
+                const now = Date.now();
+                if (window.__maktabatiLastPageTurnAt && (now - window.__maktabatiLastPageTurnAt) < 220) {
+                  return false;
+                }
+                const step = delta >= 0 ? 1 : -1;
                 const beforePage = getCurrentPageIndex();
-                if (delta > 0 && typeof window.nextPage === 'function') {
+                if (step > 0 && typeof window.nextPage === 'function') {
                   window.nextPage();
-                  animateSubtlePageTransition(delta);
+                  window.__maktabatiLastPageTurnAt = Date.now();
+                  animateSubtlePageTransition(step);
                   setTimeout(function() {
                     syncDomActivePageWithBridge();
                     MaktabatiLayoutGuard.inspectAndHeal();
                   }, 25);
                   return true;
                 }
-                if (delta < 0 && typeof window.prevPage === 'function') {
+                if (step < 0 && typeof window.prevPage === 'function') {
                   window.prevPage();
-                  animateSubtlePageTransition(delta);
+                  window.__maktabatiLastPageTurnAt = Date.now();
+                  animateSubtlePageTransition(step);
                   setTimeout(function() {
                     syncDomActivePageWithBridge();
                     MaktabatiLayoutGuard.inspectAndHeal();
@@ -701,8 +731,9 @@ object SandboxJsRuntimeBuilder {
                   return true;
                 }
                 if (typeof window.changePage === 'function') {
-                  window.changePage(delta);
-                  animateSubtlePageTransition(delta);
+                  window.__maktabatiLastPageTurnAt = now;
+                  window.changePage(step);
+                  animateSubtlePageTransition(step);
                   setTimeout(function() {
                     syncDomActivePageWithBridge();
                     MaktabatiLayoutGuard.inspectAndHeal();
@@ -710,28 +741,30 @@ object SandboxJsRuntimeBuilder {
                   return true;
                 }
                 if (typeof window.goToPage === 'function') {
-                  window.goToPage(beforePage + delta);
-                  animateSubtlePageTransition(delta);
+                  window.__maktabatiLastPageTurnAt = now;
+                  window.goToPage(beforePage + step);
+                  animateSubtlePageTransition(step);
                   setTimeout(function() {
                     syncDomActivePageWithBridge();
                     MaktabatiLayoutGuard.inspectAndHeal();
                   }, 25);
                   return true;
                 }
-                const btnSelector = delta > 0
+                const btnSelector = step > 0
                   ? '#btnNextPage,#nextBtn,.btn-next,[data-action="next"]'
                   : '#btnPrevPage,#prevBtn,.btn-prev,[data-action="prev"]';
                 const btn = document.querySelector(btnSelector);
                 if (btn && !btn.disabled) {
+                  window.__maktabatiLastPageTurnAt = now;
                   btn.click();
-                  animateSubtlePageTransition(delta);
+                  animateSubtlePageTransition(step);
                   setTimeout(function() {
                     syncDomActivePageWithBridge();
                     MaktabatiLayoutGuard.inspectAndHeal();
                   }, 25);
                   return true;
                 }
-                window.__maktabatiTurn(delta);
+                window.__maktabatiTurn(step);
                 return true;
               } catch (e) {}
               return false;

@@ -571,21 +571,23 @@ object HtmlCoverSnapshotGenerator {
                 canvas.restore()
             }
 
-            val authorPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = if (isLightCover) primaryColorInt else frameColorInt
-                textSize = 25f
-                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            }
-            val authorLayout = StaticLayout.Builder
-                .obtain(metadata.author, 0, metadata.author.length, authorPaint, textMaxWidth)
-                .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                .setMaxLines(1)
-                .build()
+            if (metadata.author.isNotBlank()) {
+                val authorPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = if (isLightCover) primaryColorInt else frameColorInt
+                    textSize = 25f
+                    typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                }
+                val authorLayout = StaticLayout.Builder
+                    .obtain(metadata.author, 0, metadata.author.length, authorPaint, textMaxWidth)
+                    .setAlignment(Layout.Alignment.ALIGN_CENTER)
+                    .setMaxLines(1)
+                    .build()
 
-            canvas.save()
-            canvas.translate(60f, SNAPSHOT_HEIGHT - 115f)
-            authorLayout.draw(canvas)
-            canvas.restore()
+                canvas.save()
+                canvas.translate(60f, SNAPSHOT_HEIGHT - 115f)
+                authorLayout.draw(canvas)
+                canvas.restore()
+            }
 
             saveBitmapToFile(bmp, targetFile)
         } catch (_: Throwable) {

@@ -30,7 +30,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TextFormat
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.AlertDialog
@@ -174,8 +174,9 @@ fun ReaderExtendedBottomBar(
                             overflow = TextOverflow.Ellipsis,
                             fontWeight = FontWeight.Bold
                         )
+                        val pageIndicatorText = "${strings.readerPageIndicator(currentPage, livePageCount)} (${(currentProgress * 100).toInt()}%)"
                         Text(
-                            text = "${book.author} • ${strings.readerPageIndicator(currentPage, livePageCount)} (${(currentProgress * 100).toInt()}%)",
+                            text = if (book.author.isNotBlank()) "${book.author} • $pageIndicatorText" else pageIndicatorText,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -205,7 +206,7 @@ fun ReaderExtendedBottomBar(
                             modifier = Modifier.testTag("reader_typography_settings_button")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Settings,
+                                imageVector = Icons.Default.TextFormat,
                                 contentDescription = strings.readerTypographySettings,
                                 tint = MaterialTheme.colorScheme.primary
                             )

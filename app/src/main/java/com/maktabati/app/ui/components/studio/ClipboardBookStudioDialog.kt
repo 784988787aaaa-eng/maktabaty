@@ -99,8 +99,8 @@ fun ClipboardBookStudioDialog(
     }
 
     var title by remember { mutableStateOf(liveProposal?.detectedTitle ?: "") }
-    var subtitle by remember { mutableStateOf(liveProposal?.detectedSubtitle ?: "نسخة تفاعلية فاخرة • مكتبتي") }
-    var author by remember { mutableStateOf(liveProposal?.detectedAuthor ?: "مكتبتي الرقمية") }
+    var subtitle by remember { mutableStateOf(liveProposal?.detectedSubtitle ?: "") }
+    var author by remember { mutableStateOf(liveProposal?.detectedAuthor ?: "") }
     var selectedTheme by remember {
         mutableStateOf(liveProposal?.recommendedTheme ?: BookVisualTheme.CREAM_BEIGE_PAPER)
     }
@@ -111,7 +111,7 @@ fun ClipboardBookStudioDialog(
             if (title.isBlank() || title == "مقتطفات من الحافظة") {
                 title = liveProposal.detectedTitle
             }
-            if (author.isBlank() || author == "مكتبتي الرقمية") {
+            if (author.isBlank()) {
                 author = liveProposal.detectedAuthor
             }
             if (!userManuallyPickedTheme) {
@@ -399,7 +399,7 @@ fun ClipboardBookStudioDialog(
                         LiveBookTemplatePreviewCard(
                             theme = selectedTheme,
                             bookTitle = title.ifBlank { liveProposal?.detectedTitle ?: "عنوان الكتاب الفاخر" },
-                            bookAuthor = author.ifBlank { "مكتبتي الرقمية" },
+                            bookAuthor = author.trim().ifBlank { liveProposal?.detectedAuthor.orEmpty() },
                             excerpt = previewExcerpt
                         )
                     }
@@ -517,10 +517,10 @@ fun ClipboardBookStudioDialog(
                                 liveProposal?.detectedTitle ?: "مقتطفات من الحافظة"
                             }
                             val finalSubtitle = subtitle.trim().ifEmpty {
-                                liveProposal?.detectedSubtitle ?: "نسخة تفاعلية فاخرة • مكتبتي"
+                                liveProposal?.detectedSubtitle.orEmpty()
                             }
                             val finalAuthor = author.trim().ifEmpty {
-                                liveProposal?.detectedAuthor ?: "مكتبتي الرقمية"
+                                liveProposal?.detectedAuthor.orEmpty()
                             }
                             onConfirmCreateBook(
                                 rawText,

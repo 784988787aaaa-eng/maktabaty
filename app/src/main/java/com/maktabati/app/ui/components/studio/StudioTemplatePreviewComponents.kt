@@ -160,15 +160,17 @@ fun LiveBookTemplatePreviewCard(
                             .height(1.5.dp)
                             .background(accentGold.copy(alpha = 0.9f))
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = bookAuthor.take(18),
-                        fontFamily = bodyFont,
-                        fontSize = 8.sp,
-                        color = Color.White.copy(alpha = 0.88f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if (bookAuthor.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = bookAuthor.take(18),
+                            fontFamily = bodyFont,
+                            fontSize = 8.sp,
+                            color = Color.White.copy(alpha = 0.88f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
 

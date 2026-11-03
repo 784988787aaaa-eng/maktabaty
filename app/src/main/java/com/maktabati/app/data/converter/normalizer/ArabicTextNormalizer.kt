@@ -137,25 +137,12 @@ object ArabicTextNormalizer {
 
             if (idx == 0 && detectedTitle.isNullOrBlank() && cleanLine.length in 2..95) {
                 detectedTitle = cleanLine
-            } else if (idx == 1 && detectedSubtitle.isBlank() && cleanLine.length in 4..110 &&
-                !isChapterHeadingLine(cleanLine) && AUTHOR_LINE_REGEX.find(cleanLine) == null
-            ) {
-                detectedSubtitle = cleanLine
             }
         }
 
-        val isRtl = detectLanguageAndDirection(rawText).first
         val finalTitle = detectedTitle?.takeIf { it.isNotBlank() } ?: fallbackTitle
-        val finalSubtitle = detectedSubtitle.ifBlank {
-            if (isRtl) {
-                "طبعة رقمية تفاعلية منسقة • منصة مكتبتي"
-            } else {
-                "Interactive Digital Edition • Maktabati"
-            }
-        }
-        val finalAuthor = detectedAuthor?.takeIf { it.isNotBlank() } ?: (
-            if (isRtl) "إصدارات مكتبتي الفاخرة" else "Maktabati Publishing"
-        )
+        val finalSubtitle = detectedSubtitle.trim()
+        val finalAuthor = detectedAuthor?.trim() ?: ""
 
         return Triple(finalTitle, finalSubtitle, finalAuthor)
     }

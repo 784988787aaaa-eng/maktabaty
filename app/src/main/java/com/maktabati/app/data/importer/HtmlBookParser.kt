@@ -477,10 +477,6 @@ object HtmlBookParser {
             else -> "en"
         }
 
-        if (author.isBlank()) {
-            author = if (language == "ar") "مؤلف غير محدد" else "Unknown Author"
-        }
-
         // 4. Extract Exact Page Count & TOC strictly following the 4 Priorities
         val tocList = mutableListOf<TocEntry>()
         val bookDataPageCount = extractBookDataPagesCountAndToc(combinedContent, bdStartIdx, tocList)

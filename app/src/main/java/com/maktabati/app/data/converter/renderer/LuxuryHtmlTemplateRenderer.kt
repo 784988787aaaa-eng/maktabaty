@@ -23,20 +23,24 @@ object LuxuryHtmlTemplateRenderer {
     ): String {
         val svgArt = buildThemeSvgEmblem(theme)
         val startBtnLabel = if (isRtl) "افتح صفحات الكتاب ✦" else "Open Book ✦"
-        val editionEyebrow = if (isRtl) {
-            "✦ طَبْعَةٌ رَقْمِيَّةٌ تَفَاعُلِيَّةٌ فَاخِرَة • مَكْتَبَتِي ✦"
+        val subtitleHtml = if (subtitle.isNotBlank()) {
+            """<div class="subtitle">${escapeHtml(subtitle)}</div>"""
         } else {
-            "✦ LUXURY INTERACTIVE EDITION • MAKTABATI ✦"
+            ""
+        }
+        val authorHtml = if (author.isNotBlank()) {
+            """<div class="author">${escapeHtml(author)}</div>"""
+        } else {
+            ""
         }
 
         return """
             <div class="cover-page">
-              <div class="eyebrow">$editionEyebrow</div>
               $svgArt
               <h1>${escapeHtml(title)}</h1>
-              <div class="subtitle">${escapeHtml(subtitle)}</div>
+              $subtitleHtml
               <div class="ornament">❖ ❖ ❖</div>
-              <div class="author">${escapeHtml(author)}</div>
+              $authorHtml
               <button class="primary-btn" onclick="window.goToPage(1)">$startBtnLabel</button>
             </div>
         """.trimIndent()
@@ -681,6 +685,8 @@ body {
   border: 1px solid var(--line);
   border-radius: 99px;
   padding: 5px 14px;
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .overlay {
@@ -845,8 +851,6 @@ mark.search-hit-mark, mark.page-search-highlight {
 
     <div id="runningHeader" class="running-header" hidden>
       <span id="runningHeaderTag" class="running-header-mark">${escapeHtml(bookTitle)}</span>
-      <span>•</span>
-      <span id="runningHeaderTitle">${escapeHtml(bookSubtitle)}</span>
     </div>
 
     <main id="bookStage" class="book-stage">
@@ -857,7 +861,7 @@ mark.search-hit-mark, mark.page-search-highlight {
 
     <footer class="bottom-nav-dock">
       <button id="btnPrevPage" class="nav-btn" onclick="window.prevPage()">$prevLabel</button>
-      <span id="pageCounter" class="page-counter">1 / ${pages.size}</span>
+      <span id="pageCounter" class="page-counter" dir="ltr">1 / ${pages.size}</span>
       <button id="btnNextPage" class="nav-btn" onclick="window.nextPage()">$nextLabel</button>
     </footer>
   </div>
@@ -900,6 +904,8 @@ mark.search-hit-mark, mark.page-search-highlight {
     };
 
     let currentPageIndex = 0;
+    window.currentPageIndex = 0;
+    window.currentPage = 0;
     let savedBookmarks = [];
     try {
       const rawBm = localStorage.getItem(STORAGE_PREFIX + "bookmarks");
@@ -912,7 +918,6 @@ mark.search-hit-mark, mark.page-search-highlight {
     const btnNextPage = document.getElementById("btnNextPage");
     const runningHeader = document.getElementById("runningHeader");
     const runningHeaderTag = document.getElementById("runningHeaderTag");
-    const runningHeaderTitle = document.getElementById("runningHeaderTitle");
     const bookmarkBtn = document.getElementById("bookmarkBtn");
     const bookStage = document.getElementById("bookStage");
 
@@ -933,6 +938,10 @@ mark.search-hit-mark, mark.page-search-highlight {
       if (index < 0) index = 0;
       if (index >= BOOK_DATA.totalPages) index = BOOK_DATA.totalPages - 1;
       currentPageIndex = index;
+      window.currentPageIndex = index;
+      window.currentPage = index;
+      window.__maktabatiLastSavedPage = index;
+      window.__maktabatiFallbackPage = index;
 
       const page = BOOK_DATA.pages[index];
       activePageArticle.innerHTML = page.html;
@@ -945,8 +954,7 @@ mark.search-hit-mark, mark.page-search-highlight {
         runningHeader.hidden = true;
       } else {
         runningHeader.hidden = false;
-        runningHeaderTag.textContent = page.tag || BOOK_DATA.title;
-        runningHeaderTitle.textContent = page.title || "";
+        runningHeaderTag.textContent = BOOK_DATA.title;
       }
 
       if (savedBookmarks.includes(index)) {
@@ -976,13 +984,23 @@ mark.search-hit-mark, mark.page-search-highlight {
     };
 
     window.nextPage = function() {
+      const now = Date.now();
+      if (window.__maktabatiLastPageTurnAt && (now - window.__maktabatiLastPageTurnAt) < 220) {
+        return;
+      }
       if (currentPageIndex < BOOK_DATA.totalPages - 1) {
+        window.__maktabatiLastPageTurnAt = now;
         renderPage(currentPageIndex + 1);
       }
     };
 
     window.prevPage = function() {
+      const now = Date.now();
+      if (window.__maktabatiLastPageTurnAt && (now - window.__maktabatiLastPageTurnAt) < 220) {
+        return;
+      }
       if (currentPageIndex > 0) {
+        window.__maktabatiLastPageTurnAt = now;
         renderPage(currentPageIndex - 1);
       }
     };

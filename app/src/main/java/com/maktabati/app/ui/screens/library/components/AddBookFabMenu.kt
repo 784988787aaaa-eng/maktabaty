@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maktabati.app.ui.localization.LocalAppStrings
@@ -49,7 +50,10 @@ fun AddBookFabMenu(
     val strings = LocalAppStrings.current
     var showAddBookMenu by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.BottomStart
+    ) {
         Surface(
             onClick = { showAddBookMenu = true },
             shape = RoundedCornerShape(50),
@@ -66,7 +70,7 @@ fun AddBookFabMenu(
                 .testTag("import_book_fab")
         ) {
             Row(
-                modifier = Modifier.padding(start = 10.dp, end = 16.dp),
+                modifier = Modifier.padding(start = 12.dp, end = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -88,7 +92,8 @@ fun AddBookFabMenu(
                     text = strings.fabAddBook,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.5.sp
+                    fontSize = 13.5.sp,
+                    maxLines = 1
                 )
             }
         }
@@ -96,6 +101,7 @@ fun AddBookFabMenu(
         DropdownMenu(
             expanded = showAddBookMenu,
             onDismissRequest = { showAddBookMenu = false },
+            offset = DpOffset(x = 0.dp, y = (-6).dp),
             shape = RoundedCornerShape(18.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp,

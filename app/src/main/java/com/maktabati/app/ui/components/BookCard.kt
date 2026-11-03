@@ -425,7 +425,7 @@ fun BookGridItem(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = book.author,
+                            text = book.author.ifBlank { book.title },
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -694,7 +694,7 @@ fun BookListItem(
                 }
 
                 Text(
-                    text = "${book.author} • $pagesLabel",
+                    text = if (book.author.isNotBlank()) "${book.author} • $pagesLabel" else (shelfName ?: pagesLabel),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1
