@@ -131,7 +131,13 @@ class BookRepository(
                             )
                         }
 
-                        if (userBook.bgPrimaryHex != meta.bgPrimaryHex ||
+                        val sanitizedSavedAuthor = HtmlBookParser.sanitizeExtractedAuthor(
+                            userBook.author,
+                            userBook.title,
+                            userBook.subtitle
+                        )
+                        if (userBook.author != sanitizedSavedAuthor ||
+                            userBook.bgPrimaryHex != meta.bgPrimaryHex ||
                             userBook.accentRoseHex != meta.accentRoseHex ||
                             userBook.accentGoldHex != meta.accentGoldHex ||
                             userBook.coverGradientStart != meta.coverGradientStart ||
@@ -141,7 +147,7 @@ class BookRepository(
                                 id = userBook.id,
                                 title = userBook.title,
                                 subtitle = userBook.subtitle,
-                                author = userBook.author,
+                                author = sanitizedSavedAuthor,
                                 coverGradientStart = meta.coverGradientStart,
                                 coverGradientEnd = meta.coverGradientEnd,
                                 bgPrimaryHex = meta.bgPrimaryHex,

@@ -45,7 +45,10 @@ object HtmlBookParser {
     private val TITLE_PATTERN = Pattern.compile("<title[^>]*>(.*?)</title>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
     private val H1_PATTERN = Pattern.compile("<h1[^>]*>(.*?)</h1>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
     private val AUTHOR_META_PATTERN = Pattern.compile("<meta\\s+[^>]*name=[\"']author[\"'][^>]*content=[\"'](.*?)[\"']", Pattern.CASE_INSENSITIVE)
+    private val SUBTITLE_META_PATTERN = Pattern.compile("<meta\\s+[^>]*name=[\"']subtitle[\"'][^>]*content=[\"'](.*?)[\"']", Pattern.CASE_INSENSITIVE)
     private val DESC_META_PATTERN = Pattern.compile("<meta\\s+[^>]*name=[\"']description[\"'][^>]*content=[\"'](.*?)[\"']", Pattern.CASE_INSENSITIVE)
+    private val DOM_SUBTITLE_PATTERN = Pattern.compile("<(?:div|p|h2)\\s+[^>]*class=[\"'][^\"']*\\b(?:cover-subtitle|subtitle)\\b[^\"']*[\"'][^>]*>(.*?)</(?:div|p|h2)>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
+    private val DOM_AUTHOR_PATTERN = Pattern.compile("<(?:div|p|span)\\s+[^>]*class=[\"'][^\"']*\\b(?:cover-author|author)\\b[^\"']*[\"'][^>]*>(.*?)</(?:div|p|span)>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
     private val CSS_LINK_PATTERN = Pattern.compile("<link\\s+[^>]*rel=[\"']stylesheet[\"'][^>]*>", Pattern.CASE_INSENSITIVE)
     private val STYLE_TAG_PATTERN = Pattern.compile("<style[^>]*>", Pattern.CASE_INSENSITIVE)
     private val SCRIPT_PATTERN = Pattern.compile("<script\\s*[^>]*>", Pattern.CASE_INSENSITIVE)
@@ -57,10 +60,26 @@ object HtmlBookParser {
     private val BOOK_DATA_TITLE_PATTERN = Pattern.compile("[\"']?\\btitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
     private val BOOK_DATA_SUBTITLE_PATTERN = Pattern.compile("[\"']?\\bsubtitle[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
     private val BOOK_DATA_AUTHOR_PATTERN = Pattern.compile("[\"']?\\bauthor[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val PAGE_PRIMARY_TITLE_REGEX = Regex("[\"']?(?:title|sectionTitle|heading)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val PAGE_TAG_REGEX = Regex("[\"']?(?:tag|chapterTag|chapterNumber)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
+    private val PAGE_TYPE_REGEX = Regex("[\"']?type[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
     private val KEY_TITLE_REGEX = Regex("[\"']?(?:title|sectionTitle|chapterTag|chapterNumber|heading|subtitle)[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")
     private val ARRAY_START_REGEX = Regex("[\"']?(?:pages|chapters|slides)[\"']?\\s*:\\s*\\[")
     private val STRIP_TAGS_REGEX = Regex("<.*?>")
     private val SECTION_OR_ARTICLE_REGEX = Regex("<(?:section|article)\\b", RegexOption.IGNORE_CASE)
+    private val DIACRITICS_COMPARE_REGEX = Regex("[\\u064B-\\u065F\\u0670\\u06D6-\\u06EDـ]")
+    private val LEADING_TRAILING_ORNAMENT_REGEX = Regex("^[\\s🌸✦❖❀📖✨•\\-—:]+|[\\s🌸✦❖❀📖✨•\\-—:]+$")
+    private val SYNTHETIC_AUTHOR_PREFIXES = listOf(
+        "إصدارات مكتبتي",
+        "اصدارات مكتبتي",
+        "طبعة رقمية",
+        "طبعة الرسائل",
+        "مؤلف غير محدد",
+        "بدون مؤلف",
+        "غير معروف",
+        "رسائل وجدانية لكل فتاة",
+        "رسائل تربوية إيمانية"
+    )
 
     // Ordered CSS variable candidates for True Palette Extraction
     private val BG_VAR_NAMES = listOf(
@@ -416,23 +435,34 @@ object HtmlBookParser {
                 title = h1Matcher.group(1)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
             }
         }
-        if (title.isBlank()) {
-            title = fallbackTitle
-        }
+        title = cleanDecoratedTitle(title).ifBlank { fallbackTitle }
 
-        // 2. Extract Subtitle & Author
+        // 2. Extract Subtitle & Author (with deduplication & synthetic placeholder filtering)
         var subtitle = ""
         if (bdHeaderSlice.isNotEmpty()) {
             val bdSubtitleMatcher = BOOK_DATA_SUBTITLE_PATTERN.matcher(bdHeaderSlice)
             if (bdSubtitleMatcher.find()) {
-                subtitle = bdSubtitleMatcher.group(1)?.trim() ?: ""
+                subtitle = deduplicateSubtitleAgainstTitle(title, bdSubtitleMatcher.group(1)?.trim() ?: "")
+            }
+        }
+        if (subtitle.isBlank()) {
+            val subMetaMatcher = SUBTITLE_META_PATTERN.matcher(headSample)
+            if (subMetaMatcher.find()) {
+                subtitle = deduplicateSubtitleAgainstTitle(title, subMetaMatcher.group(1)?.trim() ?: "")
+            }
+        }
+        if (subtitle.isBlank()) {
+            val domSubMatcher = DOM_SUBTITLE_PATTERN.matcher(headSample)
+            if (domSubMatcher.find()) {
+                val rawDomSub = domSubMatcher.group(1)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
+                subtitle = deduplicateSubtitleAgainstTitle(title, rawDomSub)
             }
         }
 
         var description = ""
         val descMatcher = DESC_META_PATTERN.matcher(headSample)
         if (descMatcher.find()) {
-            description = descMatcher.group(1)?.trim() ?: ""
+            description = deduplicateSubtitleAgainstTitle(title, descMatcher.group(1)?.trim() ?: "")
         }
         if (subtitle.isBlank() && description.isNotBlank()) {
             subtitle = description
@@ -451,6 +481,13 @@ object HtmlBookParser {
                 author = authorMatcher.group(1)?.trim() ?: ""
             }
         }
+        if (author.isBlank()) {
+            val domAuthorMatcher = DOM_AUTHOR_PATTERN.matcher(headSample)
+            if (domAuthorMatcher.find()) {
+                author = domAuthorMatcher.group(1)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
+            }
+        }
+        author = sanitizeExtractedAuthor(author, title, subtitle)
 
         // 3. Direction & Language from <html dir="..." lang="...">
         var dirAttr: String? = null
@@ -484,11 +521,18 @@ object HtmlBookParser {
         if (!quickMode && tocList.isEmpty()) {
             val headingMatcher = HEADING_PATTERN.matcher(content)
             var count = 0
+            var lastHeadingNorm = ""
             while (headingMatcher.find()) {
                 val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
                 val id = headingMatcher.group(2)
                 val headingText = headingMatcher.group(3)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
                 if (headingText.isNotBlank()) {
+                    val norm = normalizeForComparison(headingText)
+                    if (norm.isNotEmpty() && norm == lastHeadingNorm) {
+                        count++
+                        continue
+                    }
+                    lastHeadingNorm = norm
                     val level = when (tag) {
                         "h1" -> 1
                         "h2" -> 2
@@ -566,6 +610,64 @@ object HtmlBookParser {
         )
     }
 
+    private fun normalizeForComparison(text: String): String {
+        return text
+            .replace(DIACRITICS_COMPARE_REGEX, "")
+            .replace(LEADING_TRAILING_ORNAMENT_REGEX, "")
+            .replace(Regex("[أإآ]"), "ا")
+            .replace('ة', 'ه')
+            .replace('ى', 'ي')
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .lowercase()
+    }
+
+    private fun cleanDecoratedTitle(raw: String): String {
+        return raw.replace(LEADING_TRAILING_ORNAMENT_REGEX, "").trim()
+    }
+
+    private fun deduplicateSubtitleAgainstTitle(title: String, rawSubtitle: String): String {
+        val cleanSub = rawSubtitle.replace(LEADING_TRAILING_ORNAMENT_REGEX, "").trim()
+        if (cleanSub.isEmpty()) return ""
+        val normTitle = normalizeForComparison(title)
+        val normSub = normalizeForComparison(cleanSub)
+        if (normTitle.isEmpty()) return cleanSub
+        if (normSub == normTitle) return ""
+
+        // If subtitle starts with the title (e.g. "العنوان: العنوان الفرعي" or "العنوان — العنوان الفرعي"), strip the repeated title prefix
+        val separators = listOf(":", "—", "–", "-", "•", "|")
+        for (sep in separators) {
+            val sepIdx = cleanSub.indexOf(sep)
+            if (sepIdx > 0) {
+                val prefixNorm = normalizeForComparison(cleanSub.substring(0, sepIdx))
+                if (prefixNorm == normTitle || (normTitle.length >= 6 && normTitle.contains(prefixNorm))) {
+                    val remainder = cleanSub.substring(sepIdx + sep.length)
+                        .replace(LEADING_TRAILING_ORNAMENT_REGEX, "")
+                        .trim()
+                    if (normalizeForComparison(remainder) != normTitle) {
+                        return remainder
+                    }
+                    return ""
+                }
+            }
+        }
+        return cleanSub
+    }
+
+    fun sanitizeExtractedAuthor(rawAuthor: String, title: String = "", subtitle: String = ""): String {
+        val clean = rawAuthor.replace(LEADING_TRAILING_ORNAMENT_REGEX, "").trim()
+        if (clean.isEmpty()) return ""
+        val normAuthor = normalizeForComparison(clean)
+        if (normAuthor.isEmpty()) return ""
+        if (normAuthor == normalizeForComparison(title) || normAuthor == normalizeForComparison(subtitle)) {
+            return ""
+        }
+        if (SYNTHETIC_AUTHOR_PREFIXES.any { normAuthor.startsWith(normalizeForComparison(it)) }) {
+            return ""
+        }
+        return clean
+    }
+
     private fun extractBookDataPagesCountAndToc(content: String, bdStartIdx: Int, tocOut: MutableList<TocEntry>): Int {
         val startSearch = if (bdStartIdx >= 0) bdStartIdx else 0
         val searchRegion = if (startSearch > 0) content.substring(startSearch) else content
@@ -584,6 +686,7 @@ object HtmlBookParser {
         var topLevelObjectCount = 0
         var objectDepth = 0
         var currentObjectStart = -1
+        var lastTocSignature = ""
 
         var i = arrayStartIndex
         val len = content.length
@@ -655,18 +758,41 @@ object HtmlBookParser {
                     objectDepth--
                     if (bracketDepth == 1 && objectDepth == 0 && currentObjectStart != -1) {
                         topLevelObjectCount++
-                        val sliceEnd = minOf(i + 1, currentObjectStart + 450)
+                        val sliceEnd = minOf(i + 1, currentObjectStart + 650)
                         val objSlice = content.substring(currentObjectStart, sliceEnd)
-                        val pageTitleMatch = KEY_TITLE_REGEX.find(objSlice)
-                        val pageTitle = pageTitleMatch?.groupValues?.get(1)?.trim() ?: "صفحة $topLevelObjectCount"
-                        if (pageTitle.isNotBlank()) {
-                            tocOut.add(
-                                TocEntry(
-                                    title = pageTitle,
-                                    href = "#page-$topLevelObjectCount",
-                                    level = 1
+                        val headerBeforeHtml = objSlice.substringBefore("\"html\"").substringBefore("'html'")
+                        val effectiveSlice = if (headerBeforeHtml.length >= 8) headerBeforeHtml else objSlice
+
+                        val primaryTitle = PAGE_PRIMARY_TITLE_REGEX.find(effectiveSlice)?.groupValues?.get(1)?.trim()
+                            ?: PAGE_PRIMARY_TITLE_REGEX.find(objSlice)?.groupValues?.get(1)?.trim()
+                            ?: KEY_TITLE_REGEX.find(effectiveSlice)?.groupValues?.get(1)?.trim()
+                            ?: KEY_TITLE_REGEX.find(objSlice)?.groupValues?.get(1)?.trim()
+                            ?: "صفحة $topLevelObjectCount"
+
+                        val pageTag = PAGE_TAG_REGEX.find(effectiveSlice)?.groupValues?.get(1)?.trim().orEmpty()
+                        val pageType = PAGE_TYPE_REGEX.find(effectiveSlice)?.groupValues?.get(1)?.trim()?.lowercase().orEmpty()
+
+                        if (primaryTitle.isNotBlank()) {
+                            val normTag = normalizeForComparison(pageTag)
+                            val normTitle = normalizeForComparison(primaryTitle)
+                            val signature = "$normTag|$normTitle"
+                            val isOpenerOrCover = pageType == "opener" || pageType == "cover" || topLevelObjectCount == 1
+                            val isDuplicateContinuation = topLevelObjectCount > 1 &&
+                                !isOpenerOrCover &&
+                                signature.isNotEmpty() &&
+                                signature == lastTocSignature
+
+                            if (!isDuplicateContinuation) {
+                                lastTocSignature = signature
+                                val level = if (isOpenerOrCover) 1 else 2
+                                tocOut.add(
+                                    TocEntry(
+                                        title = primaryTitle,
+                                        href = "#page-$topLevelObjectCount",
+                                        level = level
+                                    )
                                 )
-                            )
+                            }
                         }
                         currentObjectStart = -1
                     }

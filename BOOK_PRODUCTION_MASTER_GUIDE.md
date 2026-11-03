@@ -6,27 +6,37 @@
 
 > **قوانين تحريم صارمة (ممنوعات قطعية لا تُقبل في أي كتاب):**
 > 1. **ممنوع نهائياً الصفحات البيضاء العارية المملة:** إياك أن تضع في الصفحة مجرد فقرتين أو ثلاث فقرات `<p>` عارية داخل صندوق أبيض وتترك نصف الصفحة السفلي فارغاً ميتاً! كل صفحة يجب أن تكون لوحة فنية متكاملة العناصر.
-> 2. **ممنوع نهائياً إضافة تخصيص اسم القارئ أو القارئة:** لا تضع أي حقل إدخال لاسم القارئ (`تخصيص الاسم` أو `اكتبي اسمكِ`) في أي مكان من الكتاب؛ حافظ على نقاء الكتاب وفخامته الأدبية المباشرة.
-> 3. **ممنوع نهائياً وضع أزرار نصية مثل `A+` أو `A-` أو `Aa` أو كلمة `الفهرس` في الشريط العلوي (`.top-bar`):** الشريط العلوي يضم فقط هوية الكتاب يميناً، وثلاث أيقونات `SVG` مرسومة بدقة يساراً (البحث `#searchOpen`، الفهرس `#tocBtn`، العلامة المرجعية `#bookmarkBtn`)، بينما يتكفل تطبيق «مكتبتي» بتكبير وتصغير الخطوط عبر `Fluid Reflow Zoom` واستوديو الخطوط.
-> 4. **ممنوع نهائياً حشر فقرة طويلة داخل عنوان الفهرس (`page.title`):** يجب أن يكون عنوان كل صفحة في الفهرس (`title`) عنواناً شاعرياً مكثفاً من **كلمتين إلى ٦ كلمات فقط** (بحد أقصى ٤٥ حرفاً)، ولا يجوز أبداً نسخ جملة طويلة من المتن ووضعها كعنوان في الفهرس.
+> 2. **ممنوع نهائياً تكرار العناوين الأساسية أو الفرعية أو الترويسات فوق بعضها (`Zero Title & Header Duplication`):**
+>    - عنوان الكتاب الأساسي يظهر في صفحة الغلاف (`.cover-page h1`) وفي الشريط العلوي الثابت (`#topBarBookTitle`) فقط؛ **يُمنع منعاً باتاً** إعادة طباعة عنوان الكتاب كـ `<h1>` في الصفحة الأولى من المتن أو داخل شريط `#runningHeader`.
+>    - العنوان الفرعي للكتاب (`.subtitle`) لا يُكتب إلا إذا كان مختلفاً تماماً في نصه ومعناه عن العنوان الأساسي؛ **إياك أن تكرر عنوان الكتاب داخل `.subtitle` أو `<meta name="description">`**، وإذا لم يوجد عنوان فرعي أو اسم مؤلف حقيقي في النص فلا تخترع عبارات وهمية (مثل «إصدارات مكتبتي الفاخرة» أو «تأليف: ...»).
+>    - في **صفحة مطلع الفصل أو المحطة (`type: "opener"`)**: يظهر التاج العلوي (`.letter-envelope-header` لرقم/شارة الفصل مثل «المَحَطَّةُ الأُولَى») وتحته عنوان الفصل الأساسي (`<h1 class="chapter-opener">`) مرة واحدة فقط، ويُخفى شريط `#runningHeader` تماماً في هذه الصفحة (`runningHeader.hidden = true`) حتى لا يتكرر اسم المحطة وعنوانها مرتين فوق بعضهما! وإذا كان عنوان الفصل جملة واحدة بسيطة (مثل «مقدمة الكتاب») بلا شقين، فلا تضع فوقها `.letter-envelope-header` مكرراً.
+>    - في **صفحات المتابعة والاسترسال (`type: "reading"`)**: لا تكرر `<h1>` ولا `.letter-envelope-header` أبداً، بل استخدم `<h2>` للعناوين الفرعية فقط عند بدء محور فرعي جديد، بينما يتكفل شريط `#runningHeader` وحده بتذكير القارئ باسم المحطة الحالية بهدوء (ويُخفى تلقائياً إذا تطابق نصه مع `<h2>` الموجود في الصفحة).
+> 3. **ممنوع نهائياً إضافة تخصيص اسم القارئ أو القارئة:** لا تضع أي حقل إدخال لاسم القارئ (`تخصيص الاسم` أو `اكتبي اسمكِ`) في أي مكان من الكتاب؛ حافظ على نقاء الكتاب وفخامته الأدبية المباشرة.
+> 4. **ممنوع نهائياً وضع أزرار نصية مثل `A+` أو `A-` أو `Aa` أو كلمة `الفهرس` في الشريط العلوي (`.top-bar`):** الشريط العلوي يضم فقط هوية الكتاب يميناً، وثلاث أيقونات `SVG` مرسومة بدقة يساراً (البحث `#searchOpen`، الفهرس `#tocBtn`، العلامة المرجعية `#bookmarkBtn`)، بينما يتكفل تطبيق «مكتبتي» بتكبير وتصغير الخطوط عبر `Fluid Reflow Zoom` واستوديو الخطوط.
+> 5. **ممنوع نهائياً حشر فقرة طويلة أو تكرار صفحات الاسترسال في الفهرس (`#tocPanel`):** يجب أن يكون عنوان كل صفحة (`title`) عنواناً شاعرياً مكثفاً من **كلمتين إلى ٦ كلمات فقط** (بحد أقصى ٤٥ حرفاً)، مع عدم تكرار نفس العنوان في الفهرس لصفحات المتابعة المتتالية التي تحمل نفس المحطة والعنوان.
 
 ---
 
 ## أولاً: دستور الفن والجمال وتنسيق الصفحات (Artistic Page Choreography & Visual Rhythm)
 
-الكتاب الذي نصنعه ليس "مستند وورد مقسماً إلى شاشات"، بل هو **معرض فني وجداني مطبوع على ورق فاخر دافئ**. عندما يقلب القارئ أو القارئة الصفحات، يجب أن تشعر العين بالدهشة والراحة والتجدد في كل صفحة:
+الكتاب الذي نصنعه ليس "مستند وورد مقسماً إلى شاشات"، بل هو **معرض فني وجداني مطبوع على ورق فاخر دافئ**. عندما يقلب القارئ أو القارئة الصفحات، يجب أن تشعر العين بالدهشة والراحة والتجدد في كل صفحة دون أي حشو أو تكرار:
 
-### ١. تشريح الصفحة المثالية التي لا يُملّ النظر إليها (`Anatomy of an Unforgettable Page`)
-كل صفحة قراءة (`type: "reading"`) يجب أن تُبنى بإيقاع بصري متناغم يجمع بين السرد والقطع الفنية البصرية المستخرجة من روح النص نفسه:
+### ١. التوزيع الهندسي الدقيق للعناوين الأساسية والفرعية عبر الصفحات (`Hierarchy of Titles & Subheadings`)
+حتى لا يقع أي ازدواج بصري بين أشرطة القارئ ومتن الصفحة، التزم بهذا التوزيع الصارم:
 
-1. **التاج العلوي للصفحة (`.letter-envelope-header` أو `.eyebrow`):**
-   - كبسولة حريرية أنيقة في مطلع الفصل أو المحطة تحمل أيقونة رقيقة أو رقماً (`<span class="letter-seal">🌸 ١</span>`) واسم المحطة أو الرسالة (`<span class="letter-envelope-title">المَحَطَّةُ الأُولَى</span>`).
-2. **العنوان الشاعري والزخرفة الفاصلة (`<h1>` أو `<h2>` + `.ornament`):**
-   - عنوان جذاب بخط الرقعة أو الكوفي الفاخر (`var(--font-headings)`) يتبعه فاصل زخرفي ذهبي رقيق (`<div class="ornament">❖ ❀ ❖</div>`).
-3. **المطلع الوجداني الدافئ (`.opening-lead` أو `.letter-greeting`):**
-   - الجملة الافتتاحية للمحطة أو النداء الحاني (مثل: *«تأمّلي معي بقلبكِ الهادئ...»* أو *«دعينا نجلس قليلاً بعيداً عن ضجيج المقارنات...»*) تُوضع داخل `.letter-greeting` بخط مميز وحدّ سفلي منقط ناعم.
+1. **صفحة الغلاف الملوكي (`type: "cover"` — الصفحة الأولى `index = 0`):**
+   - تعرض رسمة `Inline SVG` فنية، والعنوان الأساسي للكتاب (`<h1>`)، والعنوان الفرعي الحقيقي (`.subtitle` إن وُجد وكان مختلفاً عن العنوان الأساسي)، واسم المؤلف الحقيقي (`.author` إن وُجد في النص الأصلي؛ وإلا يُحذف العنصر تماماً دون اختراع أسماء دور نشر وهمية)، وزر الانطلاق `.primary-btn`.
+   - شريط `#runningHeader` يكون مخفياً (`hidden`).
+2. **صفحة فاتحة الفصل أو المحطة (`type: "opener"`):**
+   - تبدأ بالتاج العلوي للمحطة (`.letter-envelope-header.chapter-opener`) فقط إذا كان للفصل شارة/رقم مستقل عن عنوانه (مثل: `tag: "المَحَطَّةُ الأُولَى"` و `title: "عِنْدَمَا يَتَعَبُ القَلْبُ بِصَمْت"`).
+   - يليه العنوان الأساسي للفصل (`<h1 class="chapter-opener">`) متبوعاً بفاصل زخرفي رقيق (`<div class="ornament">❖ ❀ ❖</div>`) ومطلع وجداني دافئ (`.letter-greeting`).
+   - **قاعدة عدم التكرار:** في صفحات `opener` يجب إخفاء `#runningHeader` تماماً (`runningHeader.hidden = true`) لأن `.letter-envelope-header` و `<h1>` معروضان بالفعل في صدر الصفحة!
+3. **صفحات المتابعة والبسط (`type: "reading"`):**
+   - **لا تحتوي على `<h1>` ولا `.letter-envelope-header` إطلاقاً.**
+   - يظهر فيها شريط `#runningHeader` في الأعلى بهدوء حاملاً سياق الفصل (`tag • title`) بشرط ألا يكرر اسم الكتاب الموجود في `.top-bar` وألا يكرر نص `<h2>` الموجود في مطلع الصفحة.
+   - إذا انتقل النص داخل الفصل الواحد إلى محور فرعي جديد، يُفتتح المحور بعنوان فرعي رشيق (`<h2>`) وتُحدَّث خاصية `page.title` لتعكس هذا المحور الفرعي باختصار أنيق (٢–٦ كلمات).
 4. **القلب البصري للصفحة (قطعة فنية واحدة أو اثنتان في كل صفحة — إلزامي!):**
-   - **لا تترك الصفحة سرداً نصياً خالصاً أبداً!** التقط من نص الصفحة نفسها أهم تساؤل، أو أعمق حكمة، أو آية، أو حديث، أو مقارنة، وحوّلها فوراً إلى إحدى البطاقات الفنية التالية:
+   - **لا تترك الصفحة سرداً نصياً خالصاً أبداً!** التقط من نص الصفحة نفسها أهم تساؤل، أو أعمق حكمة، أو آية، أو حديث، أو مقارنة، وحوّلها فوراً إلى إحدى البطاقات الفنية التالية (دون إعادة كتابة نفس الجملة مرتين في الفقرة وفي البطاقة):
      - **بطاقة التساؤل والمكاشفة الوجدانية (`.reflection-card`):** عندما يطرح النص أسئلة تلامس النفس (مثل: *«هل شعرتِ يوماً بهذا التناقض؟ هل سألتِ نفسكِ: لماذا أبتسم وأنا متعبة؟»*)، ضعها داخل `.reflection-card` بخلفية وردية لؤلؤية متدرجة وأيقونة مرآة أو نجمة ذهبية.
      - **بطاقة همسة القلب التذكارية (`.heart-keepsake-card`):** للرسائل الحانية والخلاصات الشعورية الدافئة التي تلمس وجدان القارئة، مع شارة علوية `.heart-badge`.
      - **صندوق الدرة والإشراقة (`.wisdom-pearl`):** للقواعد الذهبية والمعاني العميقة، مع شارة `.wisdom-badge`.
@@ -37,10 +47,10 @@
 
 ### ٢. إيقاع التنويع البصري عبر صفحات الكتاب (`Anti-Monotony Page Rhythm`)
 لضمان عدم تشابه الصفحات وعدم شعور القارئة بالملل:
-- **الصفحة ١ (الغلاف الملوكي `cover`):** لوحة فنية متكاملة تتوسطها رسمة `Inline SVG` غنية التفاصيل (زهرة دمشقية متفتحة، أو قنديل نور محاط بأغصان الزيتون والنجوم الذهبية، أو قبة محراب مزخرفة)، مع شارة `.eyebrow`، وعنوان رئيسي مهيب، وعنوان فرعي، وزر انطلاق أنيق `.primary-btn`.
-- **الصفحة ٢ (فاتحة الكتاب / الإهداء أو المدخل الوجداني):** تبدأ بـ `.letter-envelope-header`، تليها عبارات الإهداء المنسقة بعناية، وتُختم بـ `.wisdom-pearl` يضع القارئة في جو الكتاب الروحي والنفسي.
+- **الصفحة ١ (الغلاف الملوكي `cover`):** لوحة فنية متكاملة تتوسطها رسمة `Inline SVG` غنية التفاصيل (زهرة دمشقية متفتحة، أو قنديل نور محاط بأغصان الزيتون والنجوم الذهبية، أو قبة محراب مزخرفة)، مع عنوان رئيسي مهيب، وعنوان فرعي (إن وُجد)، وزر انطلاق أنيق `.primary-btn`.
+- **الصفحة ٢ (فاتحة الكتاب / الإهداء أو المدخل الوجداني `opener`):** تبدأ بـ `<h1 class="chapter-opener">` (مع `.letter-envelope-header` عند وجود شارة مستقلة)، تليها عبارات المدخل المنسقة بعناية، وتُختم بـ `.wisdom-pearl` يضع القارئة في جو الكتاب الروحي والنفسي.
 - **صفحات المحطات والرسائل المتتابعة:**
-  - **صفحة بداية المحطة (`opener` أو `reading`):** تجمع بين `.letter-envelope-header` + `<h1>` + `.letter-greeting` + فقرتين سرديتين + `.reflection-card` أو `.quran-box`.
+  - **صفحة بداية المحطة (`opener`):** تجمع بين `.letter-envelope-header` + `<h1 class="chapter-opener">` + `.letter-greeting` + فقرتين سرديتين + `.reflection-card` أو `.quran-box`.
   - **صفحة التعمق والبسط (`reading`):** تبدأ بعنوان فرعي رشيق `<h2>` + فقرة سردية + `.step-card` (أو `.contrast-grid`) + `.wisdom-pearl`.
   - **صفحة ختام المحطة وإشراقتها (`reading`):** تتوج المحطة ببطاقة `.heart-keepsake-card` فاخرة تلخص الرسالة في عبارة تحفظها القارئة في قلبها، مع همسة عملية هادئة أو مساحة تأمل ذاتي في ختام الأبواب الكبرى.
 
@@ -58,24 +68,30 @@
 - إذا أرفق المستخدم ملفاً نصياً أو مستنداً، **استوعب النص كاملاً من أول كلمة إلى آخر كلمة** دون بتر أو حذف أو اختصار مخلّ، ووزّعه على العدد الكافي من الصفحات (`90` إلى `130` كلمة في الصفحة الواحدة) بلا أي سقف لعدد الصفحات.
 - حافظ بنسبة ١٠٠٪ على **جميع الحركات والتشكيلات العربية** (`\u064B-\u065F\u0670`)، وعلى **الهمزات الدقيقة** (`أ، إ، آ، ؤ، ئ، ء`)، والأقواس القرآنية المزخرفة `﴿ ... ﴾`، وعلامات التنصيص العربية `« ... »`.
 
-### ٢. قانون الفهرس الذكي المبوب (`Zero-Page Clean TOC Rule`)
-- الفهرس يظهر في النافذة المنبثقة (`#tocPanel`) عند ضغط زر الفهرس (`#tocBtn`) في الشريط العلوي.
+### ٢. قانون الفهرس الذكي المبوب بلا تكرار (`Zero-Duplication Hierarchical TOC Rule`)
+- الفهرس يظهر في النافذة المنبثقة (`#tocPanel`) عند ضغط زر الفهرس (`#tocBtn`) في الشريط العلوي، كما يستخرجه تطبيق «مكتبتي» تلقائياً من مصفوفة `BOOK_DATA.pages` عبر محلل `HtmlBookParser`.
 - كل عنصر في مصفوفة `BOOK_DATA.pages` يجب أن يحتوي على:
-  - `tag`: اسم الباب أو المحطة باختصار أنيق (٢ إلى ٣ كلمات، مثل: `"المحطة الأولى"`، `"الرسالة الثانية"`، `"مدخل النور"`).
+  - `type`: إما `"cover"` (للغلاف)، أو `"opener"` (لبداية كل فصل/محطة رئيسية — مستوى أول في الفهرس `toc-part`)، أو `"reading"` (لصفحات البسط والعناوين الفرعية — مستوى ثانٍ في الفهرس).
+  - `tag`: اسم الباب أو المحطة باختصار أنيق (٢ إلى ٣ كلمات، مثل: `"المحطة الأولى"`، `"الرسالة الثانية"`). ويُترك فارغاً `""` إذا لم يكن للصفحة شارة فصل مستقلة عن عنوانها.
   - `title`: **عنوان شاعري قصير ومكثف للصفحة (من ٢ إلى ٦ كلمات فقط — يُمنع منعاً باتاً تجاوز ٤٥ حرفاً)**.
-  - *مثال خاطئ تماماً (ممنوع):* `"title": "أنتِ أغلى من رقم يرتفع وينخفض على شاشة صامتة لا تعرف قلبكِ"` ❌
-  - *مثال صحيح واحترافي:* `"tag": "المحطة الثانية"، "title": "أنتِ أغلى من الأرقام"` ✅
+  - **عدم تكرار صفحات الاسترسال في الفهرس:** إذا امتد الفصل الواحد على عدة صفحات `reading`، فإما أن تعطي كل صفحة `reading` عنوان المحور الفرعي (`<h2>`) الخاص بها، أو إذا حملت نفس `(tag, title)` فإن دالة `buildTocPanel()` ومحلل التطبيق يدمجانها تلقائياً في بند واحد نظيف حتى لا يتكرر نفس العنوان تحت نفسه في الفهرس!
 
 ---
 
-## ثالثاً: التوافق التقني الكامل مع محركات «مكتبتي» (Maktabati Engine Integration)
+## ثالثاً: بروتوكول التناغم التام مع محركات تطبيق «مكتبتي» (Generator–App Harmony Protocol)
 
-1. **هيكلة المناطق الثلاث المحمية (`The 3-Zone Locked Page Architecture`):**
-   - **المنطقة العلوية الثابتة (`.top-bar` + `.running-header`):** ارتفاع ثابت لا يتمدد، تضم شعار الكتاب وعنوانه وأيقونات `SVG` الثلاث فقط (`#searchOpen`, `#tocBtn`, `#bookmarkBtn`)، وتحتها شريط `.running-header` الذي يعرض اسم المحطة وعنوان الصفحة الحالية.
-   - **المنطقة الوسطى المتدفقة (`#bookStage.book-stage` > `.page-canvas` > `#activePageArticle.page`):** تأخذ `flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden`، وتستجيب لتكبير وتصغير الخط عبر **`Fluid Reflow Zoom`** (`--reader-font` و `--reader-font-size` و `--font-scale`) مع دعم تأثيرات تقليب الصفحات **`4-Corner Page-Curl`**.
-   - **منطقة التنقل السفلية الثابتة (`.bottom-nav-dock`):** تضم زر `السابق` (`#btnPrevPage`)، وعداد الصفحات الصريح (`#pageCounter` بصيغة `١ / N`)، وزر `التالي` (`#btnNextPage`)، مع استدعاء جسر التطبيق `window.MaktabatiBridge.onPageChanged(index + 1, BOOK_DATA.totalPages)`.
-2. **الأدوار الخطية السبعة والـ ٢٥ خطاً عربياً المدمجة أوفلاين (`25 Offline Arabic Fonts`):**
-   - اربط جميع العناصر بمتغيرات الخطوط القياسية السبعة (`--font-body`, `--font-headings`, `--font-chapter-titles`, `--font-quotes`, `--font-quran`, `--font-interface`, `--font-numbers`) مع تضمين مسارات الخطوط المحلية في التطبيق (`https://maktabati.app/fonts/amiri.ttf` و `https://maktabati.app/fonts/cairo.ttf` و `assets/fonts/...`) حتى تعمل إعدادات «استوديو الخطوط الطباعية» في التطبيق فوراً على كل عنصر.
+لفهم كيف يعمل كتابك الجاهز (`.html`) داخل تطبيق **«مكتبتي» (Maktabati)** بتناغم ١٠٠٪ ودون ازدواجية في الكود أو الوظائف:
+
+1. **ما يتكفل به تطبيق «مكتبتي» تلقائياً عند استيراد ملف `.html` الجاهز (لا تكرره أو تتعارض معه):**
+   - **استخراج الهوية والفهرس والغلاف (`HtmlBookParser` & `HtmlCoverSnapshotGenerator`):** يقرأ التطبيق `<title>`، والعنوان الفرعي (`.subtitle` / `meta[name="subtitle"]`)، والمؤلف الحقيقي (`.author` / `meta[name="author"]`)، ويحذف الزخارف المحيطة (`🌸، ✦، ❖`) ويمنع تلقائياً أي تطابق بين العنوان الأساسي والفرعي، ويتجاهل أي عبارات نشر وهمية، كما يحسب عدد الصفحات الدقيق من `BOOK_DATA.pages` ويبني فهرس التطبيق الأصلي (`TOC`) بمستويين (`opener` كمستوى ١، و`reading` كمستوى ٢ مع دمج الصفحات المتتابعة المتطابقة).
+   - **تزويد الـ ٢٥ خطاً عربياً أوفلاين (`WebViewAssetLoader` & `MaktabatiFontRegistry`):** يعترض التطبيق تلقائياً أي طلب للخطوط عبر النطاق `https://maktabati.app/fonts/<slug>.ttf` أو `assets/fonts/...` ويغذّيه من موارد التطبيق الداخلية بسرعة فائقة دون إنترنت، ويطبّق اختيارات المستخدم من «استوديو الخطوط الطباعية» على المتغيرات السبعة (`--font-body`, `--font-headings`, `--font-chapter-titles`, `--font-quotes`, `--font-quran`, `--font-interface`, `--font-numbers`).
+   - **إيماءات اللمس وتكبير النص وحارس التخطيط (`SandboxJsRuntimeBuilder` & `MaktabatiLayoutGuard`):** يربط التطبيق إيماءة السحب الأفقي (`Swipe`) وإيماءة القرص بإصبعين (`Pinch-to-Reflow Zoom`) بالدوال القياسية `window.nextPage()`، `window.prevPage()`، `window.goToPage(idx)`، و `window.__maktabatiSetFluidZoom(pct)`، ويفحص كل صفحة عبر `MaktabatiLayoutGuard` لمنع أي تجاوز أفقي ولإخفاء `#runningHeader` تلقائياً في صفحات الغلاف ومطالع الفصول (`<h1>`).
+2. **ما يجب أن يلتزم به النموذج المنشئ في ملف `.html` لتحقيق هذا التناغم:**
+   - **هيكلة المناطق الثلاث المحمية (`The 3-Zone Locked Page Architecture`):**
+     - **المنطقة العلوية الثابتة (`.top-bar` + `#runningHeader`):** ارتفاع ثابت لا يتمدد، تضم شعار الكتاب وعنوانه (`#topBarBookTitle`) وأيقونات `SVG` الثلاث فقط (`#searchOpen`, `#tocBtn`, `#bookmarkBtn`)، وتحتها شريط `#runningHeader` الذي يظهر في صفحات القراءة (`type: "reading"`) فقط عندما يضيف سياقاً جديداً لا يكرر عنوان الكتاب ولا يكرر `<h1>`/`<h2>` الظاهر في الصفحة.
+     - **المنطقة الوسطى المتدفقة (`#bookStage.book-stage` > `.page-canvas` > `#activePageArticle.page`):** تأخذ `flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden`، وتستجيب لتكبير وتصغير الخط عبر **`Fluid Reflow Zoom`** (`--reader-font` و `--reader-font-size` و `--font-scale`) مع دعم تأثيرات تقليب الصفحات **`4-Corner Page-Curl`**.
+     - **منطقة التنقل السفلية الثابتة (`.bottom-nav-dock`):** تضم زر `السابق` (`#btnPrevPage`)، وعداد الصفحات الصريح (`#pageCounter` مع `dir="ltr"` ليظهر دائماً بصيغة `1 / N` من اليسار لليمين دون انعكاس)، وزر `التالي` (`#btnNextPage`)، مع حارس منع القفز المزدوج (`220ms Debounce`) واستدعاء جسر التطبيق `window.MaktabatiBridge.onPageChanged(index + 1, total)`.
+   - **الأدوار الخطية السبعة (`7 Typography Roles`):** اربط جميع العناصر بمتغيرات الخطوط القياسية السبعة (`--font-body`, `--font-headings`, `--font-chapter-titles`, `--font-quotes`, `--font-quran`, `--font-interface`, `--font-numbers`) مع تضمين مسارات الخطوط المحلية (`https://maktabati.app/fonts/amiri.ttf` و `https://maktabati.app/fonts/cairo.ttf`) حتى تعمل إعدادات الخطوط في التطبيق فوراً.
 
 ---
 
@@ -119,8 +135,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
   <meta name="theme-color" content="#FAF6F0"/>
   <meta name="color-scheme" content="light"/>
-  <meta name="author" content="إصدارات مكتبتي الفاخرة"/>
-  <title>عنوان الكتاب التفاعلي</title>
+  <!-- ضع وسم author فقط إذا كان اسم المؤلف مذكوراً صراحة في النص الأصلي، وإلا اتركه فارغاً أو احذفه -->
+  <title>عَلَى مَهْل... عُودِي إِلَى نُورِكِ</title>
 
   <style>
     /* ١. الخطوط العربية المدمجة أوفلاين في مكتبتي */
@@ -980,11 +996,9 @@
       </div>
     </header>
 
-    <!-- ٢. شريط عنوان المحطة الجاري -->
+    <!-- ٢. شريط سياق المحطة الجاري (يظهر فقط في صفحات المتابعة reading ولا يظهر في الغلاف أو مطالع الفصول opener) -->
     <div id="runningHeader" class="running-header" hidden>
-      <span id="runningHeaderTag" class="running-header-mark">المحطة الأولى</span>
-      <span>•</span>
-      <span id="runningHeaderTitle">عنوان المحطة</span>
+      <span id="runningHeaderTag" class="running-header-mark"></span>
     </div>
 
     <!-- ٣. مسرح الصفحة الورقية الوسطى -->
@@ -997,7 +1011,7 @@
     <!-- ٤. شريط التنقل السفلي -->
     <footer class="bottom-nav-dock">
       <button id="btnPrevPage" class="nav-btn" onclick="window.prevPage()">السابق</button>
-      <span id="pageCounter" class="page-counter">1 / 1</span>
+      <span id="pageCounter" class="page-counter" dir="ltr">1 / 1</span>
       <button id="btnNextPage" class="nav-btn" onclick="window.nextPage()">التالي</button>
     </footer>
   </div>
@@ -1029,14 +1043,15 @@
   <script>
     const BOOK_DATA = {
       title: "عَلَى مَهْل... عُودِي إِلَى نُورِكِ",
+      subtitle: "رِحْلَةٌ هَادِئَةٌ مِنْ ضَجِيجِ المُقَارَنَاتِ إِلَى سَكِينَةِ الفِطْرَةِ وَطُمَأْنِينَةِ القَلْب",
+      author: "",
       pages: [
         {
-          tag: "الغلاف الملكي",
+          tag: "",
           title: "على مهل... عودي إلى نوركِ",
           type: "cover",
           html: `
             <div class="cover-page">
-              <div class="eyebrow">✦ إِصْدَارَاتُ مَكْتَبَتِي الفَاخِرَة • رَسَائِلُ النُّورِ وَالسَّكِينَة ✦</div>
               <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="120" cy="120" r="108" fill="#FAF4F0" stroke="#C69A4E" stroke-width="1.6" stroke-dasharray="4 3"/>
                 <circle cx="120" cy="120" r="95" fill="#FFFDF9" stroke="#BD6B80" stroke-width="1.4"/>
@@ -1048,18 +1063,21 @@
                 </g>
               </svg>
               <h1>عَلَى مَهْل... عُودِي إِلَى نُورِكِ</h1>
-              <div class="subtitle">رِحْلَةٌ هَادِئَةٌ مِنْ ضَجِيجِ المُقَارَنَاتِ وَالتَّعَبِ الصَّامِتِ إِلَى سَكِينَةِ الفِطْرَةِ وَطُمَأْنِينَةِ القَلْب</div>
+              <div class="subtitle">رِحْلَةٌ هَادِئَةٌ مِنْ ضَجِيجِ المُقَارَنَاتِ إِلَى سَكِينَةِ الفِطْرَةِ وَطُمَأْنِينَةِ القَلْب</div>
               <div class="ornament">❖ ❀ ❖</div>
-              <div class="author">رَسَائِلُ وِجْدَانِيَّةٌ لِكُلِّ فَتَاةٍ تَبْحَثُ عَنْ نَفْسِهَا الصَّادِقَة</div>
               <button class="primary-btn" onclick="window.goToPage(1)">ابدئي رحلة النور ✉️</button>
             </div>
           `
         }
-        /* أضف بقية صفحات الكتاب هنا بحيث تحتوي كل صفحة على تاج علوي، وسرد متوازن، وبطاقة فنية بصرية (.reflection-card أو .wisdom-pearl أو .heart-keepsake-card أو .quran-box أو .step-card) وعنوان فهرس قصير لا يتجاوز ٦ كلمات */
+        /* أضف بقية صفحات الكتاب هنا:
+           - صفحات مطلع المحطات (type: "opener"): تحتوي على .letter-envelope-header (إذا كان هناك tag مستقل) + <h1 class="chapter-opener"> + سرد + بطاقة فنية بصرية، ولا يظهر فيها #runningHeader.
+           - صفحات المتابعة (type: "reading"): لا تكرر <h1> ولا .letter-envelope-header، بل تستخدم <h2> للعناوين الفرعية عند الحاجة + سرد + بطاقة فنية بصرية (.reflection-card أو .wisdom-pearl أو .heart-keepsake-card أو .quran-box أو .step-card). */
       ]
     };
 
     let currentPageIndex = 0;
+    window.currentPageIndex = 0;
+    window.currentPage = 0;
     const STORAGE_KEY = "maktabati_book_" + (BOOK_DATA.title || "default");
     let savedBookmarks = [];
     try {
@@ -1073,7 +1091,6 @@
     const btnNextPage = document.getElementById("btnNextPage");
     const runningHeader = document.getElementById("runningHeader");
     const runningHeaderTag = document.getElementById("runningHeaderTag");
-    const runningHeaderTitle = document.getElementById("runningHeaderTitle");
     const bookmarkBtn = document.getElementById("bookmarkBtn");
     const tocBtn = document.getElementById("tocBtn");
     const tocPanel = document.getElementById("tocPanel");
@@ -1088,8 +1105,11 @@
 
     function renderPage(index) {
       const total = BOOK_DATA.pages.length;
-      if (index < 0 || index >= total) return;
+      if (index < 0) index = 0;
+      if (index >= total) index = total - 1;
       currentPageIndex = index;
+      window.currentPageIndex = index;
+      window.currentPage = index;
       const page = BOOK_DATA.pages[index];
 
       activePageArticle.innerHTML = page.html;
@@ -1097,12 +1117,25 @@
       btnPrevPage.disabled = (index === 0);
       btnNextPage.disabled = (index === total - 1);
 
-      if (page.type === "cover" || index === 0) {
+      // منع تكرار العناوين: يُخفى شريط runningHeader في الغلاف وفي مطالع الفصول (opener أو أي صفحة بها h1)
+      if (page.type === "cover" || page.type === "opener" || index === 0 || activePageArticle.querySelector("h1")) {
         runningHeader.hidden = true;
       } else {
-        runningHeader.hidden = false;
-        runningHeaderTag.textContent = page.tag || BOOK_DATA.title;
-        runningHeaderTitle.textContent = page.title || "";
+        const cleanTag = (page.tag || "").trim();
+        const cleanTitle = (page.title || "").trim();
+        const isSameAsBook = !cleanTitle || cleanTitle === (BOOK_DATA.title || "").trim();
+        const pageH2 = activePageArticle.querySelector("h2");
+        const h2Text = pageH2 ? (pageH2.textContent || "").trim() : "";
+        const effectiveTitle = (cleanTitle && cleanTitle !== h2Text && !isSameAsBook) ? cleanTitle : "";
+        const headerLabel = (cleanTag && effectiveTitle && cleanTag !== effectiveTitle)
+          ? (cleanTag + " • " + effectiveTitle)
+          : (effectiveTitle || cleanTag);
+        if (headerLabel && headerLabel !== (BOOK_DATA.title || "").trim()) {
+          runningHeader.hidden = false;
+          runningHeaderTag.textContent = headerLabel;
+        } else {
+          runningHeader.hidden = true;
+        }
       }
 
       bookmarkBtn.classList.toggle("bookmarked", savedBookmarks.includes(index));
@@ -1118,8 +1151,22 @@
     }
 
     window.goToPage = function(index) { renderPage(index); };
-    window.nextPage = function() { if (currentPageIndex < BOOK_DATA.pages.length - 1) renderPage(currentPageIndex + 1); };
-    window.prevPage = function() { if (currentPageIndex > 0) renderPage(currentPageIndex - 1); };
+    window.nextPage = function() {
+      const now = Date.now();
+      if (window.__maktabatiLastPageTurnAt && (now - window.__maktabatiLastPageTurnAt) < 220) return;
+      if (currentPageIndex < BOOK_DATA.pages.length - 1) {
+        window.__maktabatiLastPageTurnAt = now;
+        renderPage(currentPageIndex + 1);
+      }
+    };
+    window.prevPage = function() {
+      const now = Date.now();
+      if (window.__maktabatiLastPageTurnAt && (now - window.__maktabatiLastPageTurnAt) < 220) return;
+      if (currentPageIndex > 0) {
+        window.__maktabatiLastPageTurnAt = now;
+        renderPage(currentPageIndex - 1);
+      }
+    };
 
     // Fluid Reflow Zoom Engine
     window.__maktabatiSetFluidZoom = function(zoomPct) {
@@ -1131,15 +1178,23 @@
       root.style.setProperty("--font-scale", String(scale));
     };
 
-    // الفهرس الذكي المبوب (بعناوين قصيرة أنيقة فقط)
+    // الفهرس الذكي المبوب (بعناوين قصيرة أنيقة ودون تكرار صفحات المتابعة لنفس المحطة)
     function buildTocPanel() {
       let html = "";
+      let lastSig = "";
       BOOK_DATA.pages.forEach((p, idx) => {
-        const cls = (p.type === "opener" || idx === 0) ? "toc-item toc-part" : "toc-item";
-        const shortTitle = (p.title || ("صفحة " + (idx + 1))).slice(0, 48);
+        const cleanTag = (p.tag || "").trim();
+        const cleanTitle = (p.title || ("صفحة " + (idx + 1))).trim().slice(0, 48);
+        const sig = (cleanTag + "|" + cleanTitle).toLowerCase();
+        const isOpener = (p.type === "opener" || p.type === "cover" || idx === 0);
+        if (idx > 0 && !isOpener && sig === lastSig) return;
+        lastSig = sig;
+        const cls = isOpener ? "toc-item toc-part" : "toc-item";
+        const showTag = cleanTag && cleanTag !== cleanTitle && !cleanTitle.startsWith(cleanTag);
+        const label = showTag ? (cleanTag + " • " + cleanTitle) : cleanTitle;
         html += `<div class="${cls}" onclick="window.goToPage(${idx}); tocPanel.classList.remove('open');">
-          <span>${p.tag ? p.tag + ' • ' : ''}${shortTitle}</span>
-          <small>ص ${idx + 1}</small>
+          <span>${label}</span>
+          <small dir="ltr">${idx + 1}</small>
         </div>`;
       });
       tocPanelList.innerHTML = html;

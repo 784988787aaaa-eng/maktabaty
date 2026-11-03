@@ -303,38 +303,20 @@ fun BookGridItem(
                             )
                         }
 
-                        Row(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
-                                    start = (15f * s).dp,
-                                    end = (11f * s).dp,
-                                    top = (11f * s).dp
+                                    start = (11f * s).dp,
+                                    end = (8f * s).dp,
+                                    top = (8f * s).dp
                                 ),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            contentAlignment = Alignment.TopEnd
                         ) {
-                            Surface(
-                                color = Color.Black.copy(alpha = 0.45f),
-                                shape = RoundedCornerShape((5f * s).dp),
-                                border = androidx.compose.foundation.BorderStroke(0.8.dp, goldColor.copy(alpha = 0.7f))
-                            ) {
-                                Text(
-                                    text = langLabel,
-                                    color = goldColor,
-                                    fontSize = (9.5f * s).sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(
-                                        horizontal = (6f * s).dp,
-                                        vertical = (1.5f * s).dp
-                                    )
-                                )
-                            }
-
                             IconButton(
                                 onClick = onFavoriteToggle,
                                 modifier = Modifier
-                                    .size((24f * s).dp)
+                                    .size((26f * s).dp)
                                     .testTag("favorite_button_${book.id}")
                             ) {
                                 Icon(
@@ -352,65 +334,26 @@ fun BookGridItem(
                             }
                         }
 
-                        Column(
+                        LinearProgressIndicator(
+                            progress = { book.readingProgress.coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        start = (15f * s).dp,
-                                        end = (11f * s).dp,
-                                        bottom = (11f * s).dp
-                                    ),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Surface(
-                                    color = Color.Black.copy(alpha = 0.45f),
-                                    shape = RoundedCornerShape((4f * s).dp)
-                                ) {
-                                    Text(
-                                        text = pagesLabel,
-                                        color = Color.White.copy(alpha = 0.94f),
-                                        fontSize = (9.5f * s).sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(
-                                            horizontal = (5f * s).dp,
-                                            vertical = (1.5f * s).dp
-                                        )
-                                    )
-                                }
-
-                                Surface(
-                                    color = Color.Black.copy(alpha = 0.38f),
-                                    shape = RoundedCornerShape((4f * s).dp)
-                                ) {
-                                    Text(
-                                        text = "${(book.readingProgress * 100).toInt()}%",
-                                        color = goldColor,
-                                        fontSize = (10f * s).sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(
-                                            horizontal = (4.5f * s).dp,
-                                            vertical = (1f * s).dp
-                                        )
-                                    )
-                                }
-                            }
-
-                            LinearProgressIndicator(
-                                progress = { book.readingProgress.coerceIn(0f, 1f) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height((4.5f * s).dp),
-                                color = goldColor,
-                                trackColor = Color.Black.copy(alpha = 0.35f)
-                            )
-                        }
+                                .height((4.5f * s).dp),
+                            color = goldColor,
+                            trackColor = Color.Black.copy(alpha = 0.30f)
+                        )
                     }
+                }
+
+                val cleanAuthor = remember(book.author) {
+                    HtmlBookParser.sanitizeExtractedAuthor(book.author)
+                }
+                val primaryFooterText = book.title.ifBlank { cleanAuthor }
+                val secondaryFooterText = when {
+                    !shelfName.isNullOrBlank() -> "$shelfName • $pagesLabel"
+                    cleanAuthor.isNotBlank() && !cleanAuthor.equals(book.title, ignoreCase = true) -> "$cleanAuthor • $pagesLabel"
+                    else -> pagesLabel
                 }
 
                 Row(
@@ -425,7 +368,7 @@ fun BookGridItem(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = book.author.ifBlank { book.title },
+                            text = primaryFooterText,
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -434,10 +377,11 @@ fun BookGridItem(
                             fontSize = (11.5f * s).sp
                         )
                         Text(
-                            text = shelfName ?: pagesLabel,
+                            text = secondaryFooterText,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             fontSize = (9.5f * s).sp
                         )
                     }
@@ -656,32 +600,18 @@ fun BookListItem(
 
             Spacer(modifier = Modifier.width(14.dp))
 
+            val cleanAuthor = remember(book.author) {
+                HtmlBookParser.sanitizeExtractedAuthor(book.author)
+            }
+
             Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = book.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = langLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                        )
-                    }
-                }
+                Text(
+                    text = book.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
                 if (book.subtitle.isNotBlank()) {
                     Text(
@@ -694,7 +624,7 @@ fun BookListItem(
                 }
 
                 Text(
-                    text = if (book.author.isNotBlank()) "${book.author} • $pagesLabel" else (shelfName ?: pagesLabel),
+                    text = if (cleanAuthor.isNotBlank()) "$cleanAuthor • $pagesLabel" else (shelfName?.let { "$it • $pagesLabel" } ?: pagesLabel),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1
@@ -702,26 +632,15 @@ fun BookListItem(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    LinearProgressIndicator(
-                        progress = { book.readingProgress.coerceIn(0f, 1f) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    Text(
-                        text = "${(book.readingProgress * 100).toInt()}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                LinearProgressIndicator(
+                    progress = { book.readingProgress.coerceIn(0f, 1f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             }
 
             IconButton(onClick = onFavoriteToggle) {

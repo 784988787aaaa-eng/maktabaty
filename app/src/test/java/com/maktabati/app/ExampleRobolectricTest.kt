@@ -1404,5 +1404,85 @@ class ExampleRobolectricTest {
         assertEquals("", parsedMeta.author)
         assertEquals("Cover + 1 content page = 2 pages total", 2, parsedMeta.pageCount)
     }
+
+    @Test
+    fun testGeneratorAndAppHarmonyZeroTitleAndTocDuplication() {
+        val sampleReadyHtml = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+              <meta charset="utf-8"/>
+              <meta name="author" content="إصدارات مكتبتي الفاخرة"/>
+              <meta name="description" content="🌸 عَلَى مَهْل... عُودِي إِلَى نُورِكِ 🌸"/>
+              <title>🌸 عَلَى مَهْل... عُودِي إِلَى نُورِكِ 🌸</title>
+            </head>
+            <body>
+              <div class="cover-page">
+                <h1>عَلَى مَهْل... عُودِي إِلَى نُورِكِ</h1>
+                <div class="subtitle">رِحْلَةٌ هَادِئَةٌ إِلَى سَكِينَةِ الفِطْرَة</div>
+              </div>
+              <script>
+                const BOOK_DATA = {
+                  title: "عَلَى مَهْل... عُودِي إِلَى نُورِكِ",
+                  pages: [
+                    { tag: "", title: "على مهل... عودي إلى نوركِ", type: "cover", html: "<div class='cover-page'><h1>على مهل</h1></div>" },
+                    { tag: "المحطة الأولى", title: "عندما يتعب القلب بصمت", type: "opener", html: "<h1>عندما يتعب القلب بصمت</h1><p>نص أول</p>" },
+                    { tag: "المحطة الأولى", title: "عندما يتعب القلب بصمت", type: "reading", html: "<p>استرسال المحطة الأولى دون تكرار في الفهرس</p>" },
+                    { tag: "المحطة الأولى", title: "وهم المقارنات الصامتة", type: "reading", html: "<h2>وهم المقارنات الصامتة</h2><p>محور فرعي جديد</p>" }
+                  ]
+                };
+              </script>
+            </body>
+            </html>
+        """.trimIndent()
+
+        val parsed = HtmlBookParser.parseContent(sampleReadyHtml, "افتراضي", quickMode = false)
+        assertEquals("عَلَى مَهْل... عُودِي إِلَى نُورِكِ", parsed.title)
+        assertEquals("رِحْلَةٌ هَادِئَةٌ إِلَى سَكِينَةِ الفِطْرَة", parsed.subtitle)
+        assertEquals("Synthetic publisher author must be stripped", "", parsed.author)
+        assertEquals("All 4 pages in BOOK_DATA.pages must be counted", 4, parsed.pageCount)
+        assertEquals("Consecutive continuation pages with identical (tag, title) must be deduplicated in TOC", 3, parsed.tableOfContents.size)
+        assertEquals(1, parsed.tableOfContents[0].level) // cover
+        assertEquals(1, parsed.tableOfContents[1].level) // opener
+        assertEquals("عندما يتعب القلب بصمت", parsed.tableOfContents[1].title)
+        assertEquals(2, parsed.tableOfContents[2].level) // reading sub-topic
+        assertEquals("وهم المقارنات الصامتة", parsed.tableOfContents[2].title)
+    }
+
+    @Test
+    fun testBookCardCleanLayoutAndTypographySpecimens() {
+        assertEquals("", HtmlBookParser.sanitizeExtractedAuthor("إصدارات مكتبتي الفاخرة"))
+        assertEquals("", HtmlBookParser.sanitizeExtractedAuthor("طبعة رقمية تفاعلية"))
+        assertEquals("ابن القيم", HtmlBookParser.sanitizeExtractedAuthor("ابن القيم"))
+
+        assertTrue(BookTypographyProfile.DEFAULT_SAMPLE_QURAN.contains("﴿"))
+        assertTrue(BookTypographyProfile.DEFAULT_SAMPLE_BODY.contains("الحِكْمَةِ"))
+        assertTrue(BookTypographyProfile.DEFAULT_SAMPLE_HADITH_QUOTES.contains("ﷺ"))
+        assertTrue(BookTypographyProfile.DEFAULT_SAMPLE_TOC_INTERFACE.contains("الفهرس"))
+        assertTrue(BookTypographyProfile.DEFAULT_SAMPLE_NUMBERS.contains("٠١٢٣٤٥٦٧٨٩"))
+
+        val bookCardFile = listOf(
+            File("/app/src/main/java/com/maktabati/app/ui/components/BookCard.kt"),
+            File("../app/src/main/java/com/maktabati/app/ui/components/BookCard.kt"),
+            File("src/main/java/com/maktabati/app/ui/components/BookCard.kt")
+        ).firstOrNull { it.exists() }
+        assertNotNull("BookCard.kt must exist", bookCardFile)
+        val bookCardSource = bookCardFile!!.readText(Charsets.UTF_8)
+        assertFalse("BookCard must not render language badge text on cover", bookCardSource.contains("text = langLabel"))
+        assertFalse("BookCard must not render numeric progress percentage text", bookCardSource.contains("(book.readingProgress * 100).toInt()}%"))
+        assertTrue("BookCard must keep silent LinearProgressIndicator", bookCardSource.contains("LinearProgressIndicator"))
+
+        val typoDialogFile = listOf(
+            File("/app/src/main/java/com/maktabati/app/ui/components/TypographySettingsDialog.kt"),
+            File("../app/src/main/java/com/maktabati/app/ui/components/TypographySettingsDialog.kt"),
+            File("src/main/java/com/maktabati/app/ui/components/TypographySettingsDialog.kt")
+        ).firstOrNull { it.exists() }
+        assertNotNull("TypographySettingsDialog.kt must exist", typoDialogFile)
+        val typoDialogSource = typoDialogFile!!.readText(Charsets.UTF_8)
+        assertTrue(typoDialogSource.contains("typography_specimen_chip_"))
+        assertTrue(typoDialogSource.contains("typography_edit_preview_toggle"))
+        assertTrue(typoDialogSource.contains("تحرير يدوي"))
+        assertTrue(typoDialogSource.contains("﴿ الآية ﴾"))
+    }
 }
 

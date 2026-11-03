@@ -100,7 +100,7 @@ object SemanticBookPaginator {
         var currentChapterIndex = 0
         var activeSection = SemanticSection(
             chapterTag = "",
-            chapterTitle = bookTitle
+            chapterTitle = ""
         )
 
         for ((idx, block) in rawBlocks.withIndex()) {
@@ -124,14 +124,13 @@ object SemanticBookPaginator {
                 }
                 currentChapterIndex++
                 val parts = clean.split(COLON_DASH_SPLIT_REGEX, limit = 2).map { it.trim() }
-                val tag = if (parts.size == 2 && parts[0].length <= 32) {
-                    parts[0]
-                } else if (isRtl) {
-                    "الفصل $currentChapterIndex"
-                } else {
-                    "Chapter $currentChapterIndex"
-                }
-                val title = if (parts.size == 2 && parts[1].isNotEmpty()) parts[1] else clean
+                val hasDistinctTagAndTitle = parts.size == 2 &&
+                    parts[0].isNotEmpty() &&
+                    parts[0].length <= 36 &&
+                    parts[1].isNotEmpty() &&
+                    !parts[0].equals(parts[1], ignoreCase = true)
+                val tag = if (hasDistinctTagAndTitle) parts[0] else ""
+                val title = if (hasDistinctTagAndTitle) parts[1] else clean
                 activeSection = SemanticSection(chapterTag = tag, chapterTitle = title)
             } else {
                 val words = block.split(WHITESPACE_REGEX).filter { it.isNotBlank() }
@@ -150,7 +149,7 @@ object SemanticBookPaginator {
             sections.add(
                 SemanticSection(
                     chapterTag = "",
-                    chapterTitle = bookTitle,
+                    chapterTitle = "",
                     paragraphs = mutableListOf(rawText)
                 )
             )
@@ -167,8 +166,17 @@ object SemanticBookPaginator {
                 val isFirstPageOfSection = (sectionPageIndex == 1)
                 val pageHtmlBuilder = StringBuilder()
 
+                val normalizedSectionTitle = ArabicTextNormalizer
+                    .stripArabicDiacriticsForMatching(section.chapterTitle)
+                    .trim()
+                val hasDistinctSectionTitle = section.chapterTitle.isNotBlank() &&
+                    !section.chapterTitle.equals(bookTitle, ignoreCase = true) &&
+                    (normalizedBookTitle.isEmpty() || !normalizedSectionTitle.equals(normalizedBookTitle, ignoreCase = true))
+
                 if (isFirstPageOfSection) {
-                    if (hasExplicitChapters && section.chapterTag.isNotBlank()) {
+                    if (hasExplicitChapters && section.chapterTag.isNotBlank() &&
+                        !section.chapterTag.equals(section.chapterTitle, ignoreCase = true)
+                    ) {
                         pageHtmlBuilder.append(
                             """
                             <div class="letter-envelope-header chapter-opener">
@@ -178,18 +186,38 @@ object SemanticBookPaginator {
                             """.trimIndent()
                         ).append("\n")
                     }
-                    pageHtmlBuilder.append("<h1>${escapeHtml(section.chapterTitle)}</h1>\n")
+                    if (hasDistinctSectionTitle) {
+                        pageHtmlBuilder.append("<h1 class=\"chapter-opener\">${escapeHtml(section.chapterTitle)}</h1>\n")
+                    }
                 }
 
+                var firstSubheadingOnPage = ""
                 for (blk in currentPageBlocks) {
+                    if (firstSubheadingOnPage.isEmpty() && ArabicTextNormalizer.isSubheadingLine(blk)) {
+                        firstSubheadingOnPage = blk
+                            .removePrefix("#")
+                            .removePrefix("#")
+                            .removePrefix("#")
+                            .trim()
+                            .removeSuffix(":")
+                            .removeSuffix("：")
+                            .trim()
+                    }
                     pageHtmlBuilder.append(formatSemanticParagraphToHtml(blk, isRtl)).append("\n")
+                }
+
+                val effectivePageTitle = when {
+                    !isFirstPageOfSection && firstSubheadingOnPage.isNotBlank() -> firstSubheadingOnPage
+                    hasDistinctSectionTitle -> section.chapterTitle
+                    firstSubheadingOnPage.isNotBlank() -> firstSubheadingOnPage
+                    else -> bookTitle
                 }
 
                 pages.add(
                     ConvertedPageItem(
                         tag = if (hasExplicitChapters) section.chapterTag else "",
-                        title = section.chapterTitle,
-                        type = if (isFirstPageOfSection) "opener" else "reading",
+                        title = effectivePageTitle,
+                        type = if (isFirstPageOfSection && (hasExplicitChapters || hasDistinctSectionTitle)) "opener" else "reading",
                         html = pageHtmlBuilder.toString()
                     )
                 )

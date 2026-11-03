@@ -433,8 +433,26 @@ object SandboxJsRuntimeBuilder {
               inspectAndHeal: function() {
                 try {
                   upgradeWeakBookTypography();
+                  const counterEl = document.getElementById('pageCounter') || document.getElementById('pageCount');
+                  if (counterEl) {
+                    counterEl.setAttribute('dir', 'ltr');
+                    counterEl.style.direction = 'ltr';
+                    counterEl.style.unicodeBidi = 'isolate';
+                  }
                   const canvas = getActivePageCanvas();
                   if (!canvas) return { healedCount: 0 };
+
+                  const runningHeader = document.getElementById('runningHeader');
+                  if (runningHeader && !runningHeader.hidden) {
+                    const hasCoverOrH1 = canvas.querySelector('.cover-page, h1, .chapter-opener');
+                    const topBrandEl = document.querySelector('.top-bar .brand');
+                    const topBrandTxt = topBrandEl ? (topBrandEl.textContent || '').replace(/[🌸✦❖]/g, '').trim() : '';
+                    const runningTxt = (runningHeader.textContent || '').replace(/[🌸✦❖]/g, '').trim();
+                    if (hasCoverOrH1 || (topBrandTxt && runningTxt === topBrandTxt)) {
+                      runningHeader.hidden = true;
+                    }
+                  }
+
                   const canvasWidth = canvas.clientWidth || window.innerWidth || 360;
                   let healedCount = 0;
 

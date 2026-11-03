@@ -950,11 +950,24 @@ mark.search-hit-mark, mark.page-search-highlight {
       btnPrevPage.disabled = (index === 0);
       btnNextPage.disabled = (index === BOOK_DATA.totalPages - 1);
 
-      if (page.type === "cover") {
+      if (page.type === "cover" || page.type === "opener" || activePageArticle.querySelector("h1")) {
         runningHeader.hidden = true;
       } else {
-        runningHeader.hidden = false;
-        runningHeaderTag.textContent = BOOK_DATA.title;
+        const cleanTag = (page.tag || "").trim();
+        const cleanTitle = (page.title || "").trim();
+        const isSameAsBook = !cleanTitle || cleanTitle === (BOOK_DATA.title || "").trim();
+        const pageH2 = activePageArticle.querySelector("h2");
+        const h2Text = pageH2 ? (pageH2.textContent || "").trim() : "";
+        const effectiveTitle = (cleanTitle && cleanTitle !== h2Text && !isSameAsBook) ? cleanTitle : "";
+        const headerLabel = (cleanTag && effectiveTitle && cleanTag !== effectiveTitle)
+          ? (cleanTag + " • " + effectiveTitle)
+          : (effectiveTitle || cleanTag);
+        if (headerLabel && headerLabel !== (BOOK_DATA.title || "").trim()) {
+          runningHeader.hidden = false;
+          runningHeaderTag.textContent = headerLabel;
+        } else {
+          runningHeader.hidden = true;
+        }
       }
 
       if (savedBookmarks.includes(index)) {
@@ -1049,12 +1062,23 @@ mark.search-hit-mark, mark.page-search-highlight {
 
     function buildTocPanel() {
       let html = "";
+      let lastSig = "";
       BOOK_DATA.pages.forEach((p, idx) => {
+        const cleanTag = (p.tag || "").trim();
+        const cleanTitle = (p.title || "").trim();
+        const sig = (cleanTag + "|" + cleanTitle).toLowerCase();
+        const isOpener = (p.type === "opener" || p.type === "cover");
+        if (idx > 0 && !isOpener && sig === lastSig) {
+          return;
+        }
+        lastSig = sig;
         const isPart = (p.type === "opener");
         const cls = isPart ? "toc-item toc-part" : "toc-item";
+        const showTag = cleanTag && cleanTag !== cleanTitle && !cleanTitle.startsWith(cleanTag);
+        const label = showTag ? (cleanTag + " • " + cleanTitle) : cleanTitle;
         html += `<div class="${'$'}{cls}" onclick="window.goToPage(${'$'}{idx}); tocPanel.classList.remove('open');">
-          <span>${'$'}{p.tag ? p.tag + ' • ' : ''}${'$'}{p.title}</span>
-          <small>${'$'}{idx + 1}</small>
+          <span>${'$'}{label}</span>
+          <small dir="ltr">${'$'}{idx + 1}</small>
         </div>`;
       });
       tocPanelList.innerHTML = html;
