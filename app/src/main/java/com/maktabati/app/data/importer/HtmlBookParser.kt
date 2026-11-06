@@ -435,7 +435,9 @@ object HtmlBookParser {
                 title = h1Matcher.group(1)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
             }
         }
-        title = cleanDecoratedTitle(title).ifBlank { fallbackTitle }
+        title = HtmlCoverSnapshotGenerator.sanitizeCoverTitle(
+            cleanDecoratedTitle(title).ifBlank { fallbackTitle }
+        )
 
         // 2. Extract Subtitle & Author (with deduplication & synthetic placeholder filtering)
         var subtitle = ""
@@ -458,11 +460,15 @@ object HtmlBookParser {
                 subtitle = deduplicateSubtitleAgainstTitle(title, rawDomSub)
             }
         }
+        subtitle = HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle(subtitle, title)
 
         var description = ""
         val descMatcher = DESC_META_PATTERN.matcher(headSample)
         if (descMatcher.find()) {
-            description = deduplicateSubtitleAgainstTitle(title, descMatcher.group(1)?.trim() ?: "")
+            description = HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle(
+                deduplicateSubtitleAgainstTitle(title, descMatcher.group(1)?.trim() ?: ""),
+                title
+            )
         }
         if (subtitle.isBlank() && description.isNotBlank()) {
             subtitle = description
@@ -518,8 +524,9 @@ object HtmlBookParser {
         val tocList = mutableListOf<TocEntry>()
         val bookDataPageCount = extractBookDataPagesCountAndToc(combinedContent, bdStartIdx, tocList)
 
-        if (!quickMode && tocList.isEmpty()) {
-            val headingMatcher = HEADING_PATTERN.matcher(content)
+        if (!quickMode && tocList.isEmpty() && bookDataPageCount == 0) {
+            val headingSample = if (content.length > 250_000) content.substring(0, 250_000) else content
+            val headingMatcher = HEADING_PATTERN.matcher(headingSample)
             var count = 0
             var lastHeadingNorm = ""
             while (headingMatcher.find()) {
@@ -824,7 +831,8 @@ object HtmlBookParser {
 
     fun tocToJson(tocList: List<TocEntry>): String {
         val array = JSONArray()
-        for (entry in tocList) {
+        val cappedList = if (tocList.size > 300) tocList.take(300) else tocList
+        for (entry in cappedList) {
             val obj = JSONObject()
             obj.put("title", entry.title)
             obj.put("href", entry.href)

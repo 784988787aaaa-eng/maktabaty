@@ -1,6 +1,5 @@
 package com.maktabati.app.data.importer
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -12,45 +11,37 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Base64
-import android.view.View
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebSettings
 import android.webkit.WebView
-import android.webkit.WebViewClient
-import com.maktabati.app.data.typography.MaktabatiFontRegistry
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.io.BufferedInputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
+import kotlin.math.cos
+import kotlin.math.sin
 
 object HtmlCoverSnapshotGenerator {
 
-    const val COVER_SNAPSHOT_FILENAME = "cover_snapshot.png"
+    const val SNAPSHOT_FILE_NAME = "cover_v3.png"
+    const val COVER_SNAPSHOT_FILENAME = SNAPSHOT_FILE_NAME
+    const val LEGACY_SNAPSHOT_FILENAME = "cover_snapshot.png"
     const val COVER_ASPECT_RATIO = 0.68f
-    private const val SNAPSHOT_WIDTH = 544
-    private const val SNAPSHOT_HEIGHT = 800 // 544 / 800 = 0.68f
+    const val SNAPSHOT_WIDTH = 544
+    const val SNAPSHOT_HEIGHT = 800 // 544 / 800 = 0.68f
 
     private val _snapshotVersion = MutableStateFlow(0)
     val snapshotVersion: StateFlow<Int> = _snapshotVersion.asStateFlow()
 
-    private val generatorScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val inProgressBookDirs = mutableSetOf<String>()
+    private val MARKDOWN_OR_NOISE_WRAP_REGEX = Regex("[*#_~`^|]+")
+    private val EMOJI_SURROGATE_REGEX = Regex("[\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+")
+    private val DOTS_ONLY_REGEX = Regex("^[.\\s…\\-_—•*✦✧]+$")
+    private val MULTI_SPACE_REGEX = Regex("\\s+")
 
     private val EXPLICIT_COVER_FILENAMES = listOf(
         "cover.png",
@@ -78,49 +69,8 @@ object HtmlCoverSnapshotGenerator {
         RegexOption.IGNORE_CASE
     )
 
-    const val COVER_ISOLATION_CSS = """
-        .top-bar, .bottom-nav-dock, .book-header, .controls-bar,
-        .reader-header, .reader-footer, .nav-bar, .pagination-bar,
-        #maktabati-floating-bar, #maktabati-zoom-pill,
-        header, footer, nav {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            pointer-events: none !important;
-        }
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            overflow: hidden !important;
-        }
-        .book-viewport, .stage-container, .reader-stage, .book-container, main {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: flex !important;
-            align-items: stretch !important;
-            justify-content: stretch !important;
-        }
-        .page-canvas, .cover-page, .layout-cover, .page, .book-page, [data-page="0"] {
-            margin: 0 !important;
-            width: 100% !important;
-            min-width: 100% !important;
-            max-width: 100% !important;
-            height: 100% !important;
-            min-height: 100% !important;
-            max-height: 100% !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            box-sizing: border-box !important;
-        }
-    """
-
     fun getCoverSnapshotFile(bookDir: File): File {
-        return File(bookDir, COVER_SNAPSHOT_FILENAME)
+        return File(bookDir, SNAPSHOT_FILE_NAME)
     }
 
     fun hasSavedCoverSnapshot(bookDir: File): Boolean {
@@ -128,28 +78,74 @@ object HtmlCoverSnapshotGenerator {
         return file.isFile && file.length() > 128L
     }
 
+    fun cleanupLegacySnapshotIfPresent(bookDir: File?) {
+        if (bookDir == null) return
+        val legacy = File(bookDir, LEGACY_SNAPSHOT_FILENAME)
+        if (legacy.exists()) {
+            runCatching { legacy.delete() }
+        }
+    }
+
     fun notifySnapshotUpdated() {
         _snapshotVersion.value = _snapshotVersion.value + 1
     }
 
+    fun sanitizeCoverTitle(rawTitle: String): String {
+        val cleaned = rawTitle
+            .replace(MARKDOWN_OR_NOISE_WRAP_REGEX, " ")
+            .replace(EMOJI_SURROGATE_REGEX, " ")
+            .replace(MULTI_SPACE_REGEX, " ")
+            .trim()
+            .trim('*', '#', '-', '_', '•', '✦', '✧', ' ')
+        return cleaned.ifBlank { rawTitle.trim().ifBlank { "كتاب" } }
+    }
+
+    fun sanitizeCoverSubtitle(rawSubtitle: String, cleanTitle: String = ""): String {
+        val cleaned = rawSubtitle
+            .replace(MARKDOWN_OR_NOISE_WRAP_REGEX, " ")
+            .replace(EMOJI_SURROGATE_REGEX, " ")
+            .replace(MULTI_SPACE_REGEX, " ")
+            .trim()
+            .trim('*', '#', '-', '_', ' ')
+        if (cleaned.isBlank() || DOTS_ONLY_REGEX.matches(cleaned)) {
+            return ""
+        }
+        if (cleanTitle.isNotBlank() && cleaned.equals(cleanTitle, ignoreCase = true)) {
+            return ""
+        }
+        return cleaned
+    }
+
     suspend fun ensureCoverSnapshotForBook(
-        context: Context,
+        @Suppress("UNUSED_PARAMETER") context: Context,
         bookDir: File,
         entryHtmlFile: File,
         fallbackTitle: String
     ): Boolean = withContext(Dispatchers.IO) {
         if (!bookDir.exists() || !entryHtmlFile.isFile) return@withContext false
 
+        cleanupLegacySnapshotIfPresent(bookDir)
         val snapshotFile = getCoverSnapshotFile(bookDir)
 
-        val htmlContent = runCatching { entryHtmlFile.readText(Charsets.UTF_8) }.getOrDefault("")
-        if (tryExtractExplicitCoverImage(bookDir, htmlContent, snapshotFile)) {
+        if (hasSavedCoverSnapshot(bookDir)) {
+            return@withContext true
+        }
+
+        val htmlSample = runCatching {
+            entryHtmlFile.inputStream().bufferedReader(Charsets.UTF_8).use { reader ->
+                val buf = CharArray(45_000)
+                val read = reader.read(buf)
+                if (read > 0) String(buf, 0, read) else ""
+            }
+        }.getOrDefault("")
+
+        if (tryExtractExplicitCoverImage(bookDir, htmlSample, snapshotFile)) {
             notifySnapshotUpdated()
             return@withContext true
         }
 
         val metadata = runCatching {
-            HtmlBookParser.parseQuickHeader(htmlContent, fallbackTitle, bookDir = bookDir)
+            HtmlBookParser.parseQuickHeader(htmlSample, fallbackTitle, bookDir = bookDir)
         }.getOrNull() ?: return@withContext false
 
         if (!metadata.hasCoverPage) {
@@ -159,22 +155,14 @@ object HtmlCoverSnapshotGenerator {
             return@withContext false
         }
 
-        if (!hasSavedCoverSnapshot(snapshotFile.parentFile ?: bookDir)) {
-            val rendered = renderHtmlCoverPageSnapshot(
-                htmlContent = htmlContent,
-                metadata = metadata,
-                targetFile = snapshotFile
-            )
-            if (rendered) {
-                notifySnapshotUpdated()
-            }
-        }
-
-        scheduleOffscreenWebViewCapture(
-            context = context.applicationContext,
-            bookDir = bookDir,
-            entryHtmlFile = entryHtmlFile
+        val rendered = renderHtmlCoverPageSnapshot(
+            htmlContent = htmlSample,
+            metadata = metadata,
+            targetFile = snapshotFile
         )
+        if (rendered) {
+            notifySnapshotUpdated()
+        }
 
         hasSavedCoverSnapshot(bookDir)
     }
@@ -188,17 +176,21 @@ object HtmlCoverSnapshotGenerator {
             val candidate = File(bookDir, relPath)
             if (candidate.isFile && candidate.length() > 64L) {
                 if (decodeAndSaveCoverBitmap(candidate, targetSnapshotFile)) {
+                    cleanupLegacySnapshotIfPresent(bookDir)
                     return true
                 }
             }
         }
 
         val directCover = bookDir.listFiles()?.firstOrNull { f ->
-            f.isFile && f.name != COVER_SNAPSHOT_FILENAME &&
+            f.isFile &&
+                f.name != SNAPSHOT_FILE_NAME &&
+                f.name != LEGACY_SNAPSHOT_FILENAME &&
                 f.nameWithoutExtension.equals("cover", ignoreCase = true) &&
                 f.extension.lowercase() in setOf("png", "jpg", "jpeg", "webp")
         }
         if (directCover != null && decodeAndSaveCoverBitmap(directCover, targetSnapshotFile)) {
+            cleanupLegacySnapshotIfPresent(bookDir)
             return true
         }
 
@@ -217,16 +209,21 @@ object HtmlCoverSnapshotGenerator {
                     if (decodedBytes != null && decodedBytes.isNotEmpty()) {
                         val bmp = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
                         if (bmp != null) {
-                            return saveBitmapToFile(cropToCoverAspect(bmp), targetSnapshotFile)
+                            val saved = saveBitmapToFile(cropToCoverAspect(bmp), targetSnapshotFile)
+                            if (saved) cleanupLegacySnapshotIfPresent(bookDir)
+                            return saved
                         }
                     }
                 } else if (!trimmedSrc.startsWith("http://", ignoreCase = true) &&
                     !trimmedSrc.startsWith("https://", ignoreCase = true)
                 ) {
-                    val cleanRel = Uri.decode(trimmedSrc.substringBefore("?").substringBefore("#")).removePrefix("./").removePrefix("/")
+                    val cleanRel = Uri.decode(trimmedSrc.substringBefore("?").substringBefore("#"))
+                        .removePrefix("./")
+                        .removePrefix("/")
                     val imgFile = File(bookDir, cleanRel)
                     if (imgFile.isFile && imgFile.canonicalPath.startsWith(bookDir.canonicalPath)) {
                         if (decodeAndSaveCoverBitmap(imgFile, targetSnapshotFile)) {
+                            cleanupLegacySnapshotIfPresent(bookDir)
                             return true
                         }
                     }
@@ -237,208 +234,22 @@ object HtmlCoverSnapshotGenerator {
         return false
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun captureFromLiveWebView(
         webView: WebView,
         bookDir: File,
         onCaptured: (() -> Unit)? = null
     ) {
-        if (webView.width <= 0 || webView.height <= 0) return
-        val snapshotFile = getCoverSnapshotFile(bookDir)
-
-        val injectJs = """
-            (function() {
-                try {
-                    var style = document.getElementById('maktabati-cover-snapshot-style');
-                    if (!style) {
-                        style = document.createElement('style');
-                        style.id = 'maktabati-cover-snapshot-style';
-                        document.head.appendChild(style);
-                    }
-                    style.textContent = ${ JSONObject.quote(COVER_ISOLATION_CSS) };
-                } catch(e) {}
-                return 'OK';
-            })();
-        """.trimIndent()
-
-        val restoreJs = """
-            (function() {
-                try {
-                    var style = document.getElementById('maktabati-cover-snapshot-style');
-                    if (style) style.remove();
-                } catch(e) {}
-            })();
-        """.trimIndent()
-
-        webView.evaluateJavascript(injectJs) {
-            webView.postDelayed({
-                try {
-                    val w = webView.width.coerceAtLeast(1)
-                    val h = webView.height.coerceAtLeast(1)
-                    val rawBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-                    val canvas = Canvas(rawBitmap)
-                    webView.draw(canvas)
-
-                    webView.evaluateJavascript(restoreJs, null)
-
-                    if (isBitmapMeaningful(rawBitmap)) {
-                        val cropped = cropToCoverAspect(rawBitmap)
-                        generatorScope.launch(Dispatchers.IO) {
-                            if (saveBitmapToFile(cropped, snapshotFile)) {
-                                notifySnapshotUpdated()
-                                withContext(Dispatchers.Main) {
-                                    onCaptured?.invoke()
-                                }
-                            }
-                        }
-                    } else {
-                        rawBitmap.recycle()
-                    }
-                } catch (_: Throwable) {
-                    webView.evaluateJavascript(restoreJs, null)
-                }
-            }, 90L)
-        }
+        // Intentionally disabled: live WebView capture causes inconsistent zoom/aspect cropping across books.
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @Suppress("UNUSED_PARAMETER")
     fun scheduleOffscreenWebViewCapture(
         context: Context,
         bookDir: File,
         entryHtmlFile: File
     ) {
-        val dirKey = bookDir.absolutePath
-        synchronized(inProgressBookDirs) {
-            if (dirKey in inProgressBookDirs) return
-            inProgressBookDirs.add(dirKey)
-        }
-
-        Handler(Looper.getMainLooper()).post {
-            try {
-                val booksRoot = File(context.filesDir, "books")
-                val offscreenWebView = WebView(context).apply {
-                    setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        allowFileAccess = true
-                        allowContentAccess = true
-                        @Suppress("DEPRECATION")
-                        allowFileAccessFromFileURLs = true
-                        @Suppress("DEPRECATION")
-                        allowUniversalAccessFromFileURLs = true
-                        defaultTextEncodingName = "UTF-8"
-                        cacheMode = WebSettings.LOAD_NO_CACHE
-                    }
-                }
-
-                val widthSpec = View.MeasureSpec.makeMeasureSpec(SNAPSHOT_WIDTH, View.MeasureSpec.EXACTLY)
-                val heightSpec = View.MeasureSpec.makeMeasureSpec(SNAPSHOT_HEIGHT, View.MeasureSpec.EXACTLY)
-                offscreenWebView.measure(widthSpec, heightSpec)
-                offscreenWebView.layout(0, 0, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT)
-
-                offscreenWebView.webViewClient = object : WebViewClient() {
-                    override fun shouldInterceptRequest(
-                        view: WebView?,
-                        request: WebResourceRequest?
-                    ): WebResourceResponse? {
-                        val reqUri = request?.url ?: return null
-                        if (reqUri.host == "maktabati.app") {
-                            MaktabatiFontRegistry.interceptFontRequest(
-                                context = context,
-                                requestPath = reqUri.path,
-                                bookDir = bookDir
-                            )?.let { return it }
-                        }
-                        if (reqUri.host == "maktabati.app" && reqUri.path?.startsWith("/books/") == true) {
-                            val rawRelPath = reqUri.path!!.removePrefix("/books/")
-                            val decodedRelPath = Uri.decode(rawRelPath)
-                            val targetFile = File(booksRoot, decodedRelPath).let { f ->
-                                if (f.exists()) f else File(booksRoot, rawRelPath)
-                            }
-                            try {
-                                if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
-                                    val lower = targetFile.name.lowercase()
-                                    val mime = when {
-                                        lower.endsWith(".html") || lower.endsWith(".htm") -> "text/html"
-                                        lower.endsWith(".css") -> "text/css"
-                                        lower.endsWith(".js") -> "application/javascript"
-                                        lower.endsWith(".svg") -> "image/svg+xml"
-                                        lower.endsWith(".png") -> "image/png"
-                                        lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
-                                        lower.endsWith(".webp") -> "image/webp"
-                                        else -> "application/octet-stream"
-                                    }
-                                    return WebResourceResponse(
-                                        mime,
-                                        "UTF-8",
-                                        BufferedInputStream(FileInputStream(targetFile))
-                                    )
-                                }
-                            } catch (_: Exception) {}
-                        }
-                        return super.shouldInterceptRequest(view, request)
-                    }
-
-                    override fun onPageFinished(view: WebView?, url: String?) {
-                        super.onPageFinished(view, url)
-                        val wv = view ?: return
-                        val injectJs = """
-                            (function() {
-                                try {
-                                    if (typeof goToPage === 'function') goToPage(0);
-                                    var style = document.createElement('style');
-                                    style.id = 'maktabati-cover-snapshot-style';
-                                    style.textContent = ${ JSONObject.quote(COVER_ISOLATION_CSS) };
-                                    document.head.appendChild(style);
-                                } catch(e) {}
-                                return 'OK';
-                            })();
-                        """.trimIndent()
-
-                        wv.evaluateJavascript(injectJs) {
-                            wv.postDelayed({
-                                try {
-                                    wv.measure(widthSpec, heightSpec)
-                                    wv.layout(0, 0, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT)
-                                    val bmp = Bitmap.createBitmap(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT, Bitmap.Config.ARGB_8888)
-                                    val canvas = Canvas(bmp)
-                                    wv.draw(canvas)
-
-                                    if (isBitmapMeaningful(bmp)) {
-                                        val snapshotFile = getCoverSnapshotFile(bookDir)
-                                        generatorScope.launch(Dispatchers.IO) {
-                                            if (saveBitmapToFile(bmp, snapshotFile)) {
-                                                notifySnapshotUpdated()
-                                            }
-                                        }
-                                    } else {
-                                        bmp.recycle()
-                                    }
-                                } catch (_: Throwable) {
-                                } finally {
-                                    runCatching {
-                                        wv.stopLoading()
-                                        wv.destroy()
-                                    }
-                                    synchronized(inProgressBookDirs) {
-                                        inProgressBookDirs.remove(dirKey)
-                                    }
-                                }
-                            }, 280L)
-                        }
-                    }
-                }
-
-                val relFolder = bookDir.name
-                val relEntry = entryHtmlFile.relativeTo(bookDir).path.replace("\\", "/")
-                val virtualUrl = "https://maktabati.app/books/$relFolder/$relEntry"
-                offscreenWebView.loadUrl(virtualUrl)
-            } catch (_: Throwable) {
-                synchronized(inProgressBookDirs) {
-                    inProgressBookDirs.remove(dirKey)
-                }
-            }
-        }
+        // Intentionally disabled: canonical fixed-grid Canvas cover renderer ensures 100% uniform proportions.
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -448,20 +259,23 @@ object HtmlCoverSnapshotGenerator {
         targetFile: File
     ): Boolean {
         return try {
+            cleanupLegacySnapshotIfPresent(targetFile.parentFile)
+
             val bmp = Bitmap.createBitmap(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
 
-            val bgLong = HtmlBookParser.parseHexToColorLong(metadata.bgPrimaryHex, 0xFF1E293B)
-            val roseLong = HtmlBookParser.parseHexToColorLong(metadata.accentRoseHex, 0xFF5B3A29)
-            val goldLong = HtmlBookParser.parseHexToColorLong(metadata.accentGoldHex, 0xFFD97706)
+            val bgLong = HtmlBookParser.parseHexToColorLong(metadata.bgPrimaryHex, 0xFFFAF3EB)
+            val roseLong = HtmlBookParser.parseHexToColorLong(metadata.accentRoseHex, 0xFF6B2D46)
+            val goldLong = HtmlBookParser.parseHexToColorLong(metadata.accentGoldHex, 0xFFC59B27)
 
             val isLightCover = HtmlBookParser.computeColorLuminance(bgLong) > 0.48f
             val endLong = if (isLightCover) {
-                HtmlBookParser.blendColorLongs(bgLong, roseLong, 0.14f)
+                HtmlBookParser.blendColorLongs(bgLong, roseLong, 0.12f)
             } else {
-                HtmlBookParser.blendColorLongs(bgLong, roseLong, 0.42f)
+                HtmlBookParser.blendColorLongs(bgLong, roseLong, 0.38f)
             }
 
+            // 1. Uniform Background Gradient (544x800)
             val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 shader = LinearGradient(
                     0f,
@@ -484,134 +298,215 @@ object HtmlCoverSnapshotGenerator {
                 0xFFE2E8F0.toInt()
             }
 
+            // Subtle geometric watermark grid
+            val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+                color = frameColorInt
+                alpha = if (isLightCover) 18 else 24
+            }
+            var gx = 68f
+            while (gx < SNAPSHOT_WIDTH - 40f) {
+                canvas.drawLine(gx, 40f, gx, SNAPSHOT_HEIGHT - 40f, gridPaint)
+                gx += 68f
+            }
+            var gy = 80f
+            while (gy < SNAPSHOT_HEIGHT - 40f) {
+                canvas.drawLine(40f, gy, SNAPSHOT_WIDTH - 40f, gy, gridPaint)
+                gy += 80f
+            }
+
+            // 2. Fixed Double Outer Frame (28px & 40px insets)
             val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
-                strokeWidth = 3.5f
+                strokeWidth = 3f
                 color = frameColorInt
-                alpha = if (isLightCover) 190 else 210
+                alpha = if (isLightCover) 195 else 215
             }
             val outerRect = RectF(28f, 28f, SNAPSHOT_WIDTH - 28f, SNAPSHOT_HEIGHT - 28f)
             canvas.drawRoundRect(outerRect, 20f, 20f, borderPaint)
 
-            borderPaint.strokeWidth = 1.6f
-            borderPaint.alpha = if (isLightCover) 130 else 150
+            borderPaint.strokeWidth = 1.2f
+            borderPaint.alpha = if (isLightCover) 135 else 155
             val innerRect = RectF(40f, 40f, SNAPSHOT_WIDTH - 40f, SNAPSHOT_HEIGHT - 40f)
             canvas.drawRoundRect(innerRect, 14f, 14f, borderPaint)
 
-            val emblemCenterY = 195f
-            val emblemCenterX = SNAPSHOT_WIDTH / 2f
+            // Fixed Corner Ornaments at the 4 corners of the inner frame
+            val cornerAccentPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                color = frameColorInt
+                alpha = if (isLightCover) 185 else 205
+            }
+            val corners = listOf(
+                Pair(40f, 40f),
+                Pair(SNAPSHOT_WIDTH - 40f, 40f),
+                Pair(40f, SNAPSHOT_HEIGHT - 40f),
+                Pair(SNAPSHOT_WIDTH - 40f, SNAPSHOT_HEIGHT - 40f)
+            )
+            for ((cx, cy) in corners) {
+                canvas.drawCircle(cx, cy, 4.5f, cornerAccentPaint)
+            }
+
+            // 3. Fixed Top Eyebrow at Y = 108px
+            val eyebrowText = if (metadata.isRtl) {
+                "✦ طبعة رقمية فاخرة • مكتبتي ✦"
+            } else {
+                "✦ LUXURY DIGITAL EDITION • MAKTABATI ✦"
+            }
+            val eyebrowPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = frameColorInt
+                textSize = 17f
+                textAlign = Paint.Align.CENTER
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            }
+            canvas.drawText(eyebrowText, SNAPSHOT_WIDTH / 2f, 108f, eyebrowPaint)
+
+            // 4. Fixed Central Medallion at (X = 272px, Y = 236px, R = 64px)
+            val emblemCenterX = 272f
+            val emblemCenterY = 236f
+            val emblemRadius = 64f
+
             val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
                 color = primaryColorInt
-                alpha = if (isLightCover) 24 else 48
+                alpha = if (isLightCover) 20 else 44
             }
-            canvas.drawCircle(emblemCenterX, emblemCenterY, 72f, glowPaint)
+            canvas.drawCircle(emblemCenterX, emblemCenterY, emblemRadius, glowPaint)
+
+            val dashedCirclePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 1.6f
+                color = frameColorInt
+                alpha = 155
+            }
+            canvas.drawCircle(emblemCenterX, emblemCenterY, emblemRadius, dashedCirclePaint)
 
             val emblemStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
-                strokeWidth = 2.5f
+                strokeWidth = 2.2f
                 color = frameColorInt
-                alpha = 200
+                alpha = 210
             }
-            canvas.drawCircle(emblemCenterX, emblemCenterY, 52f, emblemStroke)
+            canvas.drawCircle(emblemCenterX, emblemCenterY, 50f, emblemStroke)
 
-            val diamondPath = Path().apply {
-                moveTo(emblemCenterX, emblemCenterY - 32f)
-                lineTo(emblemCenterX + 32f, emblemCenterY)
-                lineTo(emblemCenterX, emblemCenterY + 32f)
-                lineTo(emblemCenterX - 32f, emblemCenterY)
-                close()
+            // 8-pointed Rub el Hizb / Star inside the medallion
+            val starRadiusOuter = 34f
+            val starRadiusInner = 14f
+            val starPath = Path()
+            for (i in 0 until 8) {
+                val angleDeg = i * 45.0 - 90.0
+                val r = if (i % 2 == 0) starRadiusOuter else starRadiusInner
+                val px = emblemCenterX + (r * cos(Math.toRadians(angleDeg))).toFloat()
+                val py = emblemCenterY + (r * sin(Math.toRadians(angleDeg))).toFloat()
+                if (i == 0) starPath.moveTo(px, py) else starPath.lineTo(px, py)
             }
-            canvas.drawPath(diamondPath, emblemStroke)
+            starPath.close()
+            val starFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                color = primaryColorInt
+                alpha = if (isLightCover) 36 else 65
+            }
+            canvas.drawPath(starPath, starFillPaint)
+            val starStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 2f
+                color = primaryColorInt
+                alpha = 215
+            }
+            canvas.drawPath(starPath, starStrokePaint)
+            canvas.drawCircle(emblemCenterX, emblemCenterY, 5.5f, cornerAccentPaint)
+
+            // 5. Fixed Title Zone starting at Y = 365px (Max width = 416px, max 3 lines, auto-fitted 30f..42f)
+            val cleanTitle = sanitizeCoverTitle(metadata.title)
+            val cleanSubtitle = sanitizeCoverSubtitle(metadata.subtitle, cleanTitle)
+            val cleanAuthor = HtmlBookParser.sanitizeExtractedAuthor(
+                metadata.author,
+                cleanTitle,
+                cleanSubtitle
+            )
+
+            val textMaxWidth = 416
+            val textLeftX = (SNAPSHOT_WIDTH - textMaxWidth) / 2f
+            val chosenTitleSize = when {
+                cleanTitle.length > 48 -> 30f
+                cleanTitle.length > 32 -> 34f
+                cleanTitle.length > 20 -> 38f
+                else -> 42f
+            }
 
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = titleColorInt
-                textSize = 44f
+                textSize = chosenTitleSize
                 typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             }
-            val textMaxWidth = SNAPSHOT_WIDTH - 120
             val titleLayout = StaticLayout.Builder
-                .obtain(metadata.title, 0, metadata.title.length, titlePaint, textMaxWidth)
+                .obtain(cleanTitle, 0, cleanTitle.length, titlePaint, textMaxWidth)
                 .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                .setLineSpacing(6f, 1.12f)
+                .setLineSpacing(5f, 1.12f)
                 .setMaxLines(3)
                 .build()
 
+            val titleStartY = 365f
             canvas.save()
-            val titleY = 310f
-            canvas.translate(60f, titleY)
+            canvas.translate(textLeftX, titleStartY)
             titleLayout.draw(canvas)
             canvas.restore()
 
-            val dividerY = titleY + titleLayout.height + 28f
-            val dividerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                style = Paint.Style.STROKE
-                strokeWidth = 2.5f
-                color = frameColorInt
-                alpha = 190
-            }
-            canvas.drawLine(emblemCenterX - 85f, dividerY, emblemCenterX + 85f, dividerY, dividerPaint)
-
-            if (metadata.subtitle.isNotBlank()) {
+            // 6. Subtitle Zone directly below Title (max 2 lines, font size 21f)
+            if (cleanSubtitle.isNotBlank()) {
                 val subPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = subTextColorInt
-                    textSize = 24f
+                    textSize = 21f
                     typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
                 }
                 val subLayout = StaticLayout.Builder
-                    .obtain(metadata.subtitle, 0, metadata.subtitle.length, subPaint, textMaxWidth)
+                    .obtain(cleanSubtitle, 0, cleanSubtitle.length, subPaint, textMaxWidth)
                     .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                    .setLineSpacing(4f, 1.15f)
-                    .setMaxLines(3)
+                    .setLineSpacing(4f, 1.14f)
+                    .setMaxLines(2)
                     .build()
 
+                val subtitleY = (titleStartY + titleLayout.height + 18f).coerceAtMost(545f)
                 canvas.save()
-                canvas.translate(60f, dividerY + 24f)
+                canvas.translate(textLeftX, subtitleY)
                 subLayout.draw(canvas)
                 canvas.restore()
             }
 
-            if (metadata.author.isNotBlank()) {
-                val authorPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = if (isLightCover) primaryColorInt else frameColorInt
-                    textSize = 25f
-                    typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-                }
-                val authorLayout = StaticLayout.Builder
-                    .obtain(metadata.author, 0, metadata.author.length, authorPaint, textMaxWidth)
-                    .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                    .setMaxLines(1)
-                    .build()
-
-                canvas.save()
-                canvas.translate(60f, SNAPSHOT_HEIGHT - 115f)
-                authorLayout.draw(canvas)
-                canvas.restore()
+            // 7. Fixed Triple Ornament at Y = 640px & Author/Edition at Y = 695px
+            // Leaving Y = 720..800 completely clean so bottom card badges never overlap buttons
+            val ornamentY = 640f
+            val ornamentPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = frameColorInt
+                textSize = 20f
+                textAlign = Paint.Align.CENTER
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             }
+            canvas.drawText("✦   ✦   ✦", SNAPSHOT_WIDTH / 2f, ornamentY, ornamentPaint)
+
+            val footerLabel = cleanAuthor.ifBlank {
+                if (metadata.isRtl) "إصدارات مكتبتي الفاخرة" else "Maktabati Luxury Editions"
+            }
+            val authorPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = if (isLightCover) primaryColorInt else frameColorInt
+                textSize = 21f
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            }
+            val authorLayout = StaticLayout.Builder
+                .obtain(footerLabel, 0, footerLabel.length, authorPaint, textMaxWidth)
+                .setAlignment(Layout.Alignment.ALIGN_CENTER)
+                .setMaxLines(1)
+                .build()
+
+            canvas.save()
+            canvas.translate(textLeftX, 675f)
+            authorLayout.draw(canvas)
+            canvas.restore()
 
             saveBitmapToFile(bmp, targetFile)
         } catch (_: Throwable) {
             false
         }
-    }
-
-    private fun isBitmapMeaningful(bitmap: Bitmap): Boolean {
-        if (bitmap.width < 10 || bitmap.height < 10) return false
-        val samplePoints = listOf(
-            Pair(bitmap.width / 2, bitmap.height / 2),
-            Pair(bitmap.width / 3, bitmap.height / 3),
-            Pair(bitmap.width * 2 / 3, bitmap.height / 3),
-            Pair(bitmap.width / 3, bitmap.height * 2 / 3),
-            Pair(bitmap.width * 2 / 3, bitmap.height * 2 / 3),
-            Pair(bitmap.width / 2, bitmap.height / 4),
-            Pair(bitmap.width / 2, bitmap.height * 3 / 4)
-        )
-        val colors = samplePoints.map { (x, y) ->
-            bitmap.getPixel(x.coerceIn(0, bitmap.width - 1), y.coerceIn(0, bitmap.height - 1))
-        }
-        val nonTransparent = colors.any { ((it ushr 24) and 0xFF) > 10 }
-        if (!nonTransparent) return false
-        return colors.distinct().size >= 2
     }
 
     private fun decodeAndSaveCoverBitmap(sourceFile: File, targetFile: File): Boolean {

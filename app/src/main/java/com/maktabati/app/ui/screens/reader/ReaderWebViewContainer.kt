@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.viewinterop.AndroidView
-import com.maktabati.app.data.importer.HtmlCoverSnapshotGenerator
 import com.maktabati.app.data.model.Book
 import com.maktabati.app.data.sandbox.SandboxHtmlInjector
 import com.maktabati.app.data.typography.MaktabatiFontRegistry
@@ -32,6 +31,43 @@ import com.maktabati.app.ui.reader.ReaderThemeMode
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.RandomAccessFile
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * Fast O(1) check that inspects the header (up to 64KB) and tail (16KB) of an HTML file
+ * using [RandomAccessFile] to verify whether `__maktabatiV9Initialized` is already injected,
+ * avoiding full-file `readText()` allocations when opening large multi-megabyte books.
+ */
+fun isHtmlAlreadyInjected(file: File, marker: String = "__maktabatiV9Initialized"): Boolean {
+    if (!file.isFile) return false
+    val len = file.length()
+    if (len <= 0L) return false
+    return try {
+        RandomAccessFile(file, "r").use { raf ->
+            val headSize = min(len, 65_536L).toInt()
+            val headBytes = ByteArray(headSize)
+            raf.seek(0L)
+            raf.readFully(headBytes)
+            val headText = String(headBytes, Charsets.UTF_8)
+            if (headText.contains(marker)) return true
+
+            if (len > 65_536L) {
+                val tailSize = min(len, 16_384L).toInt()
+                val tailStart = max(0L, len - tailSize)
+                val tailBytes = ByteArray(tailSize)
+                raf.seek(tailStart)
+                raf.readFully(tailBytes)
+                val tailText = String(tailBytes, Charsets.UTF_8)
+                if (tailText.contains(marker)) return true
+            }
+            false
+        }
+    } catch (_: Throwable) {
+        false
+    }
+}
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -138,7 +174,7 @@ fun ReaderWebViewContainer(
                                     try {
                                         if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
                                             val mime = ReaderWebViewStyleApplicator.resolveMimeType(targetFile.name)
-                                            if (mime == "text/html") {
+                                            if (mime == "text/html" && !isHtmlAlreadyInjected(targetFile)) {
                                                 val raw = targetFile.readText(Charsets.UTF_8)
                                                 if (!raw.contains("__maktabatiV9Initialized")) {
                                                     val upgraded = SandboxHtmlInjector.injectIntoHtml(
@@ -199,13 +235,6 @@ fun ReaderWebViewContainer(
                                             "if (typeof window.__maktabatiGoToDomPage === 'function') window.__maktabatiGoToDomPage(${savedPage - 1}); else if (typeof goToPage === 'function') goToPage(${savedPage - 1});",
                                             null
                                         )
-                                    } else if (book.scrollY == 0 && readerTheme == ReaderThemeMode.ORIGINAL) {
-                                        wv.postDelayed({
-                                            HtmlCoverSnapshotGenerator.captureFromLiveWebView(
-                                                webView = wv,
-                                                bookDir = bookDir
-                                            )
-                                        }, 140L)
                                     }
                                 }
                             }

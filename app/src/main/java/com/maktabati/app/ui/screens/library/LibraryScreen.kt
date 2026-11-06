@@ -101,12 +101,6 @@ fun LibraryScreen(
     val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
     val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
 
-    LaunchedEffect(allRawBooks.size) {
-        if (allRawBooks.isNotEmpty()) {
-            viewModel.ensureLibraryCoversAndPalettes()
-        }
-    }
-
     LaunchedEffect(cloudSyncState) {
         if (cloudSyncState is CloudSyncState.Success) {
             delay(4000)
@@ -198,13 +192,12 @@ fun LibraryScreen(
                             "application/x-zip-compressed",
                             "text/plain",
                             "text/markdown",
-                            "application/msword",
+                            "text/x-markdown",
                             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             "application/vnd.oasis.opendocument.text",
                             "application/rtf",
                             "text/rtf",
                             "application/epub+zip",
-                            "application/pdf",
                             "*/*"
                         )
                     )

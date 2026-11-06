@@ -9,7 +9,7 @@ import java.nio.charset.Charset
 import java.util.zip.ZipInputStream
 
 /**
- * Multi-format document text & metadata extractor supporting TXT, MD, DOCX, DOC, ODT, RTF, EPUB, and PDF.
+ * Multi-format document text & metadata extractor supporting TXT, MD, DOCX, ODT, RTF, and EPUB.
  */
 object DocumentTextExtractor {
 
@@ -46,18 +46,32 @@ object DocumentTextExtractor {
             bytes[2] == 0x44.toByte() &&
             bytes[3] == 0x46.toByte()
 
+        val isOleBinary = bytes.size >= 8 &&
+            bytes[0] == 0xD0.toByte() &&
+            bytes[1] == 0xCF.toByte() &&
+            bytes[2] == 0x11.toByte() &&
+            bytes[3] == 0xE0.toByte()
+
         val isRtfMagic = bytes.size >= 5 &&
             String(bytes, 0, minOf(10, bytes.size), Charsets.US_ASCII).trimStart().startsWith("{\\rtf")
+
+        if (ext == "pdf" || isPdfMagic) {
+            throw IllegalArgumentException(
+                "ملفات PDF غير مدعومة للتحويل النصي ضماناً لدقة النص العربي وسلامة التنسيق. يرجى استخدام الصيغ النصية المعتمدة: TXT, MD, DOCX, ODT, RTF, EPUB, HTML, ZIP."
+            )
+        }
+
+        if (ext == "doc" || isOleBinary) {
+            throw IllegalArgumentException(
+                "ملفات وورد الثنائية القديمة (.doc) غير مدعومة؛ يرجى حفظ الملف بصيغة وورد الحديثة (.docx) أو نص (.txt) لضمان تحويل متقن 100%."
+            )
+        }
 
         return when {
             ext == "docx" -> extractFromDocx(bytes)
             ext == "odt" -> extractFromOdt(bytes)
             ext == "epub" -> extractFromEpub(bytes)
-            ext == "pdf" || isPdfMagic -> PdfStreamExtractor.extractFromPdf(bytes)
             ext == "rtf" || isRtfMagic -> extractFromRtf(bytes)
-            ext == "doc" -> {
-                if (isZipMagic) extractFromDocx(bytes) else extractFromClassicDoc(bytes)
-            }
             isZipMagic -> detectAndExtractZipDocument(bytes)
             else -> extractFromPlainTextOrMarkdown(bytes)
         }
@@ -108,7 +122,14 @@ object DocumentTextExtractor {
         }
 
         val utf8Text = String(bytes, Charsets.UTF_8)
-        val replacementCount = utf8Text.count { it == '\uFFFD' }
+        val checkLen = minOf(utf8Text.length, 8192)
+        var replacementCount = 0
+        for (i in 0 until checkLen) {
+            if (utf8Text[i] == '\uFFFD') {
+                replacementCount++
+                if (replacementCount > 4) break
+            }
+        }
         if (replacementCount == 0) {
             return utf8Text
         }
@@ -241,143 +262,6 @@ object DocumentTextExtractor {
             explicitTitle = explicitTitle,
             explicitAuthor = explicitAuthor
         )
-    }
-
-    private fun extractFromClassicDoc(bytes: ByteArray): ExtractedDocumentData {
-        val headAscii = String(bytes, 0, minOf(64, bytes.size), Charsets.US_ASCII)
-        if (headAscii.trimStart().startsWith("{\\rtf")) {
-            return extractFromRtf(bytes)
-        }
-        val isOleBinary = bytes.size >= 8 &&
-            bytes[0] == 0xD0.toByte() &&
-            bytes[1] == 0xCF.toByte() &&
-            bytes[2] == 0x11.toByte() &&
-            bytes[3] == 0xE0.toByte()
-
-        if (!isOleBinary) {
-            return extractFromPlainTextOrMarkdown(bytes)
-        }
-
-        val utf16Segments = extractCleanUtf16LeSegmentsFromBinary(bytes)
-        val utf8Or1256Segments = extractCleanSingleByteSegmentsFromBinary(bytes)
-
-        val bestText = if (scoreReadableBookText(utf16Segments) >= scoreReadableBookText(utf8Or1256Segments)) {
-            utf16Segments
-        } else {
-            utf8Or1256Segments
-        }
-
-        return ExtractedDocumentData(bodyText = bestText.trim())
-    }
-
-    private fun extractCleanUtf16LeSegmentsFromBinary(bytes: ByteArray): String {
-        val out = StringBuilder()
-        val run = StringBuilder()
-
-        fun flushRun() {
-            val cleaned = cleanBinaryExtractedRun(run.toString())
-            if (cleaned.length >= 4 && isMeaningfulHumanRun(cleaned)) {
-                out.append(cleaned).append("\n\n")
-            }
-            run.setLength(0)
-        }
-
-        var i = 0
-        while (i + 1 < bytes.size) {
-            val lo = bytes[i].toInt() and 0xFF
-            val hi = bytes[i + 1].toInt() and 0xFF
-            val code = (hi shl 8) or lo
-            val ch = code.toChar()
-
-            val isValidChar = when {
-                code == 0x000D || code == 0x000A -> true
-                code == 0x0009 || code == 0x0020 -> true
-                code in 0x0021..0x007E -> true
-                code in 0x00A0..0x00FF -> true
-                code in 0x0600..0x06FF -> true
-                code in 0x0750..0x077F -> true
-                code in 0xFB50..0xFDFF -> true
-                code in 0xFE70..0xFEFF -> true
-                code in 0x2000..0x203A -> true
-                else -> false
-            }
-
-            if (isValidChar) {
-                if (code == 0x000D || code == 0x000A) {
-                    run.append('\n')
-                } else {
-                    run.append(ch)
-                }
-                i += 2
-            } else {
-                flushRun()
-                i += 2
-            }
-        }
-        flushRun()
-        return out.toString()
-    }
-
-    private fun extractCleanSingleByteSegmentsFromBinary(bytes: ByteArray): String {
-        val decoded = decodeTextBytesSmart(bytes)
-        val out = StringBuilder()
-        val current = StringBuilder()
-
-        for (ch in decoded) {
-            val code = ch.code
-            val valid = ch == '\n' || ch == '\r' || ch == '\t' || ch == ' ' ||
-                code in 0x0021..0x007E ||
-                code in 0x0600..0x06FF ||
-                code in 0xFB50..0xFDFF ||
-                code in 0xFE70..0xFEFF ||
-                ch in setOf('«', '»', '،', '؛', '؟', '﴿', '﴾')
-            if (valid) {
-                current.append(ch)
-            } else {
-                val cleaned = cleanBinaryExtractedRun(current.toString())
-                if (cleaned.length >= 6 && isMeaningfulHumanRun(cleaned)) {
-                    out.append(cleaned).append("\n\n")
-                }
-                current.setLength(0)
-            }
-        }
-        val tail = cleanBinaryExtractedRun(current.toString())
-        if (tail.length >= 6 && isMeaningfulHumanRun(tail)) {
-            out.append(tail).append("\n\n")
-        }
-        return out.toString()
-    }
-
-    private fun cleanBinaryExtractedRun(raw: String): String {
-        val ignoredNoiseTokens = listOf(
-            "Root Entry", "WordDocument", "SummaryInformation", "DocumentSummaryInformation",
-            "CompObj", "1Table", "0Table", "Normal.dotm", "Microsoft Office Word", "MSWordDoc",
-            "Times New Roman", "Calibri", "Arial", "HYPERLINK", "MERGEFORMAT"
-        )
-        var s = raw
-        for (token in ignoredNoiseTokens) {
-            s = s.replace(token, " ", ignoreCase = true)
-        }
-        return s.lines()
-            .map { it.replace(WHITESPACE_REGEX, " ").trim() }
-            .filter { it.length >= 2 && isMeaningfulHumanRun(it) }
-            .joinToString("\n")
-            .trim()
-    }
-
-    private fun isMeaningfulHumanRun(text: String): Boolean {
-        if (text.isBlank()) return false
-        val arabicCount = text.count { it.code in 0x0600..0x06FF || it.code in 0xFB50..0xFEFF }
-        val latinCount = text.count { it in 'A'..'Z' || it in 'a'..'z' }
-        val letterCount = arabicCount + latinCount
-        if (letterCount < 2) return false
-        return letterCount.toFloat() / text.length.toFloat() >= 0.35f
-    }
-
-    private fun scoreReadableBookText(text: String): Int {
-        val arabic = text.count { it.code in 0x0600..0x06FF }
-        val words = text.split(WHITESPACE_REGEX).count { it.length >= 2 }
-        return arabic * 3 + words
     }
 
     private fun extractFromOdt(bytes: ByteArray): ExtractedDocumentData {

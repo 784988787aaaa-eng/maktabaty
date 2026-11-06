@@ -1,6 +1,8 @@
 package com.maktabati.app.ui.components
 
+import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.LruCache
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
@@ -77,7 +81,187 @@ import com.maktabati.app.data.model.Book
 import com.maktabati.app.ui.localization.AppLanguage
 import com.maktabati.app.ui.localization.LocalAppStrings
 import com.maktabati.app.ui.theme.RoyalIndigo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+
+object CoverBitmapCache {
+    private val lruCache = object : LruCache<String, ImageBitmap>(64) {}
+
+    fun get(key: String): ImageBitmap? = synchronized(lruCache) { lruCache.get(key) }
+
+    fun put(key: String, bitmap: ImageBitmap) = synchronized(lruCache) { lruCache.put(key, bitmap) }
+}
+
+@Composable
+private fun rememberCachedCoverBitmap(
+    context: Context,
+    folderPath: String,
+    snapshotVersion: Int
+): ImageBitmap? {
+    val snapshotFile = remember(context, folderPath) {
+        File(File(context.filesDir, "books/$folderPath"), HtmlCoverSnapshotGenerator.SNAPSHOT_FILE_NAME)
+    }
+    val snapshotPath = snapshotFile.absolutePath
+    val cacheKey = "$snapshotPath#$snapshotVersion"
+    val cachedBitmap = remember(cacheKey) { CoverBitmapCache.get(cacheKey) }
+
+    val loadedBitmap by produceState<ImageBitmap?>(
+        initialValue = cachedBitmap,
+        key1 = snapshotPath,
+        key2 = snapshotVersion
+    ) {
+        if (cachedBitmap != null) {
+            value = cachedBitmap
+            return@produceState
+        }
+        val decoded = withContext(Dispatchers.IO) {
+            if (snapshotFile.isFile && snapshotFile.length() > 128L) {
+                runCatching { BitmapFactory.decodeFile(snapshotPath)?.asImageBitmap() }.getOrNull()
+            } else {
+                null
+            }
+        }
+        if (decoded != null) {
+            CoverBitmapCache.put(cacheKey, decoded)
+        }
+        value = decoded
+    }
+    return loadedBitmap
+}
+
+@Composable
+fun LuxuryGeneratedBookCover(
+    book: Book,
+    scaleFactor: Float,
+    coverFrameColor: Color,
+    coverEmblemColor: Color,
+    coverTitleColor: Color,
+    coverSubtitleColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val s = scaleFactor.coerceIn(0.68f, 1.25f)
+    val cleanTitle = remember(book.title) { HtmlCoverSnapshotGenerator.sanitizeCoverTitle(book.title) }
+    val cleanSubtitle = remember(book.subtitle, cleanTitle) {
+        HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle(book.subtitle, cleanTitle)
+    }
+    val cleanAuthor = remember(book.author, cleanTitle, cleanSubtitle) {
+        HtmlBookParser.sanitizeExtractedAuthor(book.author, cleanTitle, cleanSubtitle)
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        // Outer & Inner Frame matching 544x800 geometry
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = (11f * s).dp,
+                    end = (8f * s).dp,
+                    top = (8f * s).dp,
+                    bottom = (9f * s).dp
+                )
+                .border(
+                    width = 1.2.dp,
+                    color = coverFrameColor,
+                    shape = RoundedCornerShape((7f * s).dp)
+                )
+                .padding((3.5f * s).dp)
+                .border(
+                    width = 0.7.dp,
+                    color = coverFrameColor.copy(alpha = 0.65f),
+                    shape = RoundedCornerShape((5f * s).dp)
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = (18f * s).dp,
+                    end = (14f * s).dp,
+                    top = (16f * s).dp,
+                    bottom = (16f * s).dp
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = if (book.isRtl) "✦ طبعة رقمية فاخرة ✦" else "✦ LUXURY EDITION ✦",
+                color = coverEmblemColor.copy(alpha = 0.85f),
+                fontSize = (7.5f * s).sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = coverEmblemColor.copy(alpha = 0.12f),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    coverEmblemColor.copy(alpha = 0.55f)
+                ),
+                modifier = Modifier.size((36f * s).dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = getBookIcon(book.coverIcon),
+                        contentDescription = null,
+                        tint = coverEmblemColor,
+                        modifier = Modifier.size((18f * s).dp)
+                    )
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = cleanTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = coverTitleColor,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    fontSize = (12.5f * s).sp,
+                    lineHeight = (16f * s).sp
+                )
+
+                if (cleanSubtitle.isNotBlank()) {
+                    Spacer(modifier = Modifier.height((3f * s).dp))
+                    Text(
+                        text = cleanSubtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = coverSubtitleColor,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        fontSize = (9f * s).sp,
+                        lineHeight = (12f * s).sp
+                    )
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "✦   ✦   ✦",
+                    color = coverEmblemColor.copy(alpha = 0.75f),
+                    fontSize = (7f * s).sp,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height((2f * s).dp))
+                Text(
+                    text = cleanAuthor.ifBlank { if (book.isRtl) "إصدارات مكتبتي الفاخرة" else "Maktabati Editions" },
+                    color = coverEmblemColor.copy(alpha = 0.9f),
+                    fontSize = (7.5f * s).sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
 
 fun getBookIcon(name: String): ImageVector {
     return when (name) {
@@ -114,14 +298,11 @@ fun BookGridItem(
     val strings = LocalAppStrings.current
     val isEnUi = strings.language == AppLanguage.EN
     val snapshotVersion by HtmlCoverSnapshotGenerator.snapshotVersion.collectAsStateWithLifecycle()
-    val coverBitmap = remember(book.id, book.folderPath, snapshotVersion) {
-        val snapshotFile = File(File(context.filesDir, "books/${book.folderPath}"), "cover_snapshot.png")
-        if (snapshotFile.isFile && snapshotFile.length() > 128L) {
-            runCatching { BitmapFactory.decodeFile(snapshotFile.absolutePath)?.asImageBitmap() }.getOrNull()
-        } else {
-            null
-        }
-    }
+    val coverBitmap = rememberCachedCoverBitmap(
+        context = context,
+        folderPath = book.folderPath,
+        snapshotVersion = snapshotVersion
+    )
 
     var menuExpanded by remember { mutableStateOf(false) }
     val s = scaleFactor.coerceIn(0.68f, 1.25f)
@@ -205,81 +386,20 @@ fun BookGridItem(
                             Image(
                                 bitmap = coverBitmap,
                                 contentDescription = book.title,
-                                contentScale = ContentScale.Crop,
+                                contentScale = ContentScale.Fit,
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .testTag("book_cover_snapshot_${book.id}")
                             )
                         } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(
-                                        start = (12f * s).dp,
-                                        end = (9f * s).dp,
-                                        top = (9f * s).dp,
-                                        bottom = (10f * s).dp
-                                    )
-                                    .border(
-                                        width = 1.dp,
-                                        color = coverFrameColor,
-                                        shape = RoundedCornerShape((7f * s).dp)
-                                    )
+                            LuxuryGeneratedBookCover(
+                                book = book,
+                                scaleFactor = s,
+                                coverFrameColor = coverFrameColor,
+                                coverEmblemColor = coverEmblemColor,
+                                coverTitleColor = coverTitleColor,
+                                coverSubtitleColor = coverSubtitleColor
                             )
-
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .padding(start = (16f * s).dp, end = (12f * s).dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = coverEmblemColor.copy(alpha = 0.14f),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        1.dp,
-                                        coverEmblemColor.copy(alpha = 0.55f)
-                                    ),
-                                    modifier = Modifier.size((36f * s).dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = getBookIcon(book.coverIcon),
-                                            contentDescription = null,
-                                            tint = coverEmblemColor,
-                                            modifier = Modifier.size((19f * s).dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height((7f * s).dp))
-
-                                Text(
-                                    text = book.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = coverTitleColor,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = (13.5f * s).sp,
-                                    lineHeight = (17.5f * s).sp
-                                )
-
-                                if (book.subtitle.isNotBlank()) {
-                                    Spacer(modifier = Modifier.height((3f * s).dp))
-                                    Text(
-                                        text = book.subtitle,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = coverSubtitleColor,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center,
-                                        fontSize = (9.5f * s).sp,
-                                        lineHeight = (13f * s).sp
-                                    )
-                                }
-                            }
                         }
 
                         Row(
@@ -346,13 +466,16 @@ fun BookGridItem(
                     }
                 }
 
-                val cleanAuthor = remember(book.author) {
-                    HtmlBookParser.sanitizeExtractedAuthor(book.author)
+                val cleanTitle = remember(book.title) {
+                    HtmlCoverSnapshotGenerator.sanitizeCoverTitle(book.title)
                 }
-                val primaryFooterText = book.title.ifBlank { cleanAuthor }
+                val cleanAuthor = remember(book.author, cleanTitle) {
+                    HtmlBookParser.sanitizeExtractedAuthor(book.author, cleanTitle, book.subtitle)
+                }
+                val primaryFooterText = cleanTitle.ifBlank { cleanAuthor }
                 val secondaryFooterText = when {
                     !shelfName.isNullOrBlank() -> "$shelfName • $pagesLabel"
-                    cleanAuthor.isNotBlank() && !cleanAuthor.equals(book.title, ignoreCase = true) -> "$cleanAuthor • $pagesLabel"
+                    cleanAuthor.isNotBlank() && !cleanAuthor.equals(cleanTitle, ignoreCase = true) -> "$cleanAuthor • $pagesLabel"
                     else -> pagesLabel
                 }
 
@@ -513,14 +636,11 @@ fun BookListItem(
     val strings = LocalAppStrings.current
     val isEnUi = strings.language == AppLanguage.EN
     val snapshotVersion by HtmlCoverSnapshotGenerator.snapshotVersion.collectAsStateWithLifecycle()
-    val coverBitmap = remember(book.id, book.folderPath, snapshotVersion) {
-        val snapshotFile = File(File(context.filesDir, "books/${book.folderPath}"), "cover_snapshot.png")
-        if (snapshotFile.isFile && snapshotFile.length() > 128L) {
-            runCatching { BitmapFactory.decodeFile(snapshotFile.absolutePath)?.asImageBitmap() }.getOrNull()
-        } else {
-            null
-        }
-    }
+    val coverBitmap = rememberCachedCoverBitmap(
+        context = context,
+        folderPath = book.folderPath,
+        snapshotVersion = snapshotVersion
+    )
 
     var menuExpanded by remember { mutableStateOf(false) }
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
@@ -561,7 +681,7 @@ fun BookListItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 62.dp, height = 88.dp)
+                    .size(width = 62.dp, height = 91.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Brush.linearGradient(coverGradientColors))
                     .border(
@@ -575,7 +695,7 @@ fun BookListItem(
                     Image(
                         bitmap = coverBitmap,
                         contentDescription = book.title,
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxSize()
                             .testTag("book_cover_snapshot_${book.id}")

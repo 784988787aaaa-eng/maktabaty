@@ -7,22 +7,22 @@ import com.maktabati.app.data.converter.theme.BookVisualTheme
 
 /**
  * Splits extracted book text into balanced chapters & pages (85–125 words per page)
- * and formats semantic blocks (`.quran-box`, `.hadith-box`, `.wisdom-pearl`, `.heart-keepsake-card`, `.step-card`, `.poetry-stanza`).
+ * using streaming lineSequence() processing that gracefully handles both `\n\n` and single-`\n`
+ * large Arabic/English text files without regex backtracking or OutOfMemoryError on Android 8+.
  */
 object SemanticBookPaginator {
 
-    private val PARAGRAPH_SPLIT_REGEX = Regex("\\n\\s*\\n+")
     private val COLON_DASH_SPLIT_REGEX = Regex("[:：\\-—]")
-    private val WHITESPACE_REGEX = Regex("\\s+")
-    private val SENTENCE_SPLIT_REGEX = Regex("(?<=[.!?؟؛\\n])\\s+")
     private val BRACKET_SOURCE_REGEX = Regex("\\[([^\\]]+)\\]")
     private val CURLY_VERSE_REGEX = Regex("\\{\\s*([^}]+)\\s*\\}")
     private val DOUBLE_PAREN_REGEX = Regex("\\(\\(\\s*([^)]+)\\s*\\)\\)")
-    private val STEP_ITEM_REGEX = Regex("^([0-9٠-٩]{1,2})[.)\\-]\\s+(.+)$", RegexOption.DOT_MATCHES_ALL)
     private val INLINE_QURAN_REGEX = Regex("﴿([^﴾]+)﴾")
     private val INLINE_HADITH_REGEX = Regex("«([^»]+)»")
     private val INLINE_NUM_BADGE_REGEX = Regex("\\[([0-9٠-٩]{1,4})\\]")
     private val INLINE_BOLD_REGEX = Regex("\\*\\*([^*]+)\\*\\*")
+    private val INLINE_WHATSAPP_BOLD_REGEX = Regex("(?<!\\*)\\*([^\\s*][^*]*?[^\\s*]|[^\\s*])\\*(?!\\*)")
+    private val INLINE_WHATSAPP_ITALIC_REGEX = Regex("(?<![a-zA-Z0-9_])_([^\\s_][^_]*?[^\\s_])_(?![a-zA-Z0-9_])")
+    private val STRAY_ASTERISK_REGEX = Regex("(?<=^|\\s)\\*+|\\*+(?=\\s|$|[.،؛:!؟])")
 
     private val PEARL_PREFIXES = listOf(
         "خلاصة", "همسة", "فائدة", "درة", "وصية", "قاعدة", "إشراقة", "تأمل", "تقول ", "حكمة",
@@ -46,55 +46,33 @@ object SemanticBookPaginator {
         theme: BookVisualTheme,
         isRtl: Boolean
     ): List<ConvertedPageItem> {
+        val cleanBookTitle = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(bookTitle).ifBlank { bookTitle.trim() }
+        val cleanBookSubtitle = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(bookSubtitle)
+            .takeIf { !it.equals(cleanBookTitle, ignoreCase = true) }
+            .orEmpty()
+        val cleanBookAuthor = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(bookAuthor)
+
         val pages = mutableListOf<ConvertedPageItem>()
 
         pages.add(
             ConvertedPageItem(
                 tag = if (isRtl) "الغلاف الملكي" else "Royal Cover",
-                title = bookTitle,
+                title = cleanBookTitle,
                 type = "cover",
                 html = LuxuryHtmlTemplateRenderer.buildCoverPageHtml(
-                    title = bookTitle,
-                    subtitle = bookSubtitle,
-                    author = bookAuthor,
+                    title = cleanBookTitle,
+                    subtitle = cleanBookSubtitle,
+                    author = cleanBookAuthor,
                     theme = theme,
                     isRtl = isRtl
                 )
             )
         )
 
-        val rawBlocks = rawText
-            .split(PARAGRAPH_SPLIT_REGEX)
-            .flatMap { block ->
-                val subLines = block.lines().map { it.trim() }.filter { it.isNotEmpty() }
-                if (subLines.size > 1 && subLines.any { ArabicTextNormalizer.isChapterHeadingLine(it) || it.startsWith("#") }) {
-                    val splitList = mutableListOf<String>()
-                    val currentBuf = StringBuilder()
-                    for (l in subLines) {
-                        if (ArabicTextNormalizer.isChapterHeadingLine(l) ||
-                            l.startsWith("#") ||
-                            ArabicTextNormalizer.AUTHOR_LINE_REGEX.matches(l)
-                        ) {
-                            if (currentBuf.isNotEmpty()) {
-                                splitList.add(currentBuf.toString().trim())
-                                currentBuf.setLength(0)
-                            }
-                            splitList.add(l)
-                        } else {
-                            if (currentBuf.isNotEmpty()) currentBuf.append(" ")
-                            currentBuf.append(l)
-                        }
-                    }
-                    if (currentBuf.isNotEmpty()) splitList.add(currentBuf.toString().trim())
-                    splitList
-                } else {
-                    listOf(subLines.joinToString(" ").trim())
-                }
-            }
-            .filter { it.isNotBlank() }
-
+        val normalizedRawText = ArabicTextNormalizer.normalizeArabicFidelity(rawText)
+        val rawBlocks = extractBalancedBlocksStreaming(normalizedRawText)
         val hasExplicitChapters = rawBlocks.any { ArabicTextNormalizer.isChapterHeadingLine(it) }
-        val normalizedBookTitle = ArabicTextNormalizer.stripArabicDiacriticsForMatching(bookTitle).trim()
+        val normalizedBookTitle = ArabicTextNormalizer.stripArabicDiacriticsForMatching(cleanBookTitle).trim()
 
         val sections = mutableListOf<SemanticSection>()
         var currentChapterIndex = 0
@@ -104,11 +82,11 @@ object SemanticBookPaginator {
         )
 
         for ((idx, block) in rawBlocks.withIndex()) {
-            val clean = block.removePrefix("#").removePrefix("#").removePrefix("#").trim()
+            val clean = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(block)
             val normalizedClean = ArabicTextNormalizer.stripArabicDiacriticsForMatching(clean).trim()
 
             if (idx <= 2) {
-                if (clean.equals(bookTitle, ignoreCase = true) ||
+                if (clean.equals(cleanBookTitle, ignoreCase = true) ||
                     (normalizedBookTitle.isNotEmpty() && normalizedClean.equals(normalizedBookTitle, ignoreCase = true)) ||
                     ArabicTextNormalizer.TITLE_LINE_REGEX.matches(clean) ||
                     ArabicTextNormalizer.SUBTITLE_LINE_REGEX.matches(clean) ||
@@ -133,9 +111,9 @@ object SemanticBookPaginator {
                 val title = if (hasDistinctTagAndTitle) parts[1] else clean
                 activeSection = SemanticSection(chapterTag = tag, chapterTitle = title)
             } else {
-                val words = block.split(WHITESPACE_REGEX).filter { it.isNotBlank() }
-                if (words.size > 135) {
-                    activeSection.paragraphs.addAll(splitLongParagraphBySentences(block, targetWords = 95))
+                val wordCount = ArabicTextNormalizer.countWordsFast(block)
+                if (wordCount > 135) {
+                    activeSection.paragraphs.addAll(splitLongParagraphBySentencesLinear(block, targetWords = 95))
                 } else {
                     activeSection.paragraphs.add(block)
                 }
@@ -145,12 +123,13 @@ object SemanticBookPaginator {
             sections.add(activeSection)
         }
 
-        if (sections.isEmpty()) {
+        if (sections.isEmpty() && normalizedRawText.isNotBlank()) {
+            val fallbackChunks = splitLongParagraphBySentencesLinear(normalizedRawText.trim(), targetWords = 95)
             sections.add(
                 SemanticSection(
                     chapterTag = "",
                     chapterTitle = "",
-                    paragraphs = mutableListOf(rawText)
+                    paragraphs = fallbackChunks.toMutableList()
                 )
             )
         }
@@ -164,13 +143,13 @@ object SemanticBookPaginator {
                 if (currentPageBlocks.isEmpty()) return
                 sectionPageIndex++
                 val isFirstPageOfSection = (sectionPageIndex == 1)
-                val pageHtmlBuilder = StringBuilder()
+                val pageHtmlBuilder = StringBuilder(1024)
 
                 val normalizedSectionTitle = ArabicTextNormalizer
                     .stripArabicDiacriticsForMatching(section.chapterTitle)
                     .trim()
                 val hasDistinctSectionTitle = section.chapterTitle.isNotBlank() &&
-                    !section.chapterTitle.equals(bookTitle, ignoreCase = true) &&
+                    !section.chapterTitle.equals(cleanBookTitle, ignoreCase = true) &&
                     (normalizedBookTitle.isEmpty() || !normalizedSectionTitle.equals(normalizedBookTitle, ignoreCase = true))
 
                 if (isFirstPageOfSection) {
@@ -194,23 +173,22 @@ object SemanticBookPaginator {
                 var firstSubheadingOnPage = ""
                 for (blk in currentPageBlocks) {
                     if (firstSubheadingOnPage.isEmpty() && ArabicTextNormalizer.isSubheadingLine(blk)) {
-                        firstSubheadingOnPage = blk
-                            .removePrefix("#")
-                            .removePrefix("#")
-                            .removePrefix("#")
-                            .trim()
+                        firstSubheadingOnPage = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(blk)
                             .removeSuffix(":")
                             .removeSuffix("：")
                             .trim()
                     }
-                    pageHtmlBuilder.append(formatSemanticParagraphToHtml(blk, isRtl)).append("\n")
+                    val renderedBlock = formatSemanticParagraphToHtml(blk, isRtl)
+                    if (renderedBlock.isNotBlank()) {
+                        pageHtmlBuilder.append(renderedBlock).append("\n")
+                    }
                 }
 
                 val effectivePageTitle = when {
                     !isFirstPageOfSection && firstSubheadingOnPage.isNotBlank() -> firstSubheadingOnPage
                     hasDistinctSectionTitle -> section.chapterTitle
                     firstSubheadingOnPage.isNotBlank() -> firstSubheadingOnPage
-                    else -> bookTitle
+                    else -> cleanBookTitle
                 }
 
                 pages.add(
@@ -226,13 +204,18 @@ object SemanticBookPaginator {
             }
 
             for (para in section.paragraphs) {
-                val pWords = para.split(WHITESPACE_REGEX).count { it.isNotBlank() }.coerceAtLeast(1)
-                if (currentPageWords >= 85 && (currentPageWords + pWords) > 125) {
+                val isDivider = ArabicTextNormalizer.isOrnamentalDividerLine(para)
+                if (isDivider && currentPageBlocks.isEmpty()) {
+                    // Avoid starting a brand-new page with an ornamental divider
+                    continue
+                }
+                val pWords = if (isDivider) 4 else ArabicTextNormalizer.countWordsFast(para).coerceAtLeast(1)
+                if (currentPageWords >= 50 && (currentPageWords + pWords) > 125) {
                     flushSectionPage()
                 }
                 currentPageBlocks.add(para)
                 currentPageWords += pWords
-                if (currentPageWords >= 110) {
+                if (currentPageWords >= 100) {
                     flushSectionPage()
                 }
             }
@@ -242,44 +225,212 @@ object SemanticBookPaginator {
         return pages
     }
 
-    private fun splitLongParagraphBySentences(paragraph: String, targetWords: Int = 95): List<String> {
-        val sentences = paragraph.split(SENTENCE_SPLIT_REGEX)
-        val chunks = mutableListOf<String>()
-        val current = StringBuilder()
-        var count = 0
+    /**
+     * Streaming block extractor using `lineSequence()` that handles both blank-line separated (`\n\n`)
+     * and single-newline (`\n`) text files without merging an entire book into a single multi-megabyte line.
+     */
+    private fun extractBalancedBlocksStreaming(rawText: String): List<String> {
+        val blocks = mutableListOf<String>()
+        val currentParagraph = StringBuilder()
+        var currentParagraphWords = 0
+        var lineIndex = 0
 
-        for (s in sentences) {
-            val w = s.split(WHITESPACE_REGEX).count { it.isNotBlank() }
-            if (count >= 85 && (count + w) > 125 && current.isNotEmpty()) {
-                chunks.add(current.toString().trim())
-                current.setLength(0)
-                count = 0
-            }
-            if (current.isNotEmpty()) current.append(" ")
-            current.append(s.trim())
-            count += w
-            if (count >= targetWords) {
-                chunks.add(current.toString().trim())
-                current.setLength(0)
-                count = 0
+        fun flushCurrentParagraph() {
+            if (currentParagraph.isNotEmpty()) {
+                val text = currentParagraph.toString().trim()
+                if (text.isNotEmpty()) {
+                    blocks.add(text)
+                }
+                currentParagraph.setLength(0)
+                currentParagraphWords = 0
             }
         }
-        if (current.isNotEmpty()) {
-            chunks.add(current.toString().trim())
+
+        for (rawLine in rawText.lineSequence()) {
+            val line = rawLine.trim()
+            if (line.isEmpty()) {
+                flushCurrentParagraph()
+                continue
+            }
+
+            val strippedForMeta = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(line)
+            val isMetadataHeaderLine = lineIndex <= 4 && strippedForMeta.isNotEmpty() && (
+                ArabicTextNormalizer.TITLE_LINE_REGEX.matches(strippedForMeta) ||
+                    ArabicTextNormalizer.SUBTITLE_LINE_REGEX.matches(strippedForMeta) ||
+                    ArabicTextNormalizer.AUTHOR_LINE_REGEX.matches(strippedForMeta) ||
+                    (lineIndex == 0 && strippedForMeta.length in 2..95 && !strippedForMeta.endsWith("."))
+                )
+            lineIndex++
+
+            val isStandaloneSemanticBlock = isMetadataHeaderLine ||
+                ArabicTextNormalizer.isOrnamentalDividerLine(line) ||
+                ArabicTextNormalizer.isChapterHeadingLine(line) ||
+                line.startsWith("#") ||
+                ArabicTextNormalizer.isSubheadingLine(line) ||
+                isStandaloneCalloutOrVerseOrListLine(line)
+
+            if (isStandaloneSemanticBlock) {
+                flushCurrentParagraph()
+                blocks.add(line)
+                continue
+            }
+
+            val lineWords = ArabicTextNormalizer.countWordsFast(line)
+            if (currentParagraph.isNotEmpty() && (currentParagraphWords + lineWords) > 105) {
+                flushCurrentParagraph()
+            }
+
+            if (currentParagraph.isNotEmpty()) {
+                currentParagraph.append(' ')
+            }
+            currentParagraph.append(line)
+            currentParagraphWords += lineWords
+
+            val lastChar = line.last()
+            val endsWithSentenceStop = lastChar == '.' ||
+                lastChar == '؟' ||
+                lastChar == '!' ||
+                lastChar == '؛' ||
+                lastChar == '»' ||
+                lastChar == '﴾'
+
+            if ((currentParagraphWords >= 55 && endsWithSentenceStop) || currentParagraphWords >= 95) {
+                flushCurrentParagraph()
+            }
+        }
+
+        flushCurrentParagraph()
+        return blocks
+    }
+
+    private fun isStandaloneCalloutOrVerseOrListLine(trimmed: String): Boolean {
+        if (ArabicTextNormalizer.isOrnamentalDividerLine(trimmed)) return true
+        if (trimmed.startsWith("- ") || trimmed.startsWith("• ") || trimmed.startsWith("* ")) return true
+        if (parseStepItemPrefix(trimmed) != null) return true
+        if (trimmed.contains(" *** ")) return true
+        if ((trimmed.startsWith("﴿") && trimmed.endsWith("﴾")) || (trimmed.startsWith("«") && trimmed.endsWith("»"))) return true
+
+        val stripped = trimmed.trimStart('*', '#', '_', '✦', '❖', '•', ' ')
+        val unvocalized = ArabicTextNormalizer.stripArabicDiacriticsForMatching(stripped)
+        if (unvocalized.startsWith("قال تعالى") ||
+            unvocalized.startsWith("قال الله تعالى") ||
+            unvocalized.startsWith("يقول الله تعالى") ||
+            unvocalized.startsWith("قوله تعالى") ||
+            unvocalized.startsWith("قال رسول الله") ||
+            unvocalized.startsWith("قال النبي") ||
+            unvocalized.startsWith("وفي الحديث") ||
+            unvocalized.startsWith("حديث شريف")
+        ) {
+            return true
+        }
+        val lowerUnvoc = unvocalized.lowercase()
+        return PEARL_PREFIXES.any { lowerUnvoc.startsWith(it) }
+    }
+
+    /**
+     * Linear O(N) paragraph splitter that avoids Regex lookbehinds and intermediate word array allocations.
+     */
+    private fun splitLongParagraphBySentencesLinear(paragraph: String, targetWords: Int = 95): List<String> {
+        val len = paragraph.length
+        if (len == 0) return emptyList()
+
+        val chunks = mutableListOf<String>()
+        var chunkStart = 0
+        var wordCount = 0
+        var inWord = false
+        var lastPunctuationSplitPos = -1
+
+        for (i in 0 until len) {
+            val ch = paragraph[i]
+            if (ch.isWhitespace()) {
+                if (inWord) {
+                    inWord = false
+                    if (wordCount >= 65) {
+                        val prevChar = if (i > 0) paragraph[i - 1] else ' '
+                        if (prevChar == '.' || prevChar == '؟' || prevChar == '!' || prevChar == '؛' || prevChar == '،' || prevChar == '»' || prevChar == '﴾') {
+                            lastPunctuationSplitPos = i
+                        }
+                    }
+                    if (wordCount >= targetWords && lastPunctuationSplitPos > chunkStart) {
+                        val sub = paragraph.substring(chunkStart, lastPunctuationSplitPos).trim()
+                        if (sub.isNotEmpty()) chunks.add(sub)
+                        chunkStart = lastPunctuationSplitPos
+                        while (chunkStart < len && paragraph[chunkStart].isWhitespace()) chunkStart++
+                        wordCount = ArabicTextNormalizer.countWordsFast(paragraph.substring(chunkStart, i + 1))
+                        lastPunctuationSplitPos = -1
+                    } else if (wordCount >= 115) {
+                        val splitAt = if (lastPunctuationSplitPos > chunkStart) lastPunctuationSplitPos else i
+                        val sub = paragraph.substring(chunkStart, splitAt).trim()
+                        if (sub.isNotEmpty()) chunks.add(sub)
+                        chunkStart = splitAt
+                        while (chunkStart < len && paragraph[chunkStart].isWhitespace()) chunkStart++
+                        wordCount = 0
+                        lastPunctuationSplitPos = -1
+                    }
+                }
+            } else if (!inWord) {
+                inWord = true
+                wordCount++
+            }
+        }
+
+        if (chunkStart < len) {
+            val tail = paragraph.substring(chunkStart).trim()
+            if (tail.isNotEmpty()) {
+                chunks.add(tail)
+            }
         }
         return chunks
+    }
+
+    /**
+     * Non-backtracking O(1) prefix parser for numbered step items (e.g. `1. ...`, `٢- ...`, `12) ...`).
+     * Eliminates `RegexOption.DOT_MATCHES_ALL` backtracking on Android 8.
+     */
+    private fun parseStepItemPrefix(trimmed: String): Pair<String, String>? {
+        val len = trimmed.length
+        if (len < 4) return null
+        var i = 0
+        while (i < len && i < 3) {
+            val c = trimmed[i]
+            val isDigit = c in '0'..'9' || c in '٠'..'٩'
+            if (isDigit) {
+                i++
+            } else {
+                break
+            }
+        }
+        if (i == 0 || i >= len) return null
+        val sep = trimmed[i]
+        if (sep != '.' && sep != ')' && sep != '-') return null
+        val afterSep = i + 1
+        if (afterSep >= len || !trimmed[afterSep].isWhitespace()) return null
+        val numStr = trimmed.substring(0, i)
+        val bodyStr = trimmed.substring(afterSep).trim()
+        if (bodyStr.isEmpty()) return null
+        return Pair(numStr, bodyStr)
     }
 
     fun formatSemanticParagraphToHtml(rawBlock: String, isRtl: Boolean): String {
         val trimmed = rawBlock.trim()
         if (trimmed.isEmpty()) return ""
 
+        if (ArabicTextNormalizer.isOrnamentalDividerLine(trimmed)) {
+            return "<div class=\"ornament\" aria-hidden=\"true\">✦ ✦ ✦</div>"
+        }
+
+        if (!ArabicTextNormalizer.containsLetterOrDigit(trimmed)) {
+            return ""
+        }
+
         if (ArabicTextNormalizer.isSubheadingLine(trimmed)) {
-            val cleanSub = trimmed.removePrefix("###").removePrefix("##").removePrefix("#").trim()
+            val cleanSub = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(trimmed)
+            if (cleanSub.isEmpty()) return ""
             return "<h2>${escapeHtml(cleanSub)}</h2>"
         }
 
-        val unvocalized = ArabicTextNormalizer.stripArabicDiacriticsForMatching(trimmed)
+        val strippedLeading = trimmed.trimStart('*', '#', '_', '✦', '❖', ' ')
+        val unvocalized = ArabicTextNormalizer.stripArabicDiacriticsForMatching(strippedLeading)
 
         if ((trimmed.contains("﴿") && trimmed.contains("﴾") && trimmed.length <= 320) ||
             unvocalized.startsWith("قال تعالى") ||
@@ -287,14 +438,15 @@ object SemanticBookPaginator {
             unvocalized.startsWith("يقول الله تعالى") ||
             unvocalized.startsWith("قوله تعالى")
         ) {
-            val sourceMatch = BRACKET_SOURCE_REGEX.find(trimmed)
+            val sourceMatch = BRACKET_SOURCE_REGEX.find(strippedLeading)
             val sourceText = sourceMatch?.groupValues?.get(1)?.trim()
             val mainVerse = if (sourceMatch != null) {
-                trimmed.removeRange(sourceMatch.range).trim()
+                strippedLeading.removeRange(sourceMatch.range).trim()
             } else {
-                trimmed
+                strippedLeading
             }.replace(CURLY_VERSE_REGEX, "﴿ $1 ﴾")
                 .replace(DOUBLE_PAREN_REGEX, "﴿ $1 ﴾")
+                .trim('*')
 
             val formattedVerse = if (mainVerse.contains("﴿")) {
                 escapeHtml(mainVerse)
@@ -313,7 +465,7 @@ object SemanticBookPaginator {
             """.trimIndent()
         }
 
-        val isHadithOrQuote = (trimmed.startsWith("«") && trimmed.endsWith("»")) ||
+        val isHadithOrQuote = (strippedLeading.startsWith("«") && strippedLeading.endsWith("»")) ||
             unvocalized.startsWith("قال رسول الله") ||
             unvocalized.startsWith("قال النبي") ||
             unvocalized.startsWith("وفي الحديث") ||
@@ -323,10 +475,10 @@ object SemanticBookPaginator {
             unvocalized.startsWith("عن ابن ") ||
             unvocalized.startsWith("عن أنس") ||
             unvocalized.startsWith("عن عمر") ||
-            (trimmed.contains("«") && trimmed.contains("»") && trimmed.length <= 280)
+            (strippedLeading.contains("«") && strippedLeading.contains("»") && strippedLeading.length <= 280)
 
         if (isHadithOrQuote) {
-            val upgradedHadith = trimmed.replace(DOUBLE_PAREN_REGEX, "« $1 »")
+            val upgradedHadith = strippedLeading.replace(DOUBLE_PAREN_REGEX, "« $1 »").trim('*')
             return """
                 <div class="hadith-box" data-role="hadith">
                   <p>${escapeHtml(upgradedHadith)}</p>
@@ -336,9 +488,16 @@ object SemanticBookPaginator {
 
         val matchedPearlPrefix = PEARL_PREFIXES.firstOrNull { unvocalized.lowercase().startsWith(it) }
         if (matchedPearlPrefix != null) {
-            val parts = trimmed.split(COLON_DASH_SPLIT_REGEX, limit = 2)
-            val badge = if (parts.size == 2 && parts[0].length <= 42) parts[0].trim() else (if (isRtl) "✦ درة وإشراقة" else "✦ Key Insight")
-            val content = if (parts.size == 2 && parts[1].isNotBlank()) parts[1].trim() else trimmed
+            val parts = strippedLeading.split(COLON_DASH_SPLIT_REGEX, limit = 2)
+            val rawBadge = if (parts.size == 2 && parts[0].length <= 42) parts[0] else (if (isRtl) "درة وإشراقة" else "Key Insight")
+            val badge = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(rawBadge).ifBlank {
+                if (isRtl) "درة وإشراقة" else "Key Insight"
+            }
+            val content = if (parts.size == 2 && parts[1].isNotBlank()) {
+                parts[1].trim().trim('*')
+            } else {
+                strippedLeading.trim('*')
+            }
 
             return when {
                 unvocalized.startsWith("همسة") || unvocalized.startsWith("وصية") || unvocalized.startsWith("جرعة") ->
@@ -374,7 +533,7 @@ object SemanticBookPaginator {
 
         if (trimmed.contains(" *** ") || (trimmed.contains(" ... ") && trimmed.length <= 130 && !trimmed.endsWith("."))) {
             val delimiter = if (trimmed.contains(" *** ")) " *** " else " ... "
-            val hemistichs = trimmed.split(delimiter, limit = 2).map { it.trim() }
+            val hemistichs = trimmed.split(delimiter, limit = 2).map { it.trim().trim('*') }
             if (hemistichs.size == 2 && hemistichs[0].isNotEmpty() && hemistichs[1].isNotEmpty()) {
                 return """
                     <div class="poetry-stanza">
@@ -386,10 +545,9 @@ object SemanticBookPaginator {
             }
         }
 
-        val stepMatch = STEP_ITEM_REGEX.find(trimmed)
-        if (stepMatch != null) {
-            val num = stepMatch.groupValues[1]
-            val stepBody = stepMatch.groupValues[2].trim()
+        val stepPair = parseStepItemPrefix(trimmed)
+        if (stepPair != null) {
+            val (num, stepBody) = stepPair
             return """
                 <div class="step-card">
                   <div class="step-num">${escapeHtml(num)}</div>
@@ -411,8 +569,10 @@ object SemanticBookPaginator {
         return "<p dir=\"auto\">${formatInlineHighlights(escapeHtml(trimmed))}</p>"
     }
 
+    fun applyInlineFormatting(escapedText: String): String = formatInlineHighlights(escapedText)
+
     private fun formatInlineHighlights(escapedText: String): String {
-        return escapedText
+        val formatted = escapedText
             .replace(INLINE_QURAN_REGEX) { m ->
                 "<span class=\"quran-verse\" data-role=\"quran\">﴿${m.groupValues[1]}﴾</span>"
             }
@@ -425,55 +585,27 @@ object SemanticBookPaginator {
             .replace(INLINE_BOLD_REGEX) { m ->
                 "<strong>${m.groupValues[1]}</strong>"
             }
-    }
-
-    private fun buildClosingReflectionPageHtml(
-        bookTitle: String,
-        theme: BookVisualTheme,
-        isRtl: Boolean
-    ): String {
-        return if (isRtl) {
-            """
-            <div class="letter-envelope-header">
-              <span class="letter-seal">${theme.badgeEmoji}</span>
-              <span class="letter-envelope-title">مساحة التأمل الشخصي</span>
-            </div>
-            <h1>خُلاَصَةُ رِحْلَتِي مَعَ الكِتَاب</h1>
-            <div class="heart-keepsake-card">
-              <div class="heart-badge">${theme.badgeEmoji} مسك الختام</div>
-              <p>«كل كتاب تقرؤه يترك في قلبك بذرة نور، فاحرص على أن تسقيها بالعمل والتطبيق.»</p>
-            </div>
-            <div class="interactive-box" style="margin-top: 16px;">
-              <h3 style="margin-bottom: 6px;">✍️ أهم الفوائد والخواطر التي استوقفتني في «${escapeHtml(bookTitle)}»:</h3>
-              <textarea id="journal_book_reflection" class="field-textarea" placeholder="دوّن هنا خلاصة أفكارك، الفوائد التي لمست قلبك، أو خطتك العملية..." oninput="saveField(this.id, this.value)"></textarea>
-              <div class="save-indicator">✓ تُحفظ ملاحظاتك تلقائياً في جهازك</div>
-            </div>
-            """.trimIndent()
-        } else {
-            """
-            <div class="letter-envelope-header">
-              <span class="letter-seal">${theme.badgeEmoji}</span>
-              <span class="letter-envelope-title">Personal Reflection Journal</span>
-            </div>
-            <h1>My Key Takeaways</h1>
-            <div class="heart-keepsake-card">
-              <div class="heart-badge">${theme.badgeEmoji} Journey Completed</div>
-              <p>“Every great book plants a seed of wisdom—nurture it with reflection and action.”</p>
-            </div>
-            <div class="interactive-box" style="margin-top: 16px;">
-              <h3 style="margin-bottom: 6px;">✍️ My Notes & Reflections on “${escapeHtml(bookTitle)}”:</h3>
-              <textarea id="journal_book_reflection" class="field-textarea" placeholder="Write your key takeaways, favorite quotes, and action steps..." oninput="saveField(this.id, this.value)"></textarea>
-              <div class="save-indicator">✓ Saved automatically on your device</div>
-            </div>
-            """.trimIndent()
-        }
+            .replace(INLINE_WHATSAPP_BOLD_REGEX) { m ->
+                "<strong>${m.groupValues[1]}</strong>"
+            }
+            .replace(INLINE_WHATSAPP_ITALIC_REGEX) { m ->
+                "<em>${m.groupValues[1]}</em>"
+            }
+        return formatted.replace(STRAY_ASTERISK_REGEX, "")
     }
 
     fun escapeHtml(text: String): String {
-        return text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
+        if (text.isEmpty()) return ""
+        val sb = StringBuilder(text.length + 16)
+        for (i in 0 until text.length) {
+            when (val ch = text[i]) {
+                '&' -> sb.append("&amp;")
+                '<' -> sb.append("&lt;")
+                '>' -> sb.append("&gt;")
+                '"' -> sb.append("&quot;")
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
     }
 }

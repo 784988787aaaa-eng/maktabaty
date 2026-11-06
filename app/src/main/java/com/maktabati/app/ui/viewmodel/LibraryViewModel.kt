@@ -353,6 +353,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun cancelConversionProposal() {
+        pendingConversionProposal.value?.cleanupStagedFile()
         queueManager.advanceNextConversionProposalOrClear()
     }
 
@@ -385,15 +386,35 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             importState.value = ImportState.Error("الحافظة فارغة حالياً. انسخ أي نص أولاً ثم اختر «لصق من الحافظة» لتحويله مباشرة إلى كتاب.")
             return
         }
-        runCatching {
-            SmartBookConverter.inspectRawText(
-                rawText = resolvedText,
-                sourceLabel = "الحافظة"
-            )
-        }.onSuccess { proposal ->
-            queueManager.enqueueConversionProposals(listOf(proposal))
-        }.onFailure { err ->
-            importState.value = ImportState.Error(err.message ?: "تعذر تحليل النص المنسوخ من الحافظة")
+        if (resolvedText.length >= 50_000) {
+            viewModelScope.launch {
+                importState.value = ImportState.Loading("جاري قراءة النص وتحليل الفصول...")
+                val result = repository.inspectRawText(
+                    rawText = resolvedText,
+                    sourceLabel = "الحافظة"
+                )
+                result.onSuccess { proposal ->
+                    importState.value = ImportState.Idle
+                    queueManager.enqueueConversionProposals(listOf(proposal))
+                }.onFailure { err ->
+                    importState.value = ImportState.Error(err.message ?: "تعذر تحليل النص المنسوخ من الحافظة")
+                }
+            }
+        } else {
+            runCatching {
+                SmartBookConverter.inspectRawText(
+                    rawText = resolvedText,
+                    sourceLabel = "الحافظة",
+                    stagingCacheDir = getApplication<Application>().cacheDir
+                )
+            }.onSuccess { proposal ->
+                queueManager.enqueueConversionProposals(listOf(proposal))
+            }.onFailure { err ->
+                if (err is OutOfMemoryError || err is StackOverflowError) {
+                    System.gc()
+                }
+                importState.value = ImportState.Error(err.message ?: "تعذر تحليل النص المنسوخ من الحافظة")
+            }
         }
     }
 

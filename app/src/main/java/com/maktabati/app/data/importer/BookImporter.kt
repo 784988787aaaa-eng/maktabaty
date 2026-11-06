@@ -86,21 +86,152 @@ object BookImporter {
         theme: BookVisualTheme = proposal.recommendedTheme,
         onQuickBookStaged: ((Book) -> Unit)? = null
     ): Book = withContext(Dispatchers.IO) {
-        val generatedHtml = SmartBookConverter.convertProposalToLuxuryHtml(
-            proposal = proposal,
-            customTitle = customTitle,
-            customSubtitle = customSubtitle,
-            customAuthor = customAuthor,
-            theme = theme
-        )
-        val finalTitle = customTitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedTitle
-        importRawHtmlString(
-            context = context,
-            rawHtml = generatedHtml,
-            fallbackName = finalTitle,
-            userCustomTitle = finalTitle,
-            onQuickBookStaged = onQuickBookStaged
-        )
+        val bookId = "book_" + UUID.randomUUID().toString().replace("-", "").take(10)
+        val booksRoot = File(context.filesDir, "books").apply { mkdirs() }
+        val targetDir = File(booksRoot, bookId).apply { mkdirs() }
+
+        try {
+            val rawTitle = customTitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedTitle
+            val finalTitle = HtmlCoverSnapshotGenerator.sanitizeCoverTitle(rawTitle)
+            val rawSubtitle = customSubtitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedSubtitle
+            val finalSubtitle = HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle(rawSubtitle, finalTitle)
+            val finalAuthorRaw = customAuthor?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedAuthor
+            val finalAuthor = HtmlBookParser.sanitizeExtractedAuthor(finalAuthorRaw, finalTitle, finalSubtitle)
+
+            val pages = SmartBookConverter.buildProposalPages(
+                proposal = proposal,
+                customTitle = finalTitle,
+                customSubtitle = finalSubtitle,
+                customAuthor = finalAuthor,
+                theme = theme
+            )
+            val totalPages = pages.size.coerceAtLeast(1)
+            val injectedSnippet = SandboxHtmlInjector.buildInjectedSnippet(
+                bookId = bookId,
+                pageCount = totalPages,
+                typographyProfile = null
+            )
+
+            val destFile = File(targetDir, "index.html")
+            destFile.bufferedWriter(Charsets.UTF_8).use { writer ->
+                com.maktabati.app.data.converter.renderer.LuxuryHtmlTemplateRenderer.writeCompleteLuxuryHtmlToAppendable(
+                    out = writer,
+                    bookTitle = finalTitle,
+                    bookSubtitle = finalSubtitle,
+                    bookAuthor = finalAuthor,
+                    theme = theme,
+                    isRtl = proposal.isRtl,
+                    language = proposal.language,
+                    pages = pages,
+                    injectedHeadSnippet = injectedSnippet
+                )
+            }
+            val totalSize = destFile.length()
+
+            val bgPrimaryHex = theme.bgPrimaryHex
+            val accentRoseHex = theme.accentPrimaryHex
+            val accentGoldHex = theme.accentGoldHex
+            val startColor = HtmlBookParser.parseHexToColorLong(bgPrimaryHex, 0xFF1E293B)
+            val roseLong = HtmlBookParser.parseHexToColorLong(accentRoseHex, 0xFF5B3A29)
+            val isLightBg = HtmlBookParser.computeColorLuminance(startColor) > 0.48f
+            val endColor = if (isLightBg) {
+                HtmlBookParser.blendColorLongs(startColor, roseLong, 0.15f)
+            } else {
+                HtmlBookParser.blendColorLongs(startColor, roseLong, 0.45f)
+            }
+
+            val tocList = mutableListOf<com.maktabati.app.data.model.TocEntry>()
+            var lastSig = ""
+            for ((idx, p) in pages.withIndex()) {
+                val pTitle = p.title.trim().ifBlank { "صفحة ${idx + 1}" }
+                val sig = "${p.tag.trim().lowercase()}|${pTitle.lowercase()}"
+                val isOpenerOrCover = p.type == "opener" || p.type == "cover" || idx == 0
+                if (idx > 0 && !isOpenerOrCover && sig == lastSig) {
+                    continue
+                }
+                lastSig = sig
+                if (tocList.size < 300) {
+                    tocList.add(
+                        com.maktabati.app.data.model.TocEntry(
+                            title = pTitle,
+                            href = "#page-${idx + 1}",
+                            level = if (isOpenerOrCover) 1 else 2
+                        )
+                    )
+                }
+            }
+
+            val metadata = ParsedHtmlMetadata(
+                title = finalTitle,
+                subtitle = finalSubtitle,
+                author = finalAuthor,
+                description = finalSubtitle,
+                language = proposal.language,
+                isRtl = proposal.isRtl,
+                pageCount = totalPages,
+                accentRoseHex = accentRoseHex,
+                accentGoldHex = accentGoldHex,
+                bgPrimaryHex = bgPrimaryHex,
+                coverGradientStart = startColor,
+                coverGradientEnd = endColor,
+                hasExternalCss = true,
+                hasExternalJs = true,
+                tableOfContents = tocList,
+                hasCoverPage = true
+            )
+
+            val builtBook = Book(
+                id = bookId,
+                title = finalTitle,
+                subtitle = finalSubtitle,
+                author = finalAuthor,
+                description = finalSubtitle,
+                folderPath = bookId,
+                entryHtmlPath = "index.html",
+                shelfId = null,
+                isFavorite = false,
+                readingProgress = 0f,
+                scrollY = 0,
+                currentPage = 1,
+                pageCount = totalPages,
+                language = proposal.language,
+                isRtl = proposal.isRtl,
+                accentRoseHex = accentRoseHex,
+                accentGoldHex = accentGoldHex,
+                bgPrimaryHex = bgPrimaryHex,
+                coverGradientStart = startColor,
+                coverGradientEnd = endColor,
+                coverIcon = "auto_stories",
+                lastReadTimestamp = System.currentTimeMillis(),
+                createdAt = System.currentTimeMillis(),
+                fileCount = 1,
+                totalSizeBytes = totalSize,
+                hasExternalCss = true,
+                hasExternalJs = true,
+                tableOfContentsJson = HtmlBookParser.tocToJson(tocList)
+            )
+
+            onQuickBookStaged?.invoke(builtBook)
+
+            val snapshotFile = HtmlCoverSnapshotGenerator.getCoverSnapshotFile(targetDir)
+            if (HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
+                    htmlContent = "",
+                    metadata = metadata,
+                    targetFile = snapshotFile
+                )
+            ) {
+                HtmlCoverSnapshotGenerator.notifySnapshotUpdated()
+            }
+
+            builtBook
+        } catch (t: Throwable) {
+            if (targetDir.exists()) {
+                targetDir.deleteRecursively()
+            }
+            throw t
+        } finally {
+            proposal.cleanupStagedFile()
+        }
     }
 
     suspend fun importOrInspectUri(
@@ -123,7 +254,7 @@ object BookImporter {
         if (!isZip && !isHtmlExt && !isConvertible) {
             if (!mimeType.contains("html") && !mimeType.contains("text")) {
                 throw IllegalArgumentException(
-                    "صيغة الملف ($originalName) غير مدعومة. الصيغ المدعومة: HTML, ZIP, TXT, MD, DOC, DOCX, ODT, RTF, EPUB, PDF"
+                    "صيغة الملف ($originalName) غير مدعومة. الصيغ المعتمدة: HTML, ZIP, TXT, MD, DOCX, ODT, RTF, EPUB"
                 )
             }
         }
@@ -479,11 +610,6 @@ object BookImporter {
                     metadata = metadata.copy(title = finalTitle),
                     targetFile = snapshotFile
                 )
-                HtmlCoverSnapshotGenerator.scheduleOffscreenWebViewCapture(
-                    context = context.applicationContext,
-                    bookDir = bookDir,
-                    entryHtmlFile = entryFile
-                )
             }
         }
         if (snapshotFile.isFile) {
@@ -614,11 +740,6 @@ object BookImporter {
                         metadata = metadata.copy(title = finalTitle),
                         targetFile = snapshotFile
                     )
-                    HtmlCoverSnapshotGenerator.scheduleOffscreenWebViewCapture(
-                        context = context.applicationContext,
-                        bookDir = targetDir,
-                        entryHtmlFile = destFile
-                    )
                 }
             }
             if (snapshotFile.isFile) {
@@ -704,7 +825,9 @@ object BookImporter {
     private fun isIgnoredSystemEntry(name: String): Boolean {
         val lower = name.lowercase()
         return lower == "__macosx" || lower == ".ds_store" || lower == "thumbs.db" ||
-            lower.startsWith("._") || lower == HtmlCoverSnapshotGenerator.COVER_SNAPSHOT_FILENAME
+            lower.startsWith("._") ||
+            lower == HtmlCoverSnapshotGenerator.COVER_SNAPSHOT_FILENAME ||
+            lower == HtmlCoverSnapshotGenerator.LEGACY_SNAPSHOT_FILENAME
     }
 
     private fun resolveEffectiveArchiveRoot(rootDir: File): File {

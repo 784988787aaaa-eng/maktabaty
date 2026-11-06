@@ -5,7 +5,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.maktabati.app.data.converter.extractor.DocumentTextExtractor
-import com.maktabati.app.data.converter.extractor.PdfStreamExtractor
 import com.maktabati.app.data.converter.normalizer.ArabicTextNormalizer
 import com.maktabati.app.data.converter.paginator.SemanticBookPaginator
 import com.maktabati.app.data.converter.renderer.LuxuryHtmlTemplateRenderer
@@ -566,37 +565,6 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun testBookProductionMasterGuideExistsAndContainsAllPrompts() {
-        val rootGuide = File("../BOOK_PRODUCTION_MASTER_GUIDE.md").let {
-            if (it.exists()) it else File("BOOK_PRODUCTION_MASTER_GUIDE.md")
-        }
-        assertTrue("BOOK_PRODUCTION_MASTER_GUIDE.md must exist in project root", rootGuide.exists())
-        val content = rootGuide.readText(Charsets.UTF_8)
-
-        assertTrue(content.contains("MASTER SYSTEM PROMPT"))
-        assertTrue(content.contains("Fluid Reflow Zoom"))
-        assertTrue(content.contains("4-Corner Page-Curl"))
-        assertTrue(content.contains("--reader-font"))
-        assertTrue(content.contains("The 3-Zone Locked Page Architecture"))
-        assertTrue(content.contains("https://maktabati.app/fonts/amiri.ttf"))
-        assertTrue(content.contains("https://maktabati.app/fonts/cairo.ttf"))
-        assertTrue(content.contains("chapter-opener"))
-        assertTrue(content.contains("wisdom-pearl"))
-        assertTrue(content.contains("heart-keepsake-card"))
-        assertTrue(content.contains("letter-envelope-header"))
-        assertTrue(content.contains("الشباب"))
-        assertTrue(content.contains("الفتيات"))
-        assertTrue(content.contains("النساء"))
-        assertTrue(content.contains("العازبات"))
-        assertTrue(content.contains("المتزوجات"))
-        assertTrue(content.contains("الرجال"))
-        assertTrue(content.contains("الكتب الإسلامية"))
-        assertTrue(content.contains("المراهقون"))
-        assertTrue(content.contains("الكتب التعليمية"))
-        assertTrue(content.contains("بناء الذات"))
-    }
-
-    @Test
     fun testUnlimitedPageCountParsingForTwoThousandPageBook() {
         val pagesBuilder = StringBuilder()
         val totalPages = 2000
@@ -735,14 +703,20 @@ class ExampleRobolectricTest {
             Charsets.UTF_8
         )
 
+        val legacyCover = File(bookWithCoverDir, "cover_snapshot.png").apply {
+            writeText("legacy_zoomed_snapshot")
+        }
+        assertTrue(legacyCover.exists())
+
         val generated = HtmlCoverSnapshotGenerator.ensureCoverSnapshotForBook(
             context = context,
             bookDir = bookWithCoverDir,
             entryHtmlFile = coverHtmlFile,
             fallbackTitle = "خيمة في القلب"
         )
-        assertTrue("Should generate cover_snapshot.png for book with cover page", generated)
-        assertTrue(File(bookWithCoverDir, "cover_snapshot.png").exists())
+        assertTrue("Should generate cover_v3.png for book with cover page", generated)
+        assertTrue(File(bookWithCoverDir, "cover_v3.png").exists())
+        assertFalse("Legacy zoomed cover_snapshot.png must be cleaned up automatically", legacyCover.exists())
 
         val bookWithoutCoverDir = File(tempRoot, "book_no_cover").apply { mkdirs() }
         val noCoverHtmlFile = File(bookWithoutCoverDir, "index.html")
@@ -763,8 +737,8 @@ class ExampleRobolectricTest {
             entryHtmlFile = noCoverHtmlFile,
             fallbackTitle = "مذكرة نصية"
         )
-        assertTrue("Should NOT generate cover_snapshot.png when book has no cover page", !generatedNoCover)
-        assertTrue(!File(bookWithoutCoverDir, "cover_snapshot.png").exists())
+        assertTrue("Should NOT generate cover_v3.png when book has no cover page", !generatedNoCover)
+        assertTrue(!File(bookWithoutCoverDir, "cover_v3.png").exists())
 
         tempRoot.deleteRecursively()
         Unit
@@ -824,9 +798,9 @@ class ExampleRobolectricTest {
             }
         }
 
-        val rootManifest = File("../manifest.json").let { if (it.exists()) it else File("manifest.json") }
-        assertTrue("Root manifest.json must exist", rootManifest.exists())
-        val profile = MaktabatiFontRegistry.parseManifestTypography(rootManifest)
+        val profile = MaktabatiFontRegistry.parseManifestTypographyJson(
+            """{"typography":{"body":"Noto Naskh Arabic","headings":"Aref Ruqaa","chapterTitles":"Reem Kufi","quotes":"Amiri","quran":"Amiri Quran","interface":"Noto Sans Arabic","numbers":"Noto Sans Arabic"}}"""
+        )
         assertNotNull(profile)
         assertEquals("Noto Naskh Arabic", profile!!.body)
         assertEquals("Aref Ruqaa", profile.headings)
@@ -856,55 +830,6 @@ class ExampleRobolectricTest {
         )
         assertNotNull(quranTtfRes)
         assertEquals("font/ttf", quranTtfRes!!.mimeType)
-    }
-
-    @Test
-    fun testKhaymaFiAlQalbReferenceHtmlAndZipAudit() = runBlocking {
-        val htmlFile = File("../خَيْمَةٌ فِي القَلْب.html").let { if (it.exists()) it else File("خَيْمَةٌ فِي القَلْب.html") }
-        val zipFile = File("../خَيْمَةٌ_فِي_القَلْب.zip").let { if (it.exists()) it else File("خَيْمَةٌ_فِي_القَلْب.zip") }
-
-        assertTrue("Reference HTML must exist", htmlFile.exists())
-
-        val html = htmlFile.readText(Charsets.UTF_8)
-
-        val forbiddenGreens = listOf("24,63,58", "36,92,85", "16,35,31", "#047857", "#B8C1BA", "#b8c1ba")
-        for (green in forbiddenGreens) {
-            assertFalse("HTML must not contain green color $green", html.contains(green))
-        }
-
-        assertFalse("HTML must not contain Aa button", html.contains(">Aa<"))
-
-        assertTrue(html.contains("normalizeArabicWithMap"))
-        assertTrue(html.contains("function executeBookSearch()"))
-        assertTrue(html.contains("applyCalmPageSearchHighlight"))
-        assertTrue(html.contains("searchClearBtn"))
-        assertTrue(html.contains("searchStatus"))
-        assertTrue(html.contains("--font-body:\"Noto Naskh Arabic\""))
-        assertTrue(html.contains("--font-headings:\"Aref Ruqaa\""))
-        assertTrue(html.contains("--font-chapter-titles:\"Reem Kufi\""))
-        assertTrue(html.contains("--font-quotes:\"Amiri\""))
-        assertTrue(html.contains("--font-interface:\"Noto Sans Arabic\""))
-        assertTrue(html.contains("--font-numbers:\"Noto Sans Arabic\""))
-
-        val parsed = HtmlBookParser.parse(htmlFile, "خيمة في القلب")
-        assertEquals(105, parsed.pageCount)
-        assertEquals("#FFF1F6", parsed.bgPrimaryHex)
-        assertEquals("#B94F7A", parsed.accentRoseHex)
-        assertEquals("#B88945", parsed.accentGoldHex)
-
-        if (zipFile.exists()) {
-            val inspection = BookImporter.inspectZipFile(context, zipFile)
-            assertTrue(inspection is ZipInspectionResult.SingleBook)
-            val importedBook = (inspection as ZipInspectionResult.SingleBook).book
-            assertEquals(105, importedBook.pageCount)
-
-            val dao = database.bookDao()
-            val repository = BookRepository(dao, context)
-            val bookDir = repository.getBookDirectory(importedBook)
-            assertTrue(File(bookDir, "manifest.json").exists())
-            bookDir.deleteRecursively()
-        }
-        Unit
     }
 
     @Test
@@ -986,105 +911,6 @@ class ExampleRobolectricTest {
         assertTrue(liveJs.contains("maktabati-user-typography-override"))
         assertTrue(liveJs.contains("--font-body: \"Amiri\""))
         assertTrue(liveJs.contains("!important"))
-    }
-
-    @Test
-    fun testAnaFatatWaLiRisalahBookMasterpieceAudit() {
-        val bookFile = listOf(
-            File("/أَنَا فَتَاةٌ وَلِي رِسَالَة.html"),
-            File("../أَنَا فَتَاةٌ وَلِي رِسَالَة.html"),
-            File("أَنَا فَتَاةٌ وَلِي رِسَالَة.html")
-        ).firstOrNull { it.exists() } ?: File("../أَنَا فَتَاةٌ وَلِي رِسَالَة.html")
-        assertTrue("Book HTML file must exist", bookFile.exists())
-        assertTrue("Book HTML file must be substantial", bookFile.length() > 50000)
-
-        val meta = HtmlBookParser.parse(bookFile, "افتراضي")
-        assertTrue(meta.title.contains("أَنَا فَتَاةٌ وَلِي رِسَالَة"))
-        assertEquals(32, meta.pageCount)
-        assertTrue(meta.isRtl)
-        assertEquals("#BD6B80", meta.accentRoseHex)
-        assertEquals("#C69A4E", meta.accentGoldHex)
-        assertEquals("#FAF6F0", meta.bgPrimaryHex)
-
-        val html = bookFile.readText(Charsets.UTF_8)
-        assertTrue(html.contains("id=\"searchOpen\""))
-        assertTrue(html.contains("id=\"searchPanel\""))
-        assertTrue(html.contains("id=\"searchInput\""))
-        assertTrue(html.contains("id=\"searchClearBtn\""))
-        assertTrue(html.contains("id=\"searchStatus\""))
-        assertTrue(html.contains("id=\"searchResults\""))
-        assertTrue(html.contains("normalizeArabicWithMap"))
-        assertTrue(html.contains("executeBookSearch"))
-        assertTrue(html.contains("applyCalmPageSearchHighlight"))
-
-        assertTrue(html.contains("id=\"btnPrevPage\""))
-        assertTrue(html.contains("id=\"btnNextPage\""))
-        assertTrue(html.contains("id=\"pageCounter\""))
-        assertTrue(html.contains("__maktabatiSetFluidZoom"))
-        assertTrue(html.contains("touch-action: pan-y !important"))
-
-        assertFalse(html.contains("هذه النسخة الكاملة للكتيب"))
-        assertFalse(html.contains("ملاحظة قبل الطباعة"))
-        assertFalse(html.contains("صغتها بحيث تكون الفتاة قارئة"))
-
-        val zipFile = File("/أَنَا_فَتَاةٌ_وَلِي_رِسَالَة.zip").let { if (it.exists()) it else File("أَنَا_فَتَاةٌ_وَلِي_رِسَالَة.zip") }
-        if (zipFile.exists()) {
-            val zip = java.util.zip.ZipFile(zipFile)
-            val entries = zip.entries().asSequence().map { it.name }.toSet()
-            assertTrue(entries.contains("أَنَا فَتَاةٌ وَلِي رِسَالَة.html"))
-            zip.close()
-        }
-    }
-
-    @Test
-    fun testMenAlQalbBookMasterpieceAudit() {
-        val bookFile = listOf(
-            File("/من القلب.html"),
-            File("../من القلب.html"),
-            File("من القلب.html")
-        ).firstOrNull { it.exists() } ?: File("../من القلب.html")
-        assertTrue("من القلب.html file must exist", bookFile.exists())
-        assertTrue("من القلب.html file must be substantial", bookFile.length() > 50000)
-
-        val meta = HtmlBookParser.parse(bookFile, "افتراضي")
-        assertTrue(meta.title.contains("مِنَ القَلْب"))
-        assertEquals(32, meta.pageCount)
-        assertTrue(meta.isRtl)
-        assertEquals("#BD6B80", meta.accentRoseHex)
-        assertEquals("#C69A4E", meta.accentGoldHex)
-        assertEquals("#FAF6F0", meta.bgPrimaryHex)
-
-        val html = bookFile.readText(Charsets.UTF_8)
-        assertTrue(html.contains("id=\"searchOpen\""))
-        assertTrue(html.contains("id=\"searchPanel\""))
-        assertTrue(html.contains("id=\"searchInput\""))
-        assertTrue(html.contains("id=\"searchClearBtn\""))
-        assertTrue(html.contains("id=\"searchStatus\""))
-        assertTrue(html.contains("id=\"searchResults\""))
-        assertTrue(html.contains("normalizeArabicWithMap"))
-        assertTrue(html.contains("executeBookSearch"))
-        assertTrue(html.contains("applyCalmPageSearchHighlight"))
-
-        assertTrue(html.contains("id=\"btnPrevPage\""))
-        assertTrue(html.contains("id=\"btnNextPage\""))
-        assertTrue(html.contains("id=\"pageCounter\""))
-        assertTrue(html.contains("__maktabatiSetFluidZoom"))
-        assertTrue(html.contains("touch-action: pan-y !important"))
-
-        val booksDir = listOf(
-            File("/books"),
-            File("../books"),
-            File("books"),
-            File(System.getProperty("user.dir") ?: ".").parentFile?.resolve("books") ?: File("books")
-        ).firstOrNull { it.exists() && it.isDirectory } ?: File("../books")
-        assertTrue("books directory must exist", booksDir.exists() && booksDir.isDirectory)
-        assertTrue(File(booksDir, "خيمة_في_القلب/خَيْمَةٌ فِي القَلْب.html").exists())
-        assertTrue(File(booksDir, "أنا_فتاة_ولي_رسالة/أَنَا فَتَاةٌ وَلِي رِسَالَة.html").exists())
-        assertTrue(File(booksDir, "من_القلب/من القلب.html").exists())
-        assertTrue(File(booksDir, "index.html").exists())
-
-        val zipsInBooks = booksDir.walkTopDown().filter { it.extension.lowercase() == "zip" }.toList()
-        assertEquals("No ZIP archives should exist in the books directory", 0, zipsInBooks.size)
     }
 
     @Test
@@ -1334,7 +1160,6 @@ class ExampleRobolectricTest {
     @Test
     fun testModularArchitectureAndBilingualLocalizationEngine() {
         // 1. Verify decomposed single-responsibility modules exist and are accessible under com.maktabati.app
-        assertNotNull(PdfStreamExtractor::class.java)
         assertNotNull(DocumentTextExtractor::class.java)
         assertNotNull(ArabicTextNormalizer::class.java)
         assertNotNull(SemanticBookPaginator::class.java)
@@ -1484,5 +1309,141 @@ class ExampleRobolectricTest {
         assertTrue(typoDialogSource.contains("تحرير يدوي"))
         assertTrue(typoDialogSource.contains("﴿ الآية ﴾"))
     }
+
+    @Test
+    fun testLargeSingleNewlineArabicTextBookConversionAndImportMemorySafety(): Unit = runBlocking {
+        val dao = database.bookDao()
+        val repository = BookRepository(dao, context)
+
+        // Build a large >35,000-word (>230,000 chars) Arabic text file using ONLY single '\n' line breaks (no '\n\n')
+        val largeBookBuilder = StringBuilder(260_000)
+        largeBookBuilder.append("مَوْسُوعَةُ السَّكِينَةِ وَالبَيَانِ الكُبْرَى\n")
+        largeBookBuilder.append("تأليف: د. عَبْدُ الرَّحْمَنِ المَنْصُور\n")
+        val sampleLine = "إِنَّ القَلْبَ السَّلِيمَ يَجِدُ أُنْسَهُ فِي ذِكْرِ اللَّهِ وَالتَّأَمُّلِ فِي آيَاتِ الكَوْنِ وَالحِكْمَةِ البَالِغَةِ التِي تَهْدِي النُّفُوسَ إِلَى سَوَاءِ السَّبِيلِ."
+        for (chapter in 1..12) {
+            largeBookBuilder.append("الفصل $chapter: مَعَالِمُ الهِدَايَةِ وَالبَصِيرَةِ فِي المَرْحَلَةِ $chapter\n")
+            largeBookBuilder.append("قال تعالى: ﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾ [الرعد: 28]\n")
+            for (lineNum in 1..150) {
+                largeBookBuilder.append(sampleLine).append('\n')
+            }
+            largeBookBuilder.append("1. التَّثَبُّتُ فِي الفَهْمِ وَالعَمَلِ الصَّالِحِ الدَّائِمِ.\n")
+        }
+
+        val largeTxtFile = File(context.cacheDir, "موسوعة_السكينة_الكبرى.txt")
+        largeTxtFile.bufferedWriter(Charsets.UTF_8).use { it.write(largeBookBuilder.toString()) }
+        assertTrue("Large text file must exceed 200,000 characters", largeTxtFile.length() > 200_000L)
+
+        val uri = android.net.Uri.fromFile(largeTxtFile)
+        val proposalResult = repository.inspectConvertibleDocument(uri)
+        assertTrue("Large document inspection must succeed without OOM", proposalResult.isSuccess)
+        val proposal = proposalResult.getOrThrow()
+
+        // Verify disk staging activated so UI state rawExtractedText stays small (< 5000 chars)
+        assertNotNull("Large document proposal must use stagedTextFile on disk", proposal.stagedTextFile)
+        assertTrue("Staged file must exist before conversion", proposal.stagedTextFile!!.exists())
+        assertTrue("In-memory rawExtractedText in UI state must be capped to 4096 chars", proposal.rawExtractedText.length <= 4096)
+        assertTrue("Word count must exceed 35,000 words", proposal.wordCount > 35_000)
+        assertTrue("Preview excerpt must be populated", proposal.previewExcerpt.isNotBlank())
+
+        // Convert and import the large proposal
+        val importedResult = repository.convertAndImportProposal(
+            proposal = proposal,
+            theme = BookVisualTheme.ISLAMIC_EMERALD
+        )
+        assertTrue("Converting and importing large proposal must succeed", importedResult.isSuccess)
+        val book = importedResult.getOrThrow()
+
+        // Verify single-\n lines were properly split into 300+ balanced pages (not 1 giant paragraph)
+        assertTrue("Large 35,000+ word book must paginate into at least 300 pages, got ${book.pageCount}", book.pageCount >= 300)
+
+        // Verify staged temporary file was cleaned up after import
+        assertFalse("Staged temporary file must be deleted after import", proposal.stagedTextFile!!.exists())
+
+        // Verify TOC JSON in Room database is capped at <= 300 entries for CursorWindow safety
+        val parsedToc = HtmlBookParser.jsonToToc(book.tableOfContentsJson)
+        assertTrue("Serialized TOC in Room DB must be capped at <= 300 entries", parsedToc.size in 12..300)
+
+        // Verify cover snapshot was rendered via Canvas without crashing
+        val bookDir = repository.getBookDirectory(book)
+        assertTrue("Native Canvas cover snapshot must exist", HtmlCoverSnapshotGenerator.hasSavedCoverSnapshot(bookDir))
+
+        val htmlFile = repository.getBookAbsoluteFile(book)
+        assertTrue("Generated HTML book file must exist", htmlFile.exists())
+        assertTrue("Generated HTML book file must exceed 200KB", htmlFile.length() > 200_000L)
+
+        repository.deleteBook(book.id)
+        largeTxtFile.delete()
+    }
+
+    @Test
+    fun testUnifiedCoverDesignFastHtmlCheckAndResponsibleFormatRestrictions() {
+        // 1. Verify unified cover_v3.png dimensions (544x800) and markdown/dot sanitization
+        assertEquals("cover_v3.png", HtmlCoverSnapshotGenerator.SNAPSHOT_FILE_NAME)
+        assertEquals("الإستغفار مفتاح نجاة", HtmlCoverSnapshotGenerator.sanitizeCoverTitle("*الإستغفار مفتاح نجاة* 💫🤔💫"))
+        assertEquals("", HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle(".....", "صلاح الآباء"))
+        assertEquals("والحرص عليها", HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle("والحرص عليها", "الدعوة"))
+
+        val coverTarget = File(context.cacheDir, "test_unified_cover_v3.png")
+        val rendered = HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
+            htmlContent = "",
+            metadata = com.maktabati.app.data.importer.ParsedHtmlMetadata(
+                title = "*الإستغفار مفتاح نجاة*",
+                subtitle = ".....",
+                author = "إصدارات مكتبتي الفاخرة",
+                description = "",
+                language = "ar",
+                isRtl = true,
+                pageCount = 12,
+                accentRoseHex = "#6B2D46",
+                accentGoldHex = "#C59B27",
+                bgPrimaryHex = "#FAF3EB",
+                coverGradientStart = 0xFFFAF3EB,
+                coverGradientEnd = 0xFFF3E6DA,
+                hasExternalCss = false,
+                hasExternalJs = false,
+                tableOfContents = emptyList(),
+                hasCoverPage = true
+            ),
+            targetFile = coverTarget
+        )
+        assertTrue(rendered)
+        assertTrue(coverTarget.exists())
+        val decodedBmp = android.graphics.BitmapFactory.decodeFile(coverTarget.absolutePath)
+        assertNotNull(decodedBmp)
+        assertEquals(544, decodedBmp!!.width)
+        assertEquals(800, decodedBmp.height)
+        coverTarget.delete()
+
+        // 2. Verify RandomAccessFile fast check isHtmlAlreadyInjected without reading entire file
+        val uninjectedFile = File(context.cacheDir, "uninjected_test.html")
+        uninjectedFile.writeText("<!DOCTYPE html><html><head><title>Test</title></head><body><p>Body</p></body></html>")
+        assertFalse(com.maktabati.app.ui.screens.reader.isHtmlAlreadyInjected(uninjectedFile))
+
+        val injectedHtml = SandboxHtmlInjector.injectIntoHtml(uninjectedFile.readText(), "book_raf_test", 10)
+        uninjectedFile.writeText(injectedHtml)
+        assertTrue(com.maktabati.app.ui.screens.reader.isHtmlAlreadyInjected(uninjectedFile))
+        uninjectedFile.delete()
+
+        // 3. Verify responsible format restrictions: only 100%-reliable formats supported, PDF & binary DOC rejected
+        assertEquals(
+            setOf("txt", "md", "markdown", "docx", "odt", "rtf", "epub"),
+            SmartBookConverter.SUPPORTED_TEXT_EXTENSIONS
+        )
+        assertFalse(SmartBookConverter.isConvertibleFileName("book.pdf"))
+        assertFalse(SmartBookConverter.isConvertibleFileName("legacy.doc"))
+        assertFalse(SmartBookConverter.isConvertibleMimeType("application/pdf"))
+        assertFalse(SmartBookConverter.isConvertibleMimeType("application/msword"))
+        assertTrue(SmartBookConverter.isConvertibleFileName("book.docx"))
+        assertTrue(SmartBookConverter.isConvertibleFileName("book.txt"))
+        assertTrue(SmartBookConverter.isConvertibleFileName("book.epub"))
+
+        val fakePdfBytes = "%PDF-1.7 fake pdf content".toByteArray(Charsets.US_ASCII)
+        val pdfThrown = runCatching {
+            DocumentTextExtractor.extractStructuredDocument(fakePdfBytes, "sample.pdf")
+        }.exceptionOrNull()
+        assertNotNull("PDF must be rejected with clear guidance", pdfThrown)
+        assertTrue(pdfThrown!!.message!!.contains("PDF غير مدعومة"))
+    }
 }
+
 

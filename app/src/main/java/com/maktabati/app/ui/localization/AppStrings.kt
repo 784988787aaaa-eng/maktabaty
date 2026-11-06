@@ -145,7 +145,7 @@ object ArabicStrings : AppStrings {
     override val statsShowDetails = "عرض التفاصيل"
 
     override val emptyLibraryTitle = "لا توجد كتب في هذا الرف"
-    override val emptyLibrarySubtitle = "أضف ملفات كتب (.html, .txt, .md, .docx, .pdf, .epub, .rtf, .odt, .zip) أو الصق نصاً من الحافظة لتحويله فوراً إلى كتاب فاخر."
+    override val emptyLibrarySubtitle = "أضف ملفات كتب (.html, .txt, .md, .docx, .epub, .rtf, .odt, .zip) أو الصق نصاً من الحافظة لتحويله فوراً إلى كتاب فاخر."
     override val emptyLibraryPrimaryButton = "استيراد ملفات كتب"
     override val emptyLibraryPasteButton = "لصق نص من الحافظة"
 
@@ -153,7 +153,7 @@ object ArabicStrings : AppStrings {
     override val menuPasteFromClipboardTitle = "لصق من الحافظة"
     override val menuPasteFromClipboardSubtitle = "تحويل النص المنسوخ فوراً إلى كتاب فاخر"
     override val menuImportLocalFilesTitle = "ملفات محلية"
-    override val menuImportLocalFilesSubtitle = "HTML, TXT, DOCX, PDF, EPUB, RTF, ODT, ZIP"
+    override val menuImportLocalFilesSubtitle = "HTML, TXT, MD, DOCX, EPUB, RTF, ODT, ZIP"
     override val clipboardEmptyToast = "الحافظة فارغة! انسخ نص الكتاب أولاً ثم اضغط لصق من الحافظة."
 
     override val bookCardCompletedBadge = "مكتمل"
@@ -252,7 +252,7 @@ object EnglishStrings : AppStrings {
     override val statsShowDetails = "Show Details"
 
     override val emptyLibraryTitle = "No books in this shelf"
-    override val emptyLibrarySubtitle = "Import book files (.html, .txt, .md, .docx, .pdf, .epub, .rtf, .odt, .zip) or paste text from your clipboard to craft an interactive luxury book."
+    override val emptyLibrarySubtitle = "Import book files (.html, .txt, .md, .docx, .epub, .rtf, .odt, .zip) or paste text from your clipboard to craft an interactive luxury book."
     override val emptyLibraryPrimaryButton = "Import Book Files"
     override val emptyLibraryPasteButton = "Paste from Clipboard"
 
@@ -260,7 +260,7 @@ object EnglishStrings : AppStrings {
     override val menuPasteFromClipboardTitle = "Paste from Clipboard"
     override val menuPasteFromClipboardSubtitle = "Transform copied text into a luxury book"
     override val menuImportLocalFilesTitle = "Local Files"
-    override val menuImportLocalFilesSubtitle = "HTML, TXT, DOCX, PDF, EPUB, RTF, ODT, ZIP"
+    override val menuImportLocalFilesSubtitle = "HTML, TXT, MD, DOCX, EPUB, RTF, ODT, ZIP"
     override val clipboardEmptyToast = "Clipboard is empty! Copy your book text first, then tap Paste from Clipboard."
 
     override val bookCardCompletedBadge = "Done"

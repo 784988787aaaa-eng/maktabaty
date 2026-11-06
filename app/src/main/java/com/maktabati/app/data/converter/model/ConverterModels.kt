@@ -3,6 +3,7 @@ package com.maktabati.app.data.converter.model
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import com.maktabati.app.data.converter.theme.BookVisualTheme
+import java.io.File
 
 /**
  * Categories of visual book publishing templates covering all genres and reader tastes.
@@ -41,6 +42,8 @@ enum class PublishingLayoutStyle {
 
 /**
  * Holds the pre-analyzed result of inspecting a text/office document before final HTML generation.
+ * For large documents, the full normalized text can be backed by [stagedTextFile] in cacheDir
+ * so UI state only holds a lightweight preview excerpt.
  */
 @Immutable
 data class ConvertibleBookProposal(
@@ -55,10 +58,30 @@ data class ConvertibleBookProposal(
     val language: String,
     val wordCount: Int,
     val estimatedPages: Int,
-    val recommendedTheme: BookVisualTheme = BookVisualTheme.ROSE_HEART
+    val recommendedTheme: BookVisualTheme = BookVisualTheme.ROSE_HEART,
+    val stagedTextFile: File? = null,
+    val previewExcerpt: String = ""
 ) {
     val sourceFormatLabel: String get() = formatBadge.substringBefore(" •").trim()
     val estimatedPageCount: Int get() = estimatedPages
+
+    fun resolveFullExtractedText(): String {
+        val file = stagedTextFile
+        if (file != null && file.isFile && file.canRead()) {
+            runCatching {
+                return file.readText(Charsets.UTF_8)
+            }
+        }
+        return rawExtractedText
+    }
+
+    fun cleanupStagedFile() {
+        runCatching {
+            if (stagedTextFile != null && stagedTextFile.exists()) {
+                stagedTextFile.delete()
+            }
+        }
+    }
 }
 
 @Immutable

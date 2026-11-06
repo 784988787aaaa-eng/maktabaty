@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.maktabati.app.data.converter.normalizer.ArabicTextNormalizer
 import com.maktabati.app.data.importer.BookTemplateCategory
 import com.maktabati.app.data.importer.BookVisualTheme
 import com.maktabati.app.data.importer.SmartBookConverter
@@ -98,9 +99,21 @@ fun ClipboardBookStudioDialog(
         }
     }
 
-    var title by remember { mutableStateOf(liveProposal?.detectedTitle ?: "") }
-    var subtitle by remember { mutableStateOf(liveProposal?.detectedSubtitle ?: "") }
-    var author by remember { mutableStateOf(liveProposal?.detectedAuthor ?: "") }
+    var title by remember {
+        mutableStateOf(
+            liveProposal?.detectedTitle?.let { ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(it) }.orEmpty()
+        )
+    }
+    var subtitle by remember {
+        mutableStateOf(
+            liveProposal?.detectedSubtitle?.let { ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(it) }.orEmpty()
+        )
+    }
+    var author by remember {
+        mutableStateOf(
+            liveProposal?.detectedAuthor?.let { ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(it) }.orEmpty()
+        )
+    }
     var selectedTheme by remember {
         mutableStateOf(liveProposal?.recommendedTheme ?: BookVisualTheme.CREAM_BEIGE_PAPER)
     }
@@ -108,11 +121,14 @@ fun ClipboardBookStudioDialog(
 
     LaunchedEffect(liveProposal) {
         if (liveProposal != null) {
-            if (title.isBlank() || title == "مقتطفات من الحافظة") {
-                title = liveProposal.detectedTitle
+            if (title.isBlank() || title == "مقتطفات من الحافظة" || title == "إشراقات من الحافظة") {
+                title = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(liveProposal.detectedTitle)
+            }
+            if (subtitle.isBlank()) {
+                subtitle = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(liveProposal.detectedSubtitle)
             }
             if (author.isBlank()) {
-                author = liveProposal.detectedAuthor
+                author = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(liveProposal.detectedAuthor)
             }
             if (!userManuallyPickedTheme) {
                 selectedTheme = liveProposal.recommendedTheme
@@ -133,12 +149,16 @@ fun ClipboardBookStudioDialog(
     }
 
     val previewExcerpt = remember(rawText, liveProposal) {
-        liveProposal?.rawExtractedText?.lineSequence()
-            ?.map { it.trim() }
-            ?.firstOrNull { it.length > 25 && !it.startsWith("تأليف") && !it.startsWith("بقلم") }
-            ?.take(160)
-            ?: rawText.trim().lineSequence().firstOrNull { it.trim().length > 20 }?.take(160)
-            ?: "انسخ أي مقال أو خاطرة أو رسالة أو فصول كتاب من الحافظة، وسيقوم الاستوديو بتنسيقها فوراً في صفحات مرقمة وفهرس ذكي."
+        val fromProposal = liveProposal?.previewExcerpt?.let {
+            ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(it)
+        }.orEmpty()
+        if (fromProposal.isNotBlank()) {
+            fromProposal.take(160)
+        } else if (rawText.isNotBlank()) {
+            ArabicTextNormalizer.extractPreviewExcerptFast(rawText).take(160)
+        } else {
+            "انسخ أي مقال أو خاطرة أو رسالة أو فصول كتاب من الحافظة، وسيقوم الاستوديو بتنسيقها فوراً في صفحات مرقمة وفهرس ذكي."
+        }
     }
 
     Dialog(

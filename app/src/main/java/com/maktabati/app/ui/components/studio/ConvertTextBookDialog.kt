@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.maktabati.app.data.converter.normalizer.ArabicTextNormalizer
 import com.maktabati.app.data.importer.BookTemplateCategory
 import com.maktabati.app.data.importer.BookVisualTheme
 import com.maktabati.app.data.importer.ConvertibleBookProposal
@@ -55,9 +56,18 @@ fun ConvertTextBookDialog(
     onConfirmConvert: (title: String, subtitle: String, author: String, theme: BookVisualTheme) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var title by remember(proposal) { mutableStateOf(proposal.detectedTitle) }
-    var subtitle by remember(proposal) { mutableStateOf(proposal.detectedSubtitle) }
-    var author by remember(proposal) { mutableStateOf(proposal.detectedAuthor) }
+    var title by remember(proposal) {
+        mutableStateOf(
+            ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(proposal.detectedTitle)
+                .ifBlank { proposal.detectedTitle }
+        )
+    }
+    var subtitle by remember(proposal) {
+        mutableStateOf(ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(proposal.detectedSubtitle))
+    }
+    var author by remember(proposal) {
+        mutableStateOf(ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(proposal.detectedAuthor))
+    }
     var selectedTheme by remember(proposal) { mutableStateOf(proposal.recommendedTheme) }
     var selectedCategory by remember { mutableStateOf(BookTemplateCategory.ALL) }
 
@@ -70,11 +80,10 @@ fun ConvertTextBookDialog(
     }
 
     val previewExcerpt = remember(proposal) {
-        proposal.rawExtractedText.lineSequence()
-            .map { it.trim() }
-            .firstOrNull { it.length > 25 && !it.startsWith("تأليف") && !it.startsWith("بقلم") }
-            ?.take(150)
-            ?: "بسم الله الرحمن الرحيم.. تزداد الكلمات جمالاً وأثراً حين تُصاغ في قوالب تليق بمعانيها وتُريح عين القارئ."
+        val cleanPreview = ArabicTextNormalizer.stripFormattingAndNoiseFromHeading(proposal.previewExcerpt)
+        cleanPreview.ifBlank {
+            ArabicTextNormalizer.extractPreviewExcerptFast(proposal.rawExtractedText)
+        }
     }
 
     Dialog(

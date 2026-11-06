@@ -4,15 +4,15 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.maktabati.app.data.converter.extractor.DocumentTextExtractor
-import com.maktabati.app.data.converter.model.BookTemplateCategory
+import com.maktabati.app.data.converter.model.ConvertedPageItem
 import com.maktabati.app.data.converter.model.ConvertibleBookProposal
-import com.maktabati.app.data.converter.model.PublishingLayoutStyle
 import com.maktabati.app.data.converter.normalizer.ArabicTextNormalizer
 import com.maktabati.app.data.converter.paginator.SemanticBookPaginator
 import com.maktabati.app.data.converter.renderer.LuxuryHtmlTemplateRenderer
 import com.maktabati.app.data.converter.theme.BookVisualTheme
 import java.io.File
 import java.io.FileInputStream
+import java.util.UUID
 
 /**
  * Clean Facade for the Maktabati Offline Document-to-Luxury-HTML5 Book Converter Engine.
@@ -21,16 +21,18 @@ import java.io.FileInputStream
  */
 object SmartBookConverter {
 
-    val SUPPORTED_CONVERTIBLE_EXTENSIONS = setOf(
-        "txt", "md", "markdown", "doc", "docx", "odt", "rtf", "epub", "pdf"
+    private const val DISK_STAGE_THRESHOLD_CHARS = 80_000
+
+    val SUPPORTED_TEXT_EXTENSIONS = setOf(
+        "txt", "md", "markdown", "docx", "odt", "rtf", "epub"
     )
 
-    private val WHITESPACE_REGEX = Regex("\\s+")
+    val SUPPORTED_CONVERTIBLE_EXTENSIONS = SUPPORTED_TEXT_EXTENSIONS
 
     fun isConvertibleFileName(fileName: String?): Boolean {
         if (fileName.isNullOrBlank()) return false
         val ext = fileName.substringAfterLast('.', "").lowercase().trim()
-        return ext in SUPPORTED_CONVERTIBLE_EXTENSIONS
+        return ext in SUPPORTED_TEXT_EXTENSIONS
     }
 
     fun isConvertibleMimeType(mimeType: String?): Boolean {
@@ -41,19 +43,15 @@ object SmartBookConverter {
             m == "text/x-markdown" ||
             m == "application/rtf" ||
             m == "text/rtf" ||
-            m == "application/msword" ||
             m == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
             m == "application/vnd.oasis.opendocument.text" ||
-            m == "application/epub+zip" ||
-            m == "application/pdf"
+            m == "application/epub+zip"
     }
 
     fun detectFormatBadge(fileName: String): String {
         val ext = fileName.substringAfterLast('.', "").lowercase().trim()
         return when (ext) {
             "docx" -> "DOCX • وورد حديث"
-            "doc" -> "DOC • وورد كلاسيكي"
-            "pdf" -> "PDF • مستند رقمي"
             "epub" -> "EPUB • كتاب إلكتروني"
             "odt" -> "ODT • مستند مفتوح"
             "rtf" -> "RTF • نص منسق"
@@ -66,18 +64,29 @@ object SmartBookConverter {
         val fileName = queryFileName(context, uri) ?: "كتاب_محول.txt"
         val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
             ?: throw IllegalArgumentException("تعذر فتح وقراءة الملف من الذاكرة")
-        return inspectDocumentBytes(bytes, fileName, uri)
+        return inspectDocumentBytes(
+            bytes = bytes,
+            originalFileName = fileName,
+            uri = uri,
+            stagingCacheDir = context.cacheDir
+        )
     }
 
     fun inspectDocumentFile(file: File): ConvertibleBookProposal {
         val bytes = FileInputStream(file).use { it.readBytes() }
-        return inspectDocumentBytes(bytes, file.name, Uri.fromFile(file))
+        return inspectDocumentBytes(
+            bytes = bytes,
+            originalFileName = file.name,
+            uri = Uri.fromFile(file),
+            stagingCacheDir = file.parentFile
+        )
     }
 
     fun inspectDocumentBytes(
         bytes: ByteArray,
         originalFileName: String,
-        uri: Uri? = null
+        uri: Uri? = null,
+        stagingCacheDir: File? = null
     ): ConvertibleBookProposal {
         if (bytes.isEmpty()) {
             throw IllegalArgumentException("الملف المختار فارغ ولا يحتوي على نصوص")
@@ -105,9 +114,23 @@ object SmartBookConverter {
         )
 
         val (isRtl, language) = ArabicTextNormalizer.detectLanguageAndDirection(normalizedBody)
-        val words = normalizedBody.split(WHITESPACE_REGEX).count { it.isNotBlank() }
+        val words = ArabicTextNormalizer.countWordsFast(normalizedBody)
         val estimatedPages = ((words / 100) + 2).coerceAtLeast(2)
         val recommendedTheme = ArabicTextNormalizer.suggestThemeForContent(semanticMeta.first, normalizedBody, isRtl)
+        val previewExcerpt = ArabicTextNormalizer.extractPreviewExcerptFast(normalizedBody)
+
+        var stagedFile: File? = null
+        val retainedText = if (normalizedBody.length > DISK_STAGE_THRESHOLD_CHARS && stagingCacheDir != null) {
+            runCatching {
+                val stageDir = File(stagingCacheDir, "maktabati_text_stage").apply { mkdirs() }
+                val tmp = File(stageDir, "stage_${UUID.randomUUID().toString().replace("-", "").take(12)}.txt")
+                tmp.bufferedWriter(Charsets.UTF_8).use { it.write(normalizedBody) }
+                stagedFile = tmp
+                normalizedBody.substring(0, minOf(normalizedBody.length, 4096))
+            }.getOrDefault(normalizedBody)
+        } else {
+            normalizedBody
+        }
 
         return ConvertibleBookProposal(
             uri = uri,
@@ -116,12 +139,14 @@ object SmartBookConverter {
             detectedTitle = semanticMeta.first,
             detectedSubtitle = semanticMeta.second,
             detectedAuthor = semanticMeta.third,
-            rawExtractedText = normalizedBody,
+            rawExtractedText = retainedText,
             isRtl = isRtl,
             language = language,
             wordCount = words,
             estimatedPages = estimatedPages,
-            recommendedTheme = recommendedTheme
+            recommendedTheme = recommendedTheme,
+            stagedTextFile = stagedFile,
+            previewExcerpt = previewExcerpt
         )
     }
 
@@ -129,7 +154,8 @@ object SmartBookConverter {
         rawText: String,
         sourceLabel: String = "CLIPBOARD • نصوص الحافظة",
         preferredTitle: String? = null,
-        preferredAuthor: String? = null
+        preferredAuthor: String? = null,
+        stagingCacheDir: File? = null
     ): ConvertibleBookProposal {
         val normalizedBody = ArabicTextNormalizer.normalizeArabicFidelity(rawText)
         if (normalizedBody.isBlank()) {
@@ -146,9 +172,23 @@ object SmartBookConverter {
             fallbackTitle = fallbackTitle
         )
 
-        val words = normalizedBody.split(WHITESPACE_REGEX).count { it.isNotBlank() }
+        val words = ArabicTextNormalizer.countWordsFast(normalizedBody)
         val estimatedPages = ((words / 100) + 2).coerceAtLeast(2)
         val recommendedTheme = ArabicTextNormalizer.suggestThemeForContent(semanticMeta.first, normalizedBody, isRtl)
+        val previewExcerpt = ArabicTextNormalizer.extractPreviewExcerptFast(normalizedBody)
+
+        var stagedFile: File? = null
+        val retainedText = if (normalizedBody.length > DISK_STAGE_THRESHOLD_CHARS && stagingCacheDir != null) {
+            runCatching {
+                val stageDir = File(stagingCacheDir, "maktabati_text_stage").apply { mkdirs() }
+                val tmp = File(stageDir, "stage_${UUID.randomUUID().toString().replace("-", "").take(12)}.txt")
+                tmp.bufferedWriter(Charsets.UTF_8).use { it.write(normalizedBody) }
+                stagedFile = tmp
+                normalizedBody.substring(0, minOf(normalizedBody.length, 4096))
+            }.getOrDefault(normalizedBody)
+        } else {
+            normalizedBody
+        }
 
         return ConvertibleBookProposal(
             uri = null,
@@ -157,12 +197,14 @@ object SmartBookConverter {
             detectedTitle = semanticMeta.first,
             detectedSubtitle = semanticMeta.second,
             detectedAuthor = semanticMeta.third,
-            rawExtractedText = normalizedBody,
+            rawExtractedText = retainedText,
             isRtl = isRtl,
             language = language,
             wordCount = words,
             estimatedPages = estimatedPages,
-            recommendedTheme = recommendedTheme
+            recommendedTheme = recommendedTheme,
+            stagedTextFile = stagedFile,
+            previewExcerpt = previewExcerpt
         )
     }
 
@@ -216,12 +258,38 @@ object SmartBookConverter {
         theme: BookVisualTheme? = null
     ): String {
         val proposal = inspectDocumentFile(file)
-        return convertProposalToLuxuryHtml(
-            proposal = proposal,
-            customTitle = customTitle,
-            customSubtitle = customSubtitle,
-            customAuthor = customAuthor,
-            theme = theme ?: proposal.recommendedTheme
+        return try {
+            convertProposalToLuxuryHtml(
+                proposal = proposal,
+                customTitle = customTitle,
+                customSubtitle = customSubtitle,
+                customAuthor = customAuthor,
+                theme = theme ?: proposal.recommendedTheme
+            )
+        } finally {
+            proposal.cleanupStagedFile()
+        }
+    }
+
+    fun buildProposalPages(
+        proposal: ConvertibleBookProposal,
+        customTitle: String? = null,
+        customSubtitle: String? = null,
+        customAuthor: String? = null,
+        theme: BookVisualTheme = proposal.recommendedTheme
+    ): List<ConvertedPageItem> {
+        val finalTitle = customTitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedTitle
+        val finalSubtitle = customSubtitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedSubtitle
+        val finalAuthor = customAuthor?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedAuthor
+        val fullText = proposal.resolveFullExtractedText()
+
+        return SemanticBookPaginator.buildSemanticPages(
+            rawText = fullText,
+            bookTitle = finalTitle,
+            bookSubtitle = finalSubtitle,
+            bookAuthor = finalAuthor,
+            theme = theme,
+            isRtl = proposal.isRtl
         )
     }
 
@@ -236,13 +304,12 @@ object SmartBookConverter {
         val finalSubtitle = customSubtitle?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedSubtitle
         val finalAuthor = customAuthor?.trim()?.takeIf { it.isNotEmpty() } ?: proposal.detectedAuthor
 
-        val pages = SemanticBookPaginator.buildSemanticPages(
-            rawText = proposal.rawExtractedText,
-            bookTitle = finalTitle,
-            bookSubtitle = finalSubtitle,
-            bookAuthor = finalAuthor,
-            theme = theme,
-            isRtl = proposal.isRtl
+        val pages = buildProposalPages(
+            proposal = proposal,
+            customTitle = finalTitle,
+            customSubtitle = finalSubtitle,
+            customAuthor = finalAuthor,
+            theme = theme
         )
 
         return LuxuryHtmlTemplateRenderer.renderCompleteLuxuryHtml(

@@ -98,12 +98,68 @@ class BookRepository(
                 val entryFile = File(bookDir, userBook.entryHtmlPath)
                 if (entryFile.isFile) {
                     runCatching {
+                        HtmlCoverSnapshotGenerator.cleanupLegacySnapshotIfPresent(bookDir)
+                        val hasUpToDateCover = HtmlCoverSnapshotGenerator.hasSavedCoverSnapshot(bookDir)
+                        val isInjected = com.maktabati.app.ui.screens.reader.isHtmlAlreadyInjected(entryFile)
+                        val sanitizedSavedTitle = HtmlCoverSnapshotGenerator.sanitizeCoverTitle(userBook.title)
+                        val sanitizedSavedSubtitle = HtmlCoverSnapshotGenerator.sanitizeCoverSubtitle(
+                            userBook.subtitle,
+                            sanitizedSavedTitle
+                        )
+                        val sanitizedSavedAuthor = HtmlBookParser.sanitizeExtractedAuthor(
+                            userBook.author,
+                            sanitizedSavedTitle,
+                            sanitizedSavedSubtitle
+                        )
+                        val hasDirtyMetadata = userBook.title != sanitizedSavedTitle ||
+                            userBook.subtitle != sanitizedSavedSubtitle ||
+                            userBook.author != sanitizedSavedAuthor
+
+                        val hasValidPalette = userBook.bgPrimaryHex.isNotBlank() &&
+                            userBook.accentGoldHex.isNotBlank() &&
+                            userBook.accentRoseHex.isNotBlank()
+
+                        // Fast-Path: if book already has cover_v3.png, valid palette, clean title/subtitle/author, and v9 runtime,
+                        // do NOT read or parse index.html during app startup!
+                        if (hasUpToDateCover && isInjected && hasValidPalette && !hasDirtyMetadata && userBook.pageCount >= 1) {
+                            return@runCatching
+                        }
+
+                        // If only the unified cover_v3.png is missing or metadata had raw WhatsApp symbols,
+                        // heal metadata and regenerate cover_v3.png from header without reading/parsing the entire multi-MB book
+                        if (isInjected && hasValidPalette && userBook.pageCount >= 1) {
+                            if (hasDirtyMetadata) {
+                                bookDao.updateBookMetadataAndStyle(
+                                    id = userBook.id,
+                                    title = sanitizedSavedTitle,
+                                    subtitle = sanitizedSavedSubtitle,
+                                    author = sanitizedSavedAuthor,
+                                    coverGradientStart = userBook.coverGradientStart,
+                                    coverGradientEnd = userBook.coverGradientEnd,
+                                    bgPrimaryHex = userBook.bgPrimaryHex,
+                                    accentGoldHex = userBook.accentGoldHex,
+                                    accentRoseHex = userBook.accentRoseHex
+                                )
+                                val snapshotFile = HtmlCoverSnapshotGenerator.getCoverSnapshotFile(bookDir)
+                                if ( snapshotFile.exists()) {
+                                    snapshotFile.delete()
+                                }
+                            }
+                            HtmlCoverSnapshotGenerator.ensureCoverSnapshotForBook(
+                                context = context,
+                                bookDir = bookDir,
+                                entryHtmlFile = entryFile,
+                                fallbackTitle = sanitizedSavedTitle
+                            )
+                            return@runCatching
+                        }
+
                         val raw = entryFile.readText(Charsets.UTF_8)
-                        val meta = HtmlBookParser.parse(entryFile, userBook.title)
+                        val meta = HtmlBookParser.parse(entryFile, sanitizedSavedTitle)
                         val finalPages = meta.pageCount.coerceAtLeast(1)
 
-                        if (!raw.contains("__maktabatiV8Initialized") || userBook.pageCount != finalPages) {
-                            val healedHtml = SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, finalPages)
+                        if (!raw.contains("__maktabatiV9Initialized") || userBook.pageCount != finalPages) {
+                            val healedHtml = SandboxHtmlInjector.injectIntoHtml(raw, userBook.id, finalPages, bookDir = bookDir)
                             entryFile.writeText(healedHtml, Charsets.UTF_8)
                         }
 
@@ -131,12 +187,7 @@ class BookRepository(
                             )
                         }
 
-                        val sanitizedSavedAuthor = HtmlBookParser.sanitizeExtractedAuthor(
-                            userBook.author,
-                            userBook.title,
-                            userBook.subtitle
-                        )
-                        if (userBook.author != sanitizedSavedAuthor ||
+                        if (hasDirtyMetadata ||
                             userBook.bgPrimaryHex != meta.bgPrimaryHex ||
                             userBook.accentRoseHex != meta.accentRoseHex ||
                             userBook.accentGoldHex != meta.accentGoldHex ||
@@ -145,8 +196,8 @@ class BookRepository(
                         ) {
                             bookDao.updateBookMetadataAndStyle(
                                 id = userBook.id,
-                                title = userBook.title,
-                                subtitle = userBook.subtitle,
+                                title = sanitizedSavedTitle,
+                                subtitle = sanitizedSavedSubtitle,
                                 author = sanitizedSavedAuthor,
                                 coverGradientStart = meta.coverGradientStart,
                                 coverGradientEnd = meta.coverGradientEnd,
@@ -154,6 +205,12 @@ class BookRepository(
                                 accentGoldHex = meta.accentGoldHex,
                                 accentRoseHex = meta.accentRoseHex
                             )
+                            if (hasDirtyMetadata) {
+                                val snapshotFile = HtmlCoverSnapshotGenerator.getCoverSnapshotFile(bookDir)
+                                if (snapshotFile.exists()) {
+                                    snapshotFile.delete()
+                                }
+                            }
                         }
 
                         if (!HtmlCoverSnapshotGenerator.hasSavedCoverSnapshot(bookDir)) {
@@ -161,7 +218,7 @@ class BookRepository(
                                 context = context,
                                 bookDir = bookDir,
                                 entryHtmlFile = entryFile,
-                                fallbackTitle = userBook.title
+                                fallbackTitle = sanitizedSavedTitle
                             )
                         }
                     }
@@ -170,12 +227,21 @@ class BookRepository(
         }
     }
 
+    private fun mapImportThrowable(t: Throwable, fallbackMessage: String): Throwable {
+        if (t is kotlinx.coroutines.CancellationException) throw t
+        if (t is OutOfMemoryError || t is StackOverflowError) {
+            System.gc()
+            return IllegalStateException("حجم الملف كبير جداً على ذاكرة الجهاز الحالية؛ تم تفريغ الذاكرة المؤقتة، يرجى المحاولة مرة أخرى.")
+        }
+        return t as? Exception ?: IllegalStateException(t.message ?: fallbackMessage, t)
+    }
+
     suspend fun inspectConvertibleDocument(uri: Uri): Result<ConvertibleBookProposal> = withContext(Dispatchers.IO) {
         try {
             val proposal = SmartBookConverter.inspectDocumentUri(context, uri)
             Result.success(proposal)
-        } catch (e: Exception) {
-            Result.failure(e)
+        } catch (t: Throwable) {
+            Result.failure(mapImportThrowable(t, "تعذر قراءة وتحليل الملف النصي"))
         }
     }
 
@@ -186,11 +252,12 @@ class BookRepository(
         try {
             val proposal = SmartBookConverter.inspectRawText(
                 rawText = rawText,
-                sourceLabel = sourceLabel
+                sourceLabel = sourceLabel,
+                stagingCacheDir = context.cacheDir
             )
             Result.success(proposal)
-        } catch (e: Exception) {
-            Result.failure(e)
+        } catch (t: Throwable) {
+            Result.failure(mapImportThrowable(t, "تعذر تحليل النص المدخل"))
         }
     }
 
@@ -207,7 +274,8 @@ class BookRepository(
                 rawText = rawText,
                 sourceLabel = sourceLabel,
                 preferredTitle = customTitle,
-                preferredAuthor = customAuthor
+                preferredAuthor = customAuthor,
+                stagingCacheDir = context.cacheDir
             )
             val chosenTheme = theme ?: proposal.recommendedTheme
             val book = BookImporter.importConvertedProposal(
@@ -220,8 +288,8 @@ class BookRepository(
             )
             bookDao.insertBook(book)
             Result.success(book)
-        } catch (e: Exception) {
-            Result.failure(e)
+        } catch (t: Throwable) {
+            Result.failure(mapImportThrowable(t, "تعذر صياغة وتحويل النص إلى كتاب"))
         }
     }
 
@@ -243,8 +311,8 @@ class BookRepository(
             )
             bookDao.insertBook(book)
             Result.success(book)
-        } catch (e: Exception) {
-            Result.failure(e)
+        } catch (t: Throwable) {
+            Result.failure(mapImportThrowable(t, "تعذر إتمام تحويل الكتاب"))
         }
     }
 
@@ -259,8 +327,8 @@ class BookRepository(
                 bookDao.insertBook(outcome.book)
             }
             Result.success(outcome)
-        } catch (e: Exception) {
-            Result.failure(e)
+        } catch (t: Throwable) {
+            Result.failure(mapImportThrowable(t, "تعذر استيراد الملف المحدد"))
         }
     }
 
@@ -280,8 +348,8 @@ class BookRepository(
                         proposals.add(res.proposal)
                     }
                 }
-            } catch (e: Exception) {
-                lastError = e
+            } catch (t: Throwable) {
+                lastError = mapImportThrowable(t, "تعذر استيراد الملفات المحددة")
             }
         }
 
@@ -511,7 +579,10 @@ class BookRepository(
     private fun zipDirectoryContents(sourceDir: File, targetZipFile: File) {
         ZipOutputStream(BufferedOutputStream(FileOutputStream(targetZipFile))).use { zos ->
             sourceDir.walkTopDown().forEach { file ->
-                if (file.isFile && file.name != HtmlCoverSnapshotGenerator.COVER_SNAPSHOT_FILENAME) {
+                if (file.isFile &&
+                    file.name != HtmlCoverSnapshotGenerator.COVER_SNAPSHOT_FILENAME &&
+                    file.name != HtmlCoverSnapshotGenerator.LEGACY_SNAPSHOT_FILENAME
+                ) {
                     val relPath = file.relativeTo(sourceDir).path.replace("\\", "/")
                     val entry = ZipEntry(relPath)
                     zos.putNextEntry(entry)

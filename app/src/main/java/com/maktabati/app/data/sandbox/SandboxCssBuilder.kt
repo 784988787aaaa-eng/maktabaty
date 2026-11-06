@@ -20,7 +20,7 @@ object SandboxCssBuilder {
         }
 
         return """
-        <style id="maktabati-perf-booster">
+        <style id="maktabati-perf-booster" data-maktabati-v9="__maktabatiV9Initialized">
 $fontFacesCss
 $typographyCss
           :root {
@@ -76,6 +76,10 @@ $typographyCss
             box-sizing: border-box !important;
             position: relative;
             transform-origin: center center;
+          }
+          .page.active ~ .page:not(.active),
+          .page-canvas > .page:not(.active):not(:only-child) {
+            display: none !important;
           }
           .maktabati-gpu-hint {
             will-change: transform, opacity;

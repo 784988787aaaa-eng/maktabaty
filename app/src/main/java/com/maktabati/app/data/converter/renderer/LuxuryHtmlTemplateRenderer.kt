@@ -116,19 +116,37 @@ object LuxuryHtmlTemplateRenderer {
         theme: BookVisualTheme,
         isRtl: Boolean,
         language: String,
-        pages: List<ConvertedPageItem>
+        pages: List<ConvertedPageItem>,
+        injectedHeadSnippet: String = ""
     ): String {
-        val dirAttr = if (isRtl) "rtl" else "ltr"
-        val pagesJsonArray = JSONArray()
-        for (p in pages) {
-            val obj = JSONObject()
-            obj.put("tag", p.tag)
-            obj.put("title", p.title)
-            obj.put("type", p.type)
-            obj.put("html", p.html)
-            pagesJsonArray.put(obj)
-        }
+        val estimatedChars = 24_000 + pages.sumOf { it.html.length + it.title.length + 64 }
+        val sb = StringBuilder(estimatedChars.coerceAtMost(8 * 1024 * 1024))
+        writeCompleteLuxuryHtmlToAppendable(
+            out = sb,
+            bookTitle = bookTitle,
+            bookSubtitle = bookSubtitle,
+            bookAuthor = bookAuthor,
+            theme = theme,
+            isRtl = isRtl,
+            language = language,
+            pages = pages,
+            injectedHeadSnippet = injectedHeadSnippet
+        )
+        return sb.toString()
+    }
 
+    fun writeCompleteLuxuryHtmlToAppendable(
+        out: Appendable,
+        bookTitle: String,
+        bookSubtitle: String,
+        bookAuthor: String,
+        theme: BookVisualTheme,
+        isRtl: Boolean,
+        language: String,
+        pages: List<ConvertedPageItem>,
+        injectedHeadSnippet: String = ""
+    ) {
+        val dirAttr = if (isRtl) "rtl" else "ltr"
         val storageSlug = bookTitle.hashCode().toUInt().toString(16)
         val prevLabel = if (isRtl) "السابق" else "Previous"
         val nextLabel = if (isRtl) "التالي" else "Next"
@@ -137,7 +155,7 @@ object LuxuryHtmlTemplateRenderer {
         val searchEmptyPrompt = if (isRtl) "اكتب كلمة للبحث في جميع صفحات الكتاب..." else "Type a word to search across all pages..."
         val tocHeaderTitle = if (isRtl) "فهرس فصول الكتاب" else "Table of Contents"
 
-        return """<!DOCTYPE html>
+        out.append("""<!DOCTYPE html>
 <html lang="$language" dir="$dirAttr">
 <head>
   <meta charset="utf-8"/>
@@ -189,7 +207,7 @@ object LuxuryHtmlTemplateRenderer {
   color-scheme: light;
 }
 
-${MaktabatiFontRegistry.buildOfflineFontFacesCss("https://maktabati.app/assets")}
+${if (injectedHeadSnippet.contains("@font-face")) "" else MaktabatiFontRegistry.buildOfflineFontFacesCss("https://maktabati.app/assets")}
 
 .hadith-quote {
   font-family: var(--font-quotes);
@@ -828,7 +846,7 @@ mark.search-hit-mark, mark.page-search-highlight {
   font-weight: 700;
 }
   </style>
-</head>
+${if (injectedHeadSnippet.isNotBlank()) "$injectedHeadSnippet\n" else ""}</head>
 <body>
   <div class="app">
     <header class="top-bar">
@@ -900,7 +918,9 @@ mark.search-hit-mark, mark.page-search-highlight {
       subtitle: ${JSONObject.quote(bookSubtitle)},
       author: ${JSONObject.quote(bookAuthor)},
       totalPages: ${pages.size},
-      pages: ${pagesJsonArray}
+      pages: """)
+        writePagesJsonArrayToAppendable(out, pages)
+        out.append("""
     };
 
     let currentPageIndex = 0;
@@ -1060,28 +1080,29 @@ mark.search-hit-mark, mark.page-search-highlight {
       if (e.target === tocPanel) tocPanel.classList.remove("open");
     });
 
+    let tocBuilt = false;
     function buildTocPanel() {
-      let html = "";
+      if (tocBuilt) return;
+      const parts = [];
       let lastSig = "";
-      BOOK_DATA.pages.forEach((p, idx) => {
+      for (let idx = 0; idx < BOOK_DATA.pages.length; idx++) {
+        const p = BOOK_DATA.pages[idx];
         const cleanTag = (p.tag || "").trim();
         const cleanTitle = (p.title || "").trim();
         const sig = (cleanTag + "|" + cleanTitle).toLowerCase();
         const isOpener = (p.type === "opener" || p.type === "cover");
         if (idx > 0 && !isOpener && sig === lastSig) {
-          return;
+          continue;
         }
         lastSig = sig;
         const isPart = (p.type === "opener");
         const cls = isPart ? "toc-item toc-part" : "toc-item";
         const showTag = cleanTag && cleanTag !== cleanTitle && !cleanTitle.startsWith(cleanTag);
         const label = showTag ? (cleanTag + " • " + cleanTitle) : cleanTitle;
-        html += `<div class="${'$'}{cls}" onclick="window.goToPage(${'$'}{idx}); tocPanel.classList.remove('open');">
-          <span>${'$'}{label}</span>
-          <small dir="ltr">${'$'}{idx + 1}</small>
-        </div>`;
-      });
-      tocPanelList.innerHTML = html;
+        parts.push(`<div class="${'$'}{cls}" onclick="window.goToPage(${'$'}{idx}); tocPanel.classList.remove('open');"><span>${'$'}{label}</span><small dir="ltr">${'$'}{idx + 1}</small></div>`);
+      }
+      tocPanelList.innerHTML = parts.join("");
+      tocBuilt = true;
     }
 
     searchOpen.addEventListener("click", function() {
@@ -1120,9 +1141,15 @@ mark.search-hit-mark, mark.page-search-highlight {
     }
 
     function extractPagePlainText(html) {
-      const tmp = document.createElement("div");
-      tmp.innerHTML = html;
-      return tmp.textContent || tmp.innerText || "";
+      if (!html) return "";
+      return html
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&quot;/g, "\"")
+        .replace(/&apos;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&");
     }
 
     searchInput.addEventListener("input", function() {
@@ -1283,7 +1310,48 @@ mark.search-hit-mark, mark.page-search-highlight {
     });
   </script>
 </body>
-</html>"""
+</html>""")
+    }
+
+    private fun writePagesJsonArrayToAppendable(out: Appendable, pages: List<ConvertedPageItem>) {
+        out.append('[')
+        for ((index, p) in pages.withIndex()) {
+            if (index > 0) out.append(',')
+            out.append("{\"tag\":")
+            appendJsonEscapedString(out, p.tag)
+            out.append(",\"title\":")
+            appendJsonEscapedString(out, p.title)
+            out.append(",\"type\":")
+            appendJsonEscapedString(out, p.type)
+            out.append(",\"html\":")
+            appendJsonEscapedString(out, p.html)
+            out.append('}')
+        }
+        out.append(']')
+    }
+
+    private fun appendJsonEscapedString(out: Appendable, value: String) {
+        out.append('"')
+        for (i in 0 until value.length) {
+            when (val ch = value[i]) {
+                '"' -> out.append("\\\"")
+                '\\' -> out.append("\\\\")
+                '/' -> out.append("\\/")
+                '\b' -> out.append("\\b")
+                '\u000C' -> out.append("\\f")
+                '\n' -> out.append("\\n")
+                '\r' -> out.append("\\r")
+                '\t' -> out.append("\\t")
+                else -> {
+                    if (ch.code < 0x20) {
+                        out.append(String.format("\\u%04x", ch.code))
+                    } else {
+                        out.append(ch)
+                    }
+                }
+            }
+        }
+        out.append('"')
     }
 
     fun buildLayoutVariantCss(theme: BookVisualTheme): String {
