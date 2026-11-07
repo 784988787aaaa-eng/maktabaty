@@ -568,14 +568,14 @@ class CloudBackupManager(
             put("typo_use_custom", preferences.getBoolean("typo_use_custom", false))
             put("typo_preset_id", preferences.getString("typo_preset_id", "editorial_narrative") ?: "editorial_narrative")
             put("typo_custom_preview_text", preferences.getString("typo_custom_preview_text", "") ?: "")
-            put("typo_role_body", preferences.getString("typo_role_body", "Noto Naskh Arabic") ?: "Noto Naskh Arabic")
-            put("typo_role_quran", preferences.getString("typo_role_quran", "Amiri Quran") ?: "Amiri Quran")
-            put("typo_role_headings", preferences.getString("typo_role_headings", "Noto Kufi Arabic") ?: "Noto Kufi Arabic")
-            put("typo_role_chapter", preferences.getString("typo_role_chapter", "Reem Kufi") ?: "Reem Kufi")
-            put("typo_role_quotes", preferences.getString("typo_role_quotes", "Aref Ruqaa") ?: "Aref Ruqaa")
-            put("typo_role_interface", preferences.getString("typo_role_interface", "Noto Sans Arabic") ?: "Noto Sans Arabic")
-            put("typo_role_numbers", preferences.getString("typo_role_numbers", "Readex Pro") ?: "Readex Pro")
-            put("user_custom_fonts_json", preferences.getString("user_custom_fonts_json", "[]") ?: "[]")
+            put("typo_body", preferences.getString("typo_body", "Noto Naskh Arabic") ?: "Noto Naskh Arabic")
+            put("typo_quran", preferences.getString("typo_quran", "Amiri Quran") ?: "Amiri Quran")
+            put("typo_headings", preferences.getString("typo_headings", "Noto Kufi Arabic") ?: "Noto Kufi Arabic")
+            put("typo_chapter_titles", preferences.getString("typo_chapter_titles", "Reem Kufi") ?: "Reem Kufi")
+            put("typo_quotes", preferences.getString("typo_quotes", "Aref Ruqaa") ?: "Aref Ruqaa")
+            put("typo_interface", preferences.getString("typo_interface", "Noto Sans Arabic") ?: "Noto Sans Arabic")
+            put("typo_numbers", preferences.getString("typo_numbers", "Readex Pro") ?: "Readex Pro")
+            put("typo_user_custom_fonts_json", preferences.getString("typo_user_custom_fonts_json", "[]") ?: "[]")
         }
         root.put("preferences", prefsObj)
 
@@ -668,14 +668,62 @@ class CloudBackupManager(
                 if (prefsObj.has("typo_use_custom")) putBoolean("typo_use_custom", prefsObj.optBoolean("typo_use_custom", false))
                 if (prefsObj.has("typo_preset_id")) putString("typo_preset_id", prefsObj.optString("typo_preset_id", "editorial_narrative"))
                 if (prefsObj.has("typo_custom_preview_text")) putString("typo_custom_preview_text", prefsObj.optString("typo_custom_preview_text", ""))
-                if (prefsObj.has("typo_role_body")) putString("typo_role_body", prefsObj.optString("typo_role_body", "Noto Naskh Arabic"))
-                if (prefsObj.has("typo_role_quran")) putString("typo_role_quran", prefsObj.optString("typo_role_quran", "Amiri Quran"))
-                if (prefsObj.has("typo_role_headings")) putString("typo_role_headings", prefsObj.optString("typo_role_headings", "Noto Kufi Arabic"))
-                if (prefsObj.has("typo_role_chapter")) putString("typo_role_chapter", prefsObj.optString("typo_role_chapter", "Reem Kufi"))
-                if (prefsObj.has("typo_role_quotes")) putString("typo_role_quotes", prefsObj.optString("typo_role_quotes", "Aref Ruqaa"))
-                if (prefsObj.has("typo_role_interface")) putString("typo_role_interface", prefsObj.optString("typo_role_interface", "Noto Sans Arabic"))
-                if (prefsObj.has("typo_role_numbers")) putString("typo_role_numbers", prefsObj.optString("typo_role_numbers", "Readex Pro"))
-                if (prefsObj.has("user_custom_fonts_json")) putString("user_custom_fonts_json", prefsObj.optString("user_custom_fonts_json", "[]"))
+
+                val bodyFont = when {
+                    prefsObj.has("typo_body") -> prefsObj.optString("typo_body", "Noto Naskh Arabic")
+                    prefsObj.has("typo_role_body") -> prefsObj.optString("typo_role_body", "Noto Naskh Arabic")
+                    else -> null
+                }
+                if (bodyFont != null) putString("typo_body", bodyFont)
+
+                val quranFont = when {
+                    prefsObj.has("typo_quran") -> prefsObj.optString("typo_quran", "Amiri Quran")
+                    prefsObj.has("typo_role_quran") -> prefsObj.optString("typo_role_quran", "Amiri Quran")
+                    else -> null
+                }
+                if (quranFont != null) putString("typo_quran", quranFont)
+
+                val headingsFont = when {
+                    prefsObj.has("typo_headings") -> prefsObj.optString("typo_headings", "Noto Kufi Arabic")
+                    prefsObj.has("typo_role_headings") -> prefsObj.optString("typo_role_headings", "Noto Kufi Arabic")
+                    else -> null
+                }
+                if (headingsFont != null) putString("typo_headings", headingsFont)
+
+                val chapterFont = when {
+                    prefsObj.has("typo_chapter_titles") -> prefsObj.optString("typo_chapter_titles", "Reem Kufi")
+                    prefsObj.has("typo_role_chapter") -> prefsObj.optString("typo_role_chapter", "Reem Kufi")
+                    else -> null
+                }
+                if (chapterFont != null) putString("typo_chapter_titles", chapterFont)
+
+                val quotesFont = when {
+                    prefsObj.has("typo_quotes") -> prefsObj.optString("typo_quotes", "Aref Ruqaa")
+                    prefsObj.has("typo_role_quotes") -> prefsObj.optString("typo_role_quotes", "Aref Ruqaa")
+                    else -> null
+                }
+                if (quotesFont != null) putString("typo_quotes", quotesFont)
+
+                val interfaceFont = when {
+                    prefsObj.has("typo_interface") -> prefsObj.optString("typo_interface", "Noto Sans Arabic")
+                    prefsObj.has("typo_role_interface") -> prefsObj.optString("typo_role_interface", "Noto Sans Arabic")
+                    else -> null
+                }
+                if (interfaceFont != null) putString("typo_interface", interfaceFont)
+
+                val numbersFont = when {
+                    prefsObj.has("typo_numbers") -> prefsObj.optString("typo_numbers", "Readex Pro")
+                    prefsObj.has("typo_role_numbers") -> prefsObj.optString("typo_role_numbers", "Readex Pro")
+                    else -> null
+                }
+                if (numbersFont != null) putString("typo_numbers", numbersFont)
+
+                val customFontsJson = when {
+                    prefsObj.has("typo_user_custom_fonts_json") -> prefsObj.optString("typo_user_custom_fonts_json", "[]")
+                    prefsObj.has("user_custom_fonts_json") -> prefsObj.optString("user_custom_fonts_json", "[]")
+                    else -> null
+                }
+                if (customFontsJson != null) putString("typo_user_custom_fonts_json", customFontsJson)
             }.apply()
             MaktabatiFontRegistry.loadUserCustomFonts(context, preferences)
         }

@@ -64,6 +64,7 @@ import com.maktabati.app.data.converter.normalizer.ArabicTextNormalizer
 import com.maktabati.app.data.importer.BookTemplateCategory
 import com.maktabati.app.data.importer.BookVisualTheme
 import com.maktabati.app.data.importer.SmartBookConverter
+import com.maktabati.app.data.importer.SmartHtmlPhaseMerger
 
 private val WHITESPACE_SPLIT_REGEX = Regex("\\s+")
 
@@ -303,10 +304,11 @@ fun ClipboardBookStudioDialog(
                                         onClick = {
                                             val clipText = readClipboardText(context)
                                             if (clipText.isNotBlank()) {
-                                                rawText = if (rawText.isBlank()) {
-                                                    clipText
-                                                } else {
-                                                    "${rawText.trim()}\n\n* * *\n\n$clipText"
+                                                rawText = when {
+                                                    rawText.isBlank() -> clipText
+                                                    SmartHtmlPhaseMerger.canMergeAsHtmlPhases(rawText, clipText) ->
+                                                        SmartHtmlPhaseMerger.mergeTwoHtmlPhases(rawText, clipText)
+                                                    else -> "${rawText.trim()}\n\n* * *\n\n$clipText"
                                                 }
                                             }
                                         },

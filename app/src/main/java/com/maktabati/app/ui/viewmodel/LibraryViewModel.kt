@@ -19,6 +19,7 @@ import com.maktabati.app.data.importer.ImportUriResult
 import com.maktabati.app.data.importer.MultiBookArchiveProposal
 import com.maktabati.app.data.importer.ParsedHtmlMetadata
 import com.maktabati.app.data.importer.SmartBookConverter
+import com.maktabati.app.data.importer.SmartHtmlPhaseMerger
 import com.maktabati.app.data.model.Book
 import com.maktabati.app.data.model.Bookmark
 import com.maktabati.app.data.model.Shelf
@@ -386,6 +387,25 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             importState.value = ImportState.Error("الحافظة فارغة حالياً. انسخ أي نص أولاً ثم اختر «لصق من الحافظة» لتحويله مباشرة إلى كتاب.")
             return
         }
+        if (SmartHtmlPhaseMerger.isCompleteReadyHtmlBook(resolvedText)) {
+            viewModelScope.launch {
+                importState.value = ImportState.Loading("جاري استيراد كتاب HTML التفاعلي الجاهز من الحافظة...")
+                val result = repository.importRawHtmlBook(
+                    rawHtml = SmartHtmlPhaseMerger.unwrapMarkdownCodeFence(resolvedText),
+                    fallbackName = "كتاب تفاعلي من الحافظة"
+                )
+                result.onSuccess { book ->
+                    importState.value = ImportState.Success(book, 1)
+                    openBook(book)
+                    if (connectedGoogleEmail.value != null) {
+                        triggerAutoCloudBackup()
+                    }
+                }.onFailure { err ->
+                    importState.value = ImportState.Error(err.message ?: "تعذر استيراد كود HTML من الحافظة")
+                }
+            }
+            return
+        }
         if (resolvedText.length >= 50_000) {
             viewModelScope.launch {
                 importState.value = ImportState.Loading("جاري قراءة النص وتحليل الفصول...")
@@ -441,6 +461,26 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
         isClipboardStudioOpen.value = false
         viewModelScope.launch {
+            if (SmartHtmlPhaseMerger.isCompleteReadyHtmlBook(cleanText)) {
+                importState.value = ImportState.Loading("جاري استيراد كتاب HTML التفاعلي الجاهز...")
+                val result = repository.importRawHtmlBook(
+                    rawHtml = SmartHtmlPhaseMerger.unwrapMarkdownCodeFence(cleanText),
+                    fallbackName = customTitle?.takeIf { it.isNotBlank() } ?: "كتاب تفاعلي",
+                    customTitle = customTitle?.takeIf { it.isNotBlank() }
+                )
+                result.onSuccess { book ->
+                    importState.value = ImportState.Success(book, 1)
+                    if (connectedGoogleEmail.value != null) {
+                        triggerAutoCloudBackup()
+                    }
+                    onComplete?.invoke(book)
+                }.onFailure { err ->
+                    importState.value = ImportState.Error(err.message ?: "تعذر استيراد كتاب HTML الجاهز")
+                    onComplete?.invoke(null)
+                }
+                return@launch
+            }
+
             val chosenName = theme?.arabicName ?: "قالب النشر المختار"
             importState.value = ImportState.Loading("جاري صياغة الكتاب التفاعلي الفاخر بحلة «$chosenName»...")
             val result = repository.convertAndImportRawText(
@@ -672,7 +712,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                             val rendered = HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
                                 htmlContent = htmlContent,
                                 metadata = metadata,
-                                targetFile = snapshotFile
+                                targetFile = snapshotFile,
+                                context = getApplication()
                             )
                             if (rendered) {
                                 HtmlCoverSnapshotGenerator.notifySnapshotUpdated()

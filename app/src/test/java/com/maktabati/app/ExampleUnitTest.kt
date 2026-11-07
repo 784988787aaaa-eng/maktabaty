@@ -4,6 +4,7 @@ import com.maktabati.app.data.converter.SmartBookConverter
 import com.maktabati.app.data.converter.normalizer.ArabicTextNormalizer
 import com.maktabati.app.data.converter.renderer.LuxuryHtmlTemplateRenderer
 import com.maktabati.app.data.converter.theme.BookVisualTheme
+import com.maktabati.app.data.importer.SmartHtmlPhaseMerger
 import com.maktabati.app.data.sandbox.SandboxHtmlInjector
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -113,5 +114,56 @@ class ExampleUnitTest {
         assertEquals("الإستغفار مفتاح نجاة", ArabicTextNormalizer.stripFormattingAndNoiseFromHeading("*الإستغفار مفتاح نجاة* 💫🤔💫"))
         assertEquals("", ArabicTextNormalizer.stripFormattingAndNoiseFromHeading("*...."))
     }
+
+    @Test
+    fun testTwoPhaseHtmlMergingAndCoverTitleFrame() {
+        val coverHtml = LuxuryHtmlTemplateRenderer.buildCoverPageHtml(
+            title = "كوني صحابية",
+            subtitle = "رحلة إلى النور",
+            author = "",
+            theme = BookVisualTheme.ISLAMIC_EMERALD,
+            isRtl = true
+        )
+        assertTrue(coverHtml.contains("<div class=\"cover-title-frame\">"))
+        assertTrue(coverHtml.contains("<h1>كوني صحابية</h1>"))
+        assertFalse(coverHtml.contains("إصدارات مكتبتي الفاخرة"))
+
+        val phase1 = """
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head><title>كوني صحابية</title></head>
+            <body>
+            <script>
+            const BOOK_DATA = {
+              totalPages: 2,
+              pages: [
+                { num: 1, chapter: "الغلاف", html: `<h1>كوني صحابية</h1>` },
+                { num: 2, chapter: "الفصل الأول", html: `<p>صفحة ثانية</p>` }
+                /* === [نهاية المرحلة 1 — أرسل كلمة (أكمل) لاستلام المرحلة 2 والأخيرة] === */
+        """.trimIndent()
+
+        val phase2 = """
+                /* === [بداية المرحلة 2 والأخيرة] === */
+                { num: 3, chapter: "الفصل الثاني", html: `<p>صفحة ثالثة</p>` },
+                { num: 4, chapter: "الخاتمة", html: `<p>صفحة رابعة</p>` }
+              ]
+            };
+            </script>
+            </body>
+            </html>
+        """.trimIndent()
+
+        assertTrue(SmartHtmlPhaseMerger.isIncompletePhase1HtmlBook(phase1))
+        assertTrue(SmartHtmlPhaseMerger.isPhase2HtmlContinuation(phase2))
+        assertTrue(SmartHtmlPhaseMerger.canMergeAsHtmlPhases(phase1, phase2))
+
+        val merged = SmartHtmlPhaseMerger.mergeTwoHtmlPhases(phase1, phase2)
+        assertTrue(SmartHtmlPhaseMerger.isCompleteReadyHtmlBook(merged))
+        assertFalse(merged.contains("نهاية المرحلة 1"))
+        assertFalse(merged.contains("بداية المرحلة 2"))
+        assertTrue(merged.contains("totalPages: 4"))
+        assertTrue(merged.contains("},\n{ num: 3") || merged.contains("},\n                { num: 3"))
+    }
 }
+
 

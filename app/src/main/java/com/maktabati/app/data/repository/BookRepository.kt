@@ -332,7 +332,35 @@ class BookRepository(
         }
     }
 
+    suspend fun importRawHtmlBook(
+        rawHtml: String,
+        fallbackName: String = "كتاب تفاعلي",
+        customTitle: String? = null
+    ): Result<Book> = withContext(Dispatchers.IO) {
+        try {
+            val cleanHtml = com.maktabati.app.data.importer.SmartHtmlPhaseMerger.unwrapMarkdownCodeFence(rawHtml)
+            val book = BookImporter.importRawHtmlString(
+                context = context,
+                rawHtml = cleanHtml,
+                fallbackName = fallbackName,
+                userCustomTitle = customTitle
+            )
+            bookDao.insertBook(book)
+            Result.success(book)
+        } catch (t: Throwable) {
+            Result.failure(mapImportThrowable(t, "تعذر استيراد كتاب HTML الجاهز"))
+        }
+    }
+
     suspend fun importOrInspectMultipleBooks(uris: List<Uri>): Result<BatchImportOutcome> = withContext(Dispatchers.IO) {
+        if (uris.size == 2) {
+            val mergedTwoPhaseBook = BookImporter.tryMergeTwoPhaseUris(context, uris)
+            if (mergedTwoPhaseBook != null) {
+                bookDao.insertBook(mergedTwoPhaseBook)
+                return@withContext Result.success(BatchImportOutcome(listOf(mergedTwoPhaseBook), emptyList()))
+            }
+        }
+
         val importedBooks = mutableListOf<Book>()
         val proposals = mutableListOf<MultiBookArchiveProposal>()
         var lastError: Throwable? = null

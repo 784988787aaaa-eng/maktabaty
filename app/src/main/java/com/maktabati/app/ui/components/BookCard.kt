@@ -213,22 +213,46 @@ fun LuxuryGeneratedBookCover(
             }
 
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = cleanTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = coverTitleColor,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    fontSize = (12.5f * s).sp,
-                    lineHeight = (16f * s).sp
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = coverEmblemColor.copy(alpha = 0.06f),
+                            shape = RoundedCornerShape((6f * s).dp)
+                        )
+                        .padding(horizontal = (6f * s).dp, vertical = (4f * s).dp)
+                ) {
+                    HorizontalDivider(
+                        thickness = 0.8.dp,
+                        color = coverEmblemColor.copy(alpha = 0.55f),
+                        modifier = Modifier.fillMaxWidth(0.82f)
+                    )
+                    Spacer(modifier = Modifier.height((3.5f * s).dp))
+                    Text(
+                        text = cleanTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = coverTitleColor,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        fontSize = (13.5f * s).sp,
+                        lineHeight = (17.5f * s).sp
+                    )
+                    Spacer(modifier = Modifier.height((3.5f * s).dp))
+                    HorizontalDivider(
+                        thickness = 0.8.dp,
+                        color = coverEmblemColor.copy(alpha = 0.55f),
+                        modifier = Modifier.fillMaxWidth(0.82f)
+                    )
+                }
 
                 if (cleanSubtitle.isNotBlank()) {
-                    Spacer(modifier = Modifier.height((3f * s).dp))
+                    Spacer(modifier = Modifier.height((3.5f * s).dp))
                     Text(
                         text = cleanSubtitle,
                         style = MaterialTheme.typography.labelSmall,
@@ -249,15 +273,17 @@ fun LuxuryGeneratedBookCover(
                     fontSize = (7f * s).sp,
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height((2f * s).dp))
-                Text(
-                    text = cleanAuthor.ifBlank { if (book.isRtl) "إصدارات مكتبتي الفاخرة" else "Maktabati Editions" },
-                    color = coverEmblemColor.copy(alpha = 0.9f),
-                    fontSize = (7.5f * s).sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (cleanAuthor.isNotBlank()) {
+                    Spacer(modifier = Modifier.height((2f * s).dp))
+                    Text(
+                        text = cleanAuthor,
+                        color = coverEmblemColor.copy(alpha = 0.9f),
+                        fontSize = (7.5f * s).sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

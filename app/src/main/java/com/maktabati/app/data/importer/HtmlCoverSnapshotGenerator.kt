@@ -16,6 +16,8 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Base64
 import android.webkit.WebView
+import androidx.core.content.res.ResourcesCompat
+import com.maktabati.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -117,7 +119,7 @@ object HtmlCoverSnapshotGenerator {
     }
 
     suspend fun ensureCoverSnapshotForBook(
-        @Suppress("UNUSED_PARAMETER") context: Context,
+        context: Context,
         bookDir: File,
         entryHtmlFile: File,
         fallbackTitle: String
@@ -158,7 +160,8 @@ object HtmlCoverSnapshotGenerator {
         val rendered = renderHtmlCoverPageSnapshot(
             htmlContent = htmlSample,
             metadata = metadata,
-            targetFile = snapshotFile
+            targetFile = snapshotFile,
+            context = context
         )
         if (rendered) {
             notifySnapshotUpdated()
@@ -256,13 +259,33 @@ object HtmlCoverSnapshotGenerator {
     fun renderHtmlCoverPageSnapshot(
         htmlContent: String,
         metadata: ParsedHtmlMetadata,
-        targetFile: File
+        targetFile: File,
+        context: Context? = null
     ): Boolean {
         return try {
             cleanupLegacySnapshotIfPresent(targetFile.parentFile)
 
             val bmp = Bitmap.createBitmap(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
+
+            val serifBoldFallback = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            val serifNormalFallback = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+
+            val titleTypeface = if (context != null && metadata.isRtl) {
+                runCatching { ResourcesCompat.getFont(context, R.font.aref_ruqaa) }.getOrNull()
+                    ?.let { Typeface.create(it, Typeface.BOLD) }
+                    ?: serifBoldFallback
+            } else {
+                serifBoldFallback
+            }
+
+            val badgeTypeface = if (context != null && metadata.isRtl) {
+                runCatching { ResourcesCompat.getFont(context, R.font.reem_kufi) }.getOrNull()
+                    ?.let { Typeface.create(it, Typeface.BOLD) }
+                    ?: serifBoldFallback
+            } else {
+                serifBoldFallback
+            }
 
             val bgLong = HtmlBookParser.parseHexToColorLong(metadata.bgPrimaryHex, 0xFFFAF3EB)
             val roseLong = HtmlBookParser.parseHexToColorLong(metadata.accentRoseHex, 0xFF6B2D46)
@@ -347,7 +370,7 @@ object HtmlCoverSnapshotGenerator {
                 canvas.drawCircle(cx, cy, 4.5f, cornerAccentPaint)
             }
 
-            // 3. Fixed Top Eyebrow at Y = 108px
+            // 3. Fixed Top Eyebrow at Y = 104px
             val eyebrowText = if (metadata.isRtl) {
                 "✦ طبعة رقمية فاخرة • مكتبتي ✦"
             } else {
@@ -355,16 +378,16 @@ object HtmlCoverSnapshotGenerator {
             }
             val eyebrowPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = frameColorInt
-                textSize = 17f
+                textSize = 16.5f
                 textAlign = Paint.Align.CENTER
-                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                typeface = badgeTypeface
             }
-            canvas.drawText(eyebrowText, SNAPSHOT_WIDTH / 2f, 108f, eyebrowPaint)
+            canvas.drawText(eyebrowText, SNAPSHOT_WIDTH / 2f, 104f, eyebrowPaint)
 
-            // 4. Fixed Central Medallion at (X = 272px, Y = 236px, R = 64px)
+            // 4. Compact Central Medallion at (X = 272px, Y = 215px, R = 52px)
             val emblemCenterX = 272f
-            val emblemCenterY = 236f
-            val emblemRadius = 64f
+            val emblemCenterY = 215f
+            val emblemRadius = 52f
 
             val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
@@ -375,7 +398,7 @@ object HtmlCoverSnapshotGenerator {
 
             val dashedCirclePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
-                strokeWidth = 1.6f
+                strokeWidth = 1.5f
                 color = frameColorInt
                 alpha = 155
             }
@@ -383,15 +406,15 @@ object HtmlCoverSnapshotGenerator {
 
             val emblemStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
-                strokeWidth = 2.2f
+                strokeWidth = 2f
                 color = frameColorInt
                 alpha = 210
             }
-            canvas.drawCircle(emblemCenterX, emblemCenterY, 50f, emblemStroke)
+            canvas.drawCircle(emblemCenterX, emblemCenterY, 40f, emblemStroke)
 
             // 8-pointed Rub el Hizb / Star inside the medallion
-            val starRadiusOuter = 34f
-            val starRadiusInner = 14f
+            val starRadiusOuter = 27f
+            val starRadiusInner = 11f
             val starPath = Path()
             for (i in 0 until 8) {
                 val angleDeg = i * 45.0 - 90.0
@@ -409,14 +432,14 @@ object HtmlCoverSnapshotGenerator {
             canvas.drawPath(starPath, starFillPaint)
             val starStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
-                strokeWidth = 2f
+                strokeWidth = 1.8f
                 color = primaryColorInt
                 alpha = 215
             }
             canvas.drawPath(starPath, starStrokePaint)
-            canvas.drawCircle(emblemCenterX, emblemCenterY, 5.5f, cornerAccentPaint)
+            canvas.drawCircle(emblemCenterX, emblemCenterY, 4.5f, cornerAccentPaint)
 
-            // 5. Fixed Title Zone starting at Y = 365px (Max width = 416px, max 3 lines, auto-fitted 30f..42f)
+            // 5. Royal Hero Title Zone (cover-title-frame) with auto-fitted 34f..50f and max 3 lines
             val cleanTitle = sanitizeCoverTitle(metadata.title)
             val cleanSubtitle = sanitizeCoverSubtitle(metadata.subtitle, cleanTitle)
             val cleanAuthor = HtmlBookParser.sanitizeExtractedAuthor(
@@ -425,39 +448,76 @@ object HtmlCoverSnapshotGenerator {
                 cleanSubtitle
             )
 
-            val textMaxWidth = 416
+            val textMaxWidth = 420
             val textLeftX = (SNAPSHOT_WIDTH - textMaxWidth) / 2f
             val chosenTitleSize = when {
-                cleanTitle.length > 48 -> 30f
-                cleanTitle.length > 32 -> 34f
-                cleanTitle.length > 20 -> 38f
-                else -> 42f
+                cleanTitle.length > 48 -> 34f
+                cleanTitle.length > 32 -> 40f
+                cleanTitle.length > 18 -> 45f
+                else -> 50f
             }
 
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = titleColorInt
                 textSize = chosenTitleSize
-                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                typeface = titleTypeface
             }
             val titleLayout = StaticLayout.Builder
                 .obtain(cleanTitle, 0, cleanTitle.length, titlePaint, textMaxWidth)
                 .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                .setLineSpacing(5f, 1.12f)
+                .setLineSpacing(6f, 1.14f)
                 .setMaxLines(3)
                 .build()
 
-            val titleStartY = 365f
+            val titleStartY = 330f
+            val frameTopY = titleStartY - 22f
+            val frameBottomY = titleStartY + titleLayout.height + 22f
+            val frameLeftX = 56f
+            val frameRightX = SNAPSHOT_WIDTH - 56f
+
+            // Soft gradient background for cover-title-frame
+            val titleFrameBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(
+                    frameLeftX,
+                    frameTopY,
+                    frameRightX,
+                    frameBottomY,
+                    intArrayOf(
+                        (frameColorInt and 0x00FFFFFF) or (if (isLightCover) 0x08000000 else 0x10000000),
+                        (frameColorInt and 0x00FFFFFF) or (if (isLightCover) 0x22000000 else 0x2E000000),
+                        (frameColorInt and 0x00FFFFFF) or (if (isLightCover) 0x08000000 else 0x10000000)
+                    ),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    Shader.TileMode.CLAMP
+                )
+            }
+            canvas.drawRoundRect(
+                RectF(frameLeftX, frameTopY, frameRightX, frameBottomY),
+                14f,
+                14f,
+                titleFrameBgPaint
+            )
+
+            val titleFrameRulePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 2.2f
+                color = frameColorInt
+                alpha = if (isLightCover) 190 else 215
+            }
+            canvas.drawLine(frameLeftX + 18f, frameTopY, frameRightX - 18f, frameTopY, titleFrameRulePaint)
+            canvas.drawLine(frameLeftX + 18f, frameBottomY, frameRightX - 18f, frameBottomY, titleFrameRulePaint)
+
             canvas.save()
             canvas.translate(textLeftX, titleStartY)
             titleLayout.draw(canvas)
             canvas.restore()
 
-            // 6. Subtitle Zone directly below Title (max 2 lines, font size 21f)
+            // 6. Subtitle Zone directly below Title Frame (max 2 lines, font size 21f)
             if (cleanSubtitle.isNotBlank()) {
                 val subPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = subTextColorInt
                     textSize = 21f
-                    typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+                    typeface = serifNormalFallback
                 }
                 val subLayout = StaticLayout.Builder
                     .obtain(cleanSubtitle, 0, cleanSubtitle.length, subPaint, textMaxWidth)
@@ -466,42 +526,40 @@ object HtmlCoverSnapshotGenerator {
                     .setMaxLines(2)
                     .build()
 
-                val subtitleY = (titleStartY + titleLayout.height + 18f).coerceAtMost(545f)
+                val subtitleY = (frameBottomY + 20f).coerceAtMost(565f)
                 canvas.save()
                 canvas.translate(textLeftX, subtitleY)
                 subLayout.draw(canvas)
                 canvas.restore()
             }
 
-            // 7. Fixed Triple Ornament at Y = 640px & Author/Edition at Y = 695px
-            // Leaving Y = 720..800 completely clean so bottom card badges never overlap buttons
-            val ornamentY = 640f
+            // 7. Fixed Triple Ornament at Y = 650px & Real Author ONLY when present
+            val ornamentY = if (cleanAuthor.isNotBlank()) 642f else 675f
             val ornamentPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = frameColorInt
                 textSize = 20f
                 textAlign = Paint.Align.CENTER
-                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                typeface = serifBoldFallback
             }
             canvas.drawText("✦   ✦   ✦", SNAPSHOT_WIDTH / 2f, ornamentY, ornamentPaint)
 
-            val footerLabel = cleanAuthor.ifBlank {
-                if (metadata.isRtl) "إصدارات مكتبتي الفاخرة" else "Maktabati Luxury Editions"
-            }
-            val authorPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = if (isLightCover) primaryColorInt else frameColorInt
-                textSize = 21f
-                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            }
-            val authorLayout = StaticLayout.Builder
-                .obtain(footerLabel, 0, footerLabel.length, authorPaint, textMaxWidth)
-                .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                .setMaxLines(1)
-                .build()
+            if (cleanAuthor.isNotBlank()) {
+                val authorPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = if (isLightCover) primaryColorInt else frameColorInt
+                    textSize = 21f
+                    typeface = badgeTypeface
+                }
+                val authorLayout = StaticLayout.Builder
+                    .obtain(cleanAuthor, 0, cleanAuthor.length, authorPaint, textMaxWidth)
+                    .setAlignment(Layout.Alignment.ALIGN_CENTER)
+                    .setMaxLines(1)
+                    .build()
 
-            canvas.save()
-            canvas.translate(textLeftX, 675f)
-            authorLayout.draw(canvas)
-            canvas.restore()
+                canvas.save()
+                canvas.translate(textLeftX, 676f)
+                authorLayout.draw(canvas)
+                canvas.restore()
+            }
 
             saveBitmapToFile(bmp, targetFile)
         } catch (_: Throwable) {

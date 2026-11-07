@@ -217,7 +217,8 @@ object BookImporter {
             if (HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
                     htmlContent = "",
                     metadata = metadata,
-                    targetFile = snapshotFile
+                    targetFile = snapshotFile,
+                    context = context
                 )
             ) {
                 HtmlCoverSnapshotGenerator.notifySnapshotUpdated()
@@ -599,7 +600,12 @@ object BookImporter {
             )
         }
 
-        val metadata = HtmlBookParser.parse(entryFile, fallbackTitle)
+        val metadata = HtmlBookParser.parseContent(
+            content = injectedHtml,
+            fallbackTitle = fallbackTitle,
+            quickMode = false,
+            supplementalAssets = HtmlBookParser.readSupplementalAssetsFromBookDir(bookDir)
+        )
         val finalTitle = if (!userCustomTitle.isNullOrBlank()) userCustomTitle else metadata.title
 
         val snapshotFile = HtmlCoverSnapshotGenerator.getCoverSnapshotFile(bookDir)
@@ -608,7 +614,8 @@ object BookImporter {
                 HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
                     htmlContent = rawHtml,
                     metadata = metadata.copy(title = finalTitle),
-                    targetFile = snapshotFile
+                    targetFile = snapshotFile,
+                    context = context
                 )
             }
         }
@@ -738,7 +745,8 @@ object BookImporter {
                     HtmlCoverSnapshotGenerator.renderHtmlCoverPageSnapshot(
                         htmlContent = rawHtml,
                         metadata = metadata.copy(title = finalTitle),
-                        targetFile = snapshotFile
+                        targetFile = snapshotFile,
+                        context = context
                     )
                 }
             }
@@ -782,6 +790,39 @@ object BookImporter {
             }
             throw e
         }
+    }
+
+    fun tryMergeTwoPhaseUris(context: Context, uris: List<Uri>): Book? {
+        if (uris.size != 2) return null
+        return runCatching {
+            val name0 = queryFileName(context, uris[0]) ?: "part1.html"
+            val name1 = queryFileName(context, uris[1]) ?: "part2.html"
+            val lower0 = name0.lowercase()
+            val lower1 = name1.lowercase()
+            if (lower0.endsWith(".zip") || lower1.endsWith(".zip")) return null
+
+            val text0 = context.contentResolver.openInputStream(uris[0])?.use {
+                String(it.readBytes(), Charsets.UTF_8)
+            } ?: return null
+            val text1 = context.contentResolver.openInputStream(uris[1])?.use {
+                String(it.readBytes(), Charsets.UTF_8)
+            } ?: return null
+
+            val mergedHtml = when {
+                SmartHtmlPhaseMerger.canMergeAsHtmlPhases(text0, text1) ->
+                    SmartHtmlPhaseMerger.mergeTwoHtmlPhases(text0, text1)
+                SmartHtmlPhaseMerger.canMergeAsHtmlPhases(text1, text0) ->
+                    SmartHtmlPhaseMerger.mergeTwoHtmlPhases(text1, text0)
+                else -> return null
+            }
+
+            val fallbackName = name0.substringBeforeLast(".").ifBlank { "كتاب مدمج" }
+            importRawHtmlString(
+                context = context,
+                rawHtml = mergedHtml,
+                fallbackName = fallbackName
+            )
+        }.getOrNull()
     }
 
     private fun extractZipSafely(inputStream: InputStream, destDir: File): Pair<Int, Long> {

@@ -37,7 +37,9 @@ object LuxuryHtmlTemplateRenderer {
         return """
             <div class="cover-page">
               $svgArt
-              <h1>${escapeHtml(title)}</h1>
+              <div class="cover-title-frame">
+                <h1>${escapeHtml(title)}</h1>
+              </div>
               $subtitleHtml
               <div class="ornament">❖ ❖ ❖</div>
               $authorHtml
@@ -438,11 +440,22 @@ body {
   margin: 6px auto 14px;
 }
 
+.cover-title-frame {
+  width: min(94%, 580px);
+  margin: 8px auto 14px;
+  padding: 14px 18px;
+  border-top: 2px solid var(--accent-gold);
+  border-bottom: 2px solid var(--accent-gold);
+  border-radius: 14px;
+  background: linear-gradient(90deg, transparent, var(--bg-pearl-gold), transparent);
+}
+
 .cover-page h1 {
   font-family: var(--font-headings);
-  font-size: clamp(1.55em, 5vw, 2.2em);
+  font-size: clamp(2.05em, 7vw, 3.1em);
+  line-height: 1.42;
   color: var(--accent-rose-dark);
-  margin: 6px auto 10px;
+  margin: 0 auto;
 }
 
 .cover-page .subtitle {
