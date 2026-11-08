@@ -163,6 +163,39 @@ class ExampleUnitTest {
         assertFalse(merged.contains("بداية المرحلة 2"))
         assertTrue(merged.contains("totalPages: 4"))
         assertTrue(merged.contains("},\n{ num: 3") || merged.contains("},\n                { num: 3"))
+
+        val rootBookFile = java.io.File("../حتى_يغيروا_ما_بأنفسهم.html").let {
+            if (it.exists()) it else java.io.File("حتى_يغيروا_ما_بأنفسهم.html")
+        }
+        if (rootBookFile.exists()) {
+            val content = rootBookFile.readText(Charsets.UTF_8)
+            assertTrue(SmartHtmlPhaseMerger.isCompleteReadyHtmlBook(content))
+            val parsed = com.maktabati.app.data.importer.HtmlBookParser.parseContent(
+                content = content,
+                fallbackTitle = "حتى يغيروا ما بأنفسهم",
+                quickMode = false
+            )
+            assertEquals("حتى يغيروا ما بأنفسهم", parsed.title)
+            assertTrue("Expected at least 35 pages, got ${parsed.pageCount}", parsed.pageCount >= 35)
+            assertTrue("Expected TOC entries, got ${parsed.tableOfContents.size}", parsed.tableOfContents.size >= 12)
+        }
+
+        val lianakaAllahFile = java.io.File("../لأنك_الله_رحلة_إلى_السماء_السابعة.html").let {
+            if (it.exists()) it else java.io.File("لأنك_الله_رحلة_إلى_السماء_السابعة.html")
+        }
+        if (lianakaAllahFile.exists()) {
+            val content = lianakaAllahFile.readText(Charsets.UTF_8)
+            assertTrue(SmartHtmlPhaseMerger.isCompleteReadyHtmlBook(content))
+            val parsed = com.maktabati.app.data.importer.HtmlBookParser.parseContent(
+                content = content,
+                fallbackTitle = "لأنك الله: رحلة إلى السماء السابعة",
+                quickMode = false
+            )
+            assertTrue(parsed.title.contains("لأنك الله"))
+            assertEquals("علي بن جابر الفيفي", parsed.author)
+            assertEquals(25, parsed.pageCount)
+            assertTrue("Expected TOC entries, got ${parsed.tableOfContents.size}", parsed.tableOfContents.size >= 12)
+        }
     }
 }
 

@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+  <meta name="theme-color" content="#FAF6ED"/>
+  <meta name="color-scheme" content="light"/>
+  <meta name="author" content="علي بن جابر الفيفي"/>
+  <meta name="description" content="لأنك الله: رحلة إلى السماء السابعة — تأملات روحانية وأدبية في ظلال عشرة من أسماء الله الحسنى: الصمد، الحفيظ، اللطيف، الشافي، الوكيل، الشكور، الجبار، الهادي، الغفور، القريب"/>
+  <title>لأنك الله — رحلة إلى السماء السابعة</title>
+  <style>
+    /* الخطوط المدمجة أوفلاين في تطبيق مكتبتي */
+    @font-face {
+      font-family: "Amiri";
+      src: url("https://maktabati.app/assets/fonts/amiri/amiri-400.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Amiri";
+      src: url("https://maktabati.app/assets/fonts/amiri/amiri-700.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/amiri.ttf") format("truetype");
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Noto Naskh Arabic";
+      src: url("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/noto_naskh_arabic.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Noto Naskh Arabic";
+      src: url("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-700.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/noto_naskh_arabic.ttf") format("truetype");
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Aref Ruqaa";
+      src: url("https://maktabati.app/assets/fonts/aref-ruqaa/aref-ruqaa-400.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/aref_ruqaa.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Aref Ruqaa";
+      src: url("https://maktabati.app/assets/fonts/aref-ruqaa/aref-ruqaa-700.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/aref_ruqaa.ttf") format("truetype");
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Reem Kufi";
+      src: url("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-400.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/reem_kufi.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Reem Kufi";
+      src: url("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-700.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/reem_kufi.ttf") format("truetype");
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Amiri Quran";
+      src: url("https://maktabati.app/fonts/amiri_quran.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Scheherazade New";
+      src: url("https://maktabati.app/fonts/scheherazade_new.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Noto Sans Arabic";
+      src: url("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-400.woff2") format("woff2"),
+           url("https://maktabati.app/fonts/noto_sans_arabic.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Cairo";
+      src: url("https://maktabati.app/fonts/cairo.ttf") format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      /* حلة اللازورد السماوي والتذهيب السلطاني (مستوحاة من رحلة إلى السماء السابعة) */
+      --bg-primary: #FAF6ED;
+      --bg-secondary: #FFFDF8;
+      --paper-bg: #FFFDF8;
+      --bg-card: #FFFDF8;
+      --bg-soft-rose: #EEF3F8;
+      --bg-soft-sage: #F4EFE2;
+      --bg-pearl-gold: #FCF4DF;
+
+      --text-primary: #1B2430;
+      --text-secondary: #4B5666;
+      --accent-rose: #1E3A5F;
+      --accent-rose-dark: #0F2542;
+      --accent-rose-light: #3B6998;
+      --accent-sage: #065F46;
+      --accent-sage-dark: #044332;
+      --accent-gold: #B8860B;
+      --accent-gold-soft: rgba(184,134,11,0.25);
+      --line: rgba(30,58,95,0.16);
+      --border-ornate: rgba(184,134,11,0.38);
+      --paper-edge: #D6CBB5;
+      --shadow-card: 0 16px 42px rgba(15,37,66,0.07);
+
+      /* نظام التحجيم التفاعلي */
+      --reader-font: 21px;
+      --reader-font-size: 100%;
+      --font-scale: 1;
+
+      --font-body: "Noto Naskh Arabic", "Amiri", serif;
+      --font-headings: "Aref Ruqaa", "Amiri", serif;
+      --font-titles: "Reem Kufi", sans-serif;
+      --font-chapter-titles: "Reem Kufi", sans-serif;
+      --font-quotes: "Amiri", "Aref Ruqaa", serif;
+      --font-quran: "Amiri Quran", "Scheherazade New", "Amiri", serif;
+      --font-ui: "Noto Sans Arabic", "Cairo", sans-serif;
+      --font-interface: "Noto Sans Arabic", "Cairo", sans-serif;
+      --font-numbers: "Noto Sans Arabic", "Cairo", sans-serif;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; max-width: 100%; overflow-wrap: anywhere; }
+    html, body, .app { touch-action: pan-y !important; margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-body); }
+    .app { height: 100vh; max-height: 100vh; display: flex; flex-direction: column; background: linear-gradient(155deg, var(--bg-primary), var(--bg-secondary) 55%, var(--bg-soft-rose) 100%); }
+
+    /* الشريط العلوي */
+    .top-bar { height: 56px; flex: 0 0 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--line); z-index: 10; box-shadow: 0 3px 14px rgba(0,0,0,0.04); }
+    .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-ui); font-size: 14px; font-weight: 700; color: var(--accent-rose-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-gem { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, var(--accent-rose), var(--accent-rose-dark)); font-size: 14px; }
+    .tools { display: flex; gap: 6px; }
+    .icon-btn { border: 1px solid var(--line); background: var(--bg-primary); color: var(--accent-rose-dark); border-radius: 12px; min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s; }
+    .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+    .icon-btn.bookmarked { background: var(--bg-pearl-gold); color: var(--accent-gold); border-color: var(--accent-gold); }
+
+    /* شريط الفصل الجاري */
+    .running-header { height: 34px; flex: 0 0 34px; display: flex; align-items: center; justify-content: center; background: var(--accent-rose-dark); color: #FAF6ED; border-bottom: 2px solid var(--accent-gold); font-family: var(--font-ui); font-size: 11px; font-weight: 700; }
+    .running-header[hidden] { display: none; }
+
+    /* مسرح الصفحة الورقية وتنسيقات الإخراج الفني */
+    .book-stage { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: clamp(10px, 2.5vw, 22px); display: flex; justify-content: center; align-items: flex-start; }
+    .page-canvas { width: min(100%, 760px); min-height: 100%; margin: 0 auto; background: var(--bg-secondary); border: 1.5px solid var(--paper-edge); border-radius: 18px; padding: clamp(22px, 4.2vw, 42px); position: relative; box-shadow: var(--shadow-card); }
+    .page-canvas::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--accent-gold-soft); border-radius: 12px; pointer-events: none; }
+    .page { position: relative; z-index: 1; font-size: calc(var(--reader-font)); line-height: 2.06; color: var(--text-primary); animation: pageIn .22s ease both; }
+    @keyframes pageIn { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    .page p { margin: 0 0 15px; text-align: justify; line-height: 2.06; }
+    .page h1 { font-family: var(--font-headings); font-size: clamp(1.5em, 4.8vw, 2.05em); color: var(--accent-rose-dark); margin: 0 0 12px; font-weight: 700; }
+    .page h2 { font-family: var(--font-headings); font-size: clamp(1.22em, 3.8vw, 1.5em); color: var(--accent-rose-dark); margin: 18px 0 10px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .page h2::before { content: "❖"; color: var(--accent-gold); font-size: 0.78em; }
+
+    /* الشريط السفلي للتنقل */
+    .bottom-nav-dock { min-height: 60px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 8px 16px calc(env(safe-area-inset-bottom, 6px) + 6px); background: var(--bg-secondary); border-top: 1px solid var(--line); }
+    .nav-btn { min-width: 90px; border-radius: 12px; background: var(--accent-rose-dark); color: #fff; border: none; padding: 8px 14px; font-family: var(--font-ui); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .nav-btn:disabled { opacity: 0.35; cursor: default; }
+    .page-counter { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--text-secondary); background: var(--bg-primary); border: 1px solid var(--line); border-radius: 99px; padding: 5px 15px; direction: ltr; }
+
+    /* نوافذ الفهرس والبحث */
+    .overlay { position: fixed; inset: 0; z-index: 45; background: rgba(15,37,66,0.45); backdrop-filter: blur(3px); display: none; align-items: flex-end; justify-content: center; padding: 12px; }
+    .overlay.open { display: flex; }
+    .panel { width: min(100%, 640px); max-height: 78vh; overflow-y: auto; background: var(--bg-secondary); border-radius: 18px; padding: 16px; border: 1px solid var(--paper-edge); box-shadow: 0 20px 60px rgba(0,0,0,0.22); }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+    .panel-head h3 { margin: 0; font-family: var(--font-ui); font-size: 15px; color: var(--accent-rose-dark); }
+    #searchInput { width: 100%; min-height: 44px; padding: 9px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg-primary); font-family: var(--font-ui); font-size: 14px; margin-bottom: 10px; outline: none; }
+    .search-result, .toc-item { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; margin: 4px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-primary); cursor: pointer; font-family: var(--font-ui); font-size: 13px; color: var(--text-primary); }
+    .toc-item.toc-part { background: var(--bg-soft-rose); color: var(--accent-rose-dark); font-weight: 700; border-color: var(--accent-gold-soft); }
+    .toc-item small, .search-result small { color: var(--accent-gold); font-weight: 700; background: var(--bg-secondary); padding: 2px 8px; border-radius: 99px; border: 1px solid var(--accent-gold-soft); }
+    mark.page-search-highlight, mark.search-hit-mark { background: var(--accent-gold-soft); color: var(--accent-rose-dark); font-weight: 700; border-radius: 4px; padding: 0 4px; }
+
+    /* ========================================================
+       فضاء الإبداع الطباعي لدار النشر (خاص بكتاب «لأنك الله»)
+       ======================================================== */
+    .cover-page {
+      min-height: clamp(460px, 70vh, 760px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      isolation: isolate;
+      padding: clamp(26px, 5vw, 48px) clamp(16px, 4vw, 32px);
+      background: radial-gradient(ellipse at 50% 34%, #FFFFFF 0%, var(--bg-soft-rose) 52%, var(--bg-primary) 100%);
+      border: 2px solid var(--border-ornate);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 6px var(--bg-secondary), inset 0 0 0 7.5px var(--accent-gold-soft);
+    }
+    .cover-art-svg { width: clamp(135px, 36vw, 195px); height: auto; margin: 0 auto 16px; filter: drop-shadow(0 8px 18px rgba(15,37,66,0.12)); }
+    .cover-title-frame {
+      position: relative;
+      padding: clamp(14px, 3vw, 22px) clamp(22px, 5vw, 36px);
+      margin: 4px auto 14px;
+      max-width: 94%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), var(--bg-pearl-gold));
+      border-top: 2px solid var(--accent-gold);
+      border-bottom: 2px solid var(--accent-gold);
+      border-radius: 14px;
+      box-shadow: 0 10px 26px rgba(15,37,66,0.06);
+    }
+    .cover-page h1 { font-family: var(--font-headings); font-size: clamp(2.2em, 7.6vw, 3.3em); line-height: 1.38; color: var(--accent-rose-dark); margin: 0; }
+    .cover-page .subtitle { font-family: var(--font-headings); font-size: clamp(1.05em, 3.2vw, 1.28em); color: var(--accent-rose-light); margin: 6px auto 12px; text-align: center; }
+    .cover-page .author { font-family: var(--font-ui); font-size: 0.78em; font-weight: 700; color: var(--accent-rose-dark); background: var(--bg-secondary); border: 1px solid var(--accent-gold-soft); border-radius: 99px; padding: 5px 20px; margin: 4px 0 14px; }
+    .ornament { color: var(--accent-gold); font-size: 0.92em; letter-spacing: 6px; margin: 12px 0; text-align: center; }
+    .primary-btn { border: 1px solid var(--accent-gold); background: linear-gradient(135deg, var(--accent-rose), var(--accent-rose-dark)); color: #fff; border-radius: 99px; padding: 10px 28px; font-family: var(--font-ui); font-size: 0.76em; font-weight: 700; cursor: pointer; margin-top: 6px; box-shadow: 0 7px 18px rgba(15,37,66,0.18); }
+
+    /* لوحة مطلع الاسم الإلهي الجليل */
+    .divine-name-opener {
+      text-align: center;
+      padding: 20px 16px;
+      margin: 4px 0 18px;
+      border-radius: 16px;
+      background: radial-gradient(circle at 50% 30%, #FFFFFF, var(--bg-soft-rose) 65%, var(--bg-pearl-gold) 100%);
+      border: 1.5px solid var(--accent-gold-soft);
+      box-shadow: 0 8px 24px rgba(15,37,66,0.04);
+    }
+    .letter-envelope-header {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-gold-soft);
+      border-radius: 99px;
+      padding: 4px 16px;
+      margin: 0 auto 10px;
+      font-family: var(--font-titles);
+      font-size: 0.68em;
+      font-weight: 700;
+      color: var(--accent-rose-dark);
+    }
+    .divine-epigraph {
+      font-family: var(--font-quotes);
+      font-size: 1.08em;
+      line-height: 2.0;
+      color: var(--accent-rose-dark);
+      max-width: 90%;
+      margin: 10px auto 0;
+      padding-top: 10px;
+      border-top: 1px dashed var(--accent-gold-soft);
+      text-align: center;
+    }
+
+    /* البطاقات القرآنية والنبوية والشعرية والوجدانية */
+    .quran-box {
+      margin: 16px 0;
+      padding: 15px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--bg-pearl-gold), var(--bg-secondary));
+      border: 1.5px solid var(--accent-gold-soft);
+      border-inline-start: 4px solid var(--accent-gold);
+      text-align: center;
+    }
+    .quran-box p, .quran-verse { font-family: var(--font-quran); font-size: 1.15em; line-height: 2.15; color: var(--accent-rose-dark); margin: 0; text-align: center; }
+
+    .hadith-box {
+      margin: 16px 0;
+      padding: 15px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--bg-soft-sage), var(--bg-secondary));
+      border: 1px solid var(--line);
+      border-inline-start: 4px solid var(--accent-sage);
+      text-align: center;
+    }
+    .hadith-box p { font-family: var(--font-quotes); font-size: 1.06em; line-height: 2.02; color: var(--accent-sage-dark); margin: 0; text-align: center; }
+
+    .poetry-stanza {
+      margin: 16px 0;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--bg-soft-rose), var(--bg-secondary));
+      border: 1px dashed var(--accent-gold);
+      text-align: center;
+      font-family: var(--font-quotes);
+    }
+    .poetry-shatr { font-size: 1.05em; color: var(--accent-rose-dark); line-height: 1.95; }
+
+    .reflection-card {
+      margin: 16px 0;
+      padding: 15px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-soft-rose));
+      border: 1px solid var(--line);
+      border-inline-start: 4px solid var(--accent-rose);
+    }
+    .reflection-card p { font-family: var(--font-quotes); font-size: 1.03em; color: var(--accent-rose-dark); margin: 0; line-height: 1.98; }
+
+    .wisdom-pearl {
+      margin: 16px 0;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: var(--bg-pearl-gold);
+      border: 1px solid var(--accent-gold-soft);
+      border-inline-start: 3.5px solid var(--accent-gold);
+      font-family: var(--font-quotes);
+    }
+
+    .heart-keepsake-card {
+      background: linear-gradient(145deg, var(--bg-secondary), var(--bg-soft-rose) 65%, var(--bg-pearl-gold) 100%);
+      border: 1.5px solid var(--accent-gold-soft);
+      border-radius: 16px;
+      padding: 18px;
+      margin: 16px 0;
+      text-align: center;
+    }
+    .heart-keepsake-card p { font-family: var(--font-quotes); font-size: 1.1em; line-height: 2.08; color: var(--accent-rose-dark); margin: 0; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-gem" aria-hidden="true">✦</div>
+        <span id="topBarBookTitle">لأنك الله — رحلة إلى السماء السابعة</span>
+      </div>
+      <div class="tools">
+        <button id="searchOpen" class="icon-btn" aria-label="بحث"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+        <button id="tocBtn" class="icon-btn" aria-label="فهرس"><svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg></button>
+        <button id="bookmarkBtn" class="icon-btn" aria-label="حفظ"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+      </div>
+    </header>
+
+    <div id="runningHeader" class="running-header" hidden><span id="runningHeaderTag"></span></div>
+
+    <main id="bookStage" class="book-stage">
+      <div class="page-canvas"><article id="activePageArticle" class="page"></article></div>
+    </main>
+
+    <footer class="bottom-nav-dock">
+      <button id="btnPrevPage" class="nav-btn" onclick="window.prevPage()">السابق</button>
+      <span id="pageCounter" class="page-counter" dir="ltr">1 / 1</span>
+      <button id="btnNextPage" class="nav-btn" onclick="window.nextPage()">التالي</button>
+    </footer>
+  </div>
+
+  <div id="searchPanel" class="overlay"><div class="panel"><div class="panel-head"><h3>البحث في الكتاب</h3><button id="searchClose" class="icon-btn">✕</button></div><input id="searchInput" type="text" placeholder="ابحث عن اسم من أسماء الله، آية، أو خاطرة..."/><div id="searchResults"></div></div></div>
+  <div id="tocPanel" class="overlay"><div class="panel"><div class="panel-head"><h3>فهرس أسماء الله الحسنى والفصول</h3><button id="tocClose" class="icon-btn">✕</button></div><div id="tocPanelList"></div></div></div>
+
+  <script>
+    const BOOK_DATA = {
+      title: "لأنك الله",
+      subtitle: "رحلة إلى السماء السابعة",
+      author: "علي بن جابر الفيفي",
+      pages: [
+        {
+          tag: "",
+          title: "غلاف الكتاب",
+          type: "cover",
+          html: `
+            <div class="cover-page">
+              <svg class="cover-art-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="120" cy="120" r="108" fill="var(--bg-primary)" stroke="var(--accent-gold)" stroke-width="1.8" stroke-dasharray="4 3"/>
+                <circle cx="120" cy="120" r="92" fill="var(--bg-secondary)" stroke="var(--accent-rose)" stroke-width="1.5"/>
+                <path d="M52 148 C 66 96, 94 64, 120 48 C 146 64, 174 96, 188 148" stroke="var(--accent-gold)" stroke-width="2" fill="var(--bg-soft-rose)" fill-opacity="0.5"/>
+                <g transform="translate(120, 120)">
+                  <polygon points="0,-46 13,-13 46,0 13,13 0,46 -13,13 -46,0 -13,-13" fill="var(--bg-pearl-gold)" stroke="var(--accent-gold)" stroke-width="1.6"/>
+                  <circle cx="0" cy="0" r="14" fill="var(--accent-rose)"/>
+                  <circle cx="0" cy="0" r="5" fill="var(--accent-gold)"/>
+                </g>
+              </svg>
+              <div class="cover-title-frame">
+                <h1>لأنك الله</h1>
+              </div>
+              <p class="subtitle">رحلة إلى السماء السابعة</p>
+              <div class="author">علي بن جابر الفيفي</div>
+              <div class="ornament">❖ ✦ ❖</div>
+              <button class="primary-btn" onclick="window.goToPage(1)">ابدأ الرحلة إلى السماء السابعة ✦</button>
+            </div>
+          `
+        },
+        {
+          tag: "فاتحة الكتاب",
+          title: "الإهداء والمقدمة",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ فاتحة الرحلة ✦</div>
+              <h1 class="chapter-opener">الإهداء</h1>
+            </div>
+            <div class="heart-keepsake-card">
+              <p>إلى التي قالت لي ذات ليلة، وأنا في السابعة من عمري: هل صليت العِشاء؟<br/>فقلت لها -كاذبًا- نعم!<br/>فنظرت إلي نظرة شكّ، وقالت: قل ما شئت .. ولكنّه قد رآك!<br/>فأفزعتني «قد رآك» هذه .. وجعلتني أنهض لأصلي .. رغم ادعائي الكاذب!<br/><strong>إلى أمّي ..</strong></p>
+            </div>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">لأنّك الله .. لا خوفٌ ولا قلقُ</div>
+              <div class="poetry-shatr">ولا غروب .. ولا ليل .. ولا شفقُ</div>
+              <div class="poetry-shatr">لأنّك الله .. قلبي كلّه أملُ</div>
+              <div class="poetry-shatr">لأنّك الله .. روحي ملؤها الألقُ</div>
+            </div>
+            <h2>مُقدِّمَة</h2>
+            <p>الحمد لله والصلاة والسلام على رسول الله وصحبه ومن والاه .. وبعد:</p>
+            <p>فهذه كلمات عن بعض أسماء الله، كتبتها بضعفي عن القويّ سبحانه، وبعجزي عن القدير سبحانه، وبجهلي عن العليم سبحانه .. حرصت أن أجعلها مما يفهمه متوسّط الثقافة، ويستطيع قراءته المريض على سريره، والحزين بين دموعه، والمحتاج وسط كروبه ..</p>
+            <p>لديّ يقين أن تعلّق القلب بالله، وعلمه به، ومراقبته له، وحبّه وخوفه ورجاءه، كما أنّه سرّ سعادة الآخرة، فإنّه سر سعادة الدنيا كذلك، وأنّ مرحلة الأحزان والوساوس والكروب ستنتهي تمامًا إن وجّه العبد بوصلة اهتمامه إلى الذي لم يخلقه إلا لعبادته ..</p>
+            <p>وباب أسماء الله الحسنى باب إيمانيّ عظيم، يدلف العبد من خلاله إلى عالم قدسي خاص، يجعل النفس تسجد تعظيمًا، والروح تتبتّل خشوعًا وحبًّا .. أردت من هذا الكتاب الدلالة على الله سبحانه، والإشارة إليهِ بالقليل مما لديهِ، وتذكير نفسي وإخواني بأنّه على كل شيء قدير، وأن فضله كبير، وأنّه سبحانه السميع البصير .. وأردت أن أربت بهذه الكلمات على أكتاف أتعبتها الأوجاع، وأمسح بها على رؤوس صدّعتها الآلام، أردت أن أواري بأحرفي الدموع، وأن أطفئ لهيب الضلوع ..</p>
+            <p>إنّنا بدون معرفة أسماء الله في صحراء تائهون، تتبدد أيامنا في لهيب تلك الصحراء، ودوّامة كثبان القلق النفسي .. اختر الله: معرفة، وإيمانًا، ويقينًا، وعبادة، وخضوعًا، ثم أنسًا، وسعادة، وهناء .. أو اختر التيه، والضياع، والاختناق، والشعور بالكآبة، والتمزّق النفسي .. لا أدّعي في هذا الكتاب إحاطة ولا علمًا ولا سبقًا، الذي أدعيه هو العجز والتقصير والافتقار إلى عفوه سبحانه وتجاوزه .. فإن كان في هذا الكتاب من خير فأسأل الله أن يشيعه بين الناس، وإن كان غير ذلك فقد علم سبحانه كل التقصير الذي عندي، وقد علمتُ بعض العفو الذي عنده .. أسأل الله صلاح النيّة، وأن يغفر ما قد يندّ به القلم، أو يخطئ به الفؤاد .. وصلى الله وسلم على سيّدنا محمد .. وآخر دعوانا أن الحمد لله رب العالمين ..</p>
+          `
+        },
+        {
+          tag: "١ • الصَّمَد",
+          title: "الصَّمَد — في ظلال الصَّمَديّة",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم الأول ✦</div>
+              <h1 class="chapter-opener">الصَّمَد</h1>
+              <div class="divine-epigraph">لا يستطيع العالَم كلّه أن يمسّك بسوء لم يرده الله ..<br/>ولا يستطيع العالَم كله أن يدفع عنك سوءًا قدّره الله ..</div>
+            </div>
+            <p>إذا كان الضعف قد بنى حولك سجنًا ضيقًا لا تستطيع الخروج منه! إذا حاصرتك الحاجات، وداهمتك الخطوب، والتفّت من حولك الهموم، وأخذت روحك في الهرب إلى المجهول! فأنت ساعتها بحاجة إلى أن تصمد إليه .. اسم الله «الصمد» سيمدّك بكل ما تحتاجه لتكون قويًّا في هذه الحياة، وتجابه واقعك بشموخ، وتتجاوز عقدك بعزيمة! ابدأ مع الصمد عهدًا جديدًا، ثم ثق أنّ الغد سيكون أفضل من اليوم .. وبكثير!!</p>
+            <h2>في ظلال الصَّمَديّة</h2>
+            <p>الصمد اسم كما ترى بالغ الهيبة، قويّ الحروف، شامخ المعنى، قليل الورود والذكر، ذو جلالة خاصّة. وكأن الصمود له سبحانه أهم تجلّيات الإخلاص في العبادة، فمَن أكثرَ من استحضار معنى الإخلاص في عباداته، أكسب قلبه صفة الرضوخ إلى مولاه والصمود له وعدم الالتجاء إلاّ إليه.</p>
+            <p>وها نحن ندلف إلى عالَم الصمديّة لنستلهم شيئًا من معاني الصمد: الصمد هو من تصمد إليه الخلائق، أي تلجأ إليه، هذا من أجلّ معاني هذا الاسم، لذا فسوف نُطوّف بهذا المعنى .. الصمد هو المقصود في الرغائب، المستغاث به عند المصائب، والمفزوع إليه وقت النوائب. جاء ذكره في سورة من أعظم سُوَر المصحف، ومن أقصرها، وهي سورة الإخلاص التي تعدل ثلث القرآن الكريم:</p>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ قُلْ هُوَ اللَّهُ أَحَدٌ * اللَّهُ الصَّمَدُ ﴾</p>
+            </div>
+            <p>يحتاج المخلوق إلى نصر فيقول: يا الله .. يحتاج إلى إعانة فيقول: يا الله .. يحتاج إلى حفظ فيقول: يا الله .. يحتاج إلى هداية فيقول: يا الله .. يحتاج إلى لطف فيقول: يا الله ..</p>
+          `
+        },
+        {
+          tag: "١ • الصَّمَد",
+          title: "أمواج .. وأفكار الزيف",
+          type: "reading",
+          html: `
+            <h2>أمواج ..</h2>
+            <p>أحاطك بالاحتياجات لتحيط نفسك بأسمائه وصفاته، وهذا معنى الصمديّة. في كل لحظات حياتك أنت بحاجة إليه، فإن لم ترجع إليه اختيارًا رجعت إليه اضطرارا.</p>
+            <p>المزارع إذا تأخر وقت الحصاد، وقد تعاظمت حاجته للثمر، وصار الماء شحيحًا، نظر إلى السماء وقال: يا الله! ركاب السفينة إذا تلاطمت بهم الأمواج، وزعزعت فكرة الموت طمأنينة الحياة في نفوسهم قالوا: يا الله! إذا أعلن قائد الطائرة أن عجلاتها رفضت التحرّك ولذلك فسيأخذ جولة على المطار إلى أن تُحل المشكلة، ينسى ركاب الطائرة كل الشخصيات المهمة، ولا يتذكرون إلا الذي بيده ملكوت كل شيء وهو يجير ولا يجار عليه.</p>
+            <p>وعيناك على رسّام القلب، تنظر إلى تلك الخطوط المتعرّجة ومريضك تخفت أنفاسه، وتتضاءل نبضاته، وتلك الخطوط تأخذ قليلًا قليلًا في الهبوط، لحظتها تنسى اسم الممرضة، ويتبخّر من رأسك وجه الطبيب وتقول في رجاء: يا الله كن معه!</p>
+            <h2>أفكار الزيف</h2>
+            <div class="hadith-box">
+              <p>جَاءَ شَيْخٌ أَعْرَابِيٌّ اسْمُهُ الحُصَيْنُ إِلَى رَسُولِ اللهِ ﷺ، فَسَأَلَهُ النَّبِيُّ ﷺ: «كَمْ تَعْبُدُ يَا حُصَيْنُ؟» فَقَالَ: سَبْعَةٌ، سِتَّةٌ فِي الأَرْضِ وَوَاحِدٌ فِي السَّمَاءِ، فَسَأَلَهُ النَّبِيُّ ﷺ: «مَنْ لِرَهْبِكَ؟» قَالَ: الَّذِي فِي السَّمَاءِ، قَالَ: «مَنْ لِرَغْبِكَ؟» قَالَ الَّذِي فِي السَّمَاءِ، فَقَالَ لَهُ النَّبِيُّ ﷺ: «فَاتْرُكِ الَّذِينَ فِي الأَرْضِ وَاعْبُدْ الَّذِي فِي السَّمَاءِ»، فَأَسْلَمَ الحُصَيْنُ!</p>
+            </div>
+            <p>لقد اقتنع بسبب معنى الصمديّة، لأن من تصمد إليه وقت الرهبة والرغبة هو وحده من يستحق أن تسجد له! إن الإيمان أسهل فكرة في الوجود، لا تحتاج إلى كتب، ولا إلى فلسفة، ولا إلى سبر وتقسيم، هي كلمة قلها بإخلاص، ثم اتركها لتشتت أفكار الزيف .. يختصر القرآن ذلك فيقول: ﴿ قُلِ اللَّهُ ثُمَّ ذَرْهُمْ فِي خَوْضِهِمْ يَلْعَبُونَ ﴾. كلمة «الله» وحدها .. كفيلة بإسكات أكبر أكاذيب الحياة .. في عمق كل إنسان، وداخل كل خليّة، وحول كل شريان أشياء تعرف الله جيّدًا، وتسجد له، وتسبّحه ..</p>
+            <p>إن الكافر وهو كافر إذا سمع القرآن يخضع .. ومن قصص السيرة الشهيرة أن رسول الله ﷺ قرأ سورة النجم على مشركي مكّة في المسجد الحرام، وما إن انتهى حتى سجدوا .. كلّهم سجدوا .. حتى أولئك الذين طردوه وآذوه وخططوا لاغتياله سجدوا! تلك الأشياء التي في خلاياهم وشرايينهم تفجّرت فيها طاقة إيمانيّة رهيبة فجعلتهم يخرّون للأذقان سجّدًا ..</p>
+          `
+        },
+        {
+          tag: "١ • الصَّمَد",
+          title: "الكواكب .. وتنساه .. واصمد إليه",
+          type: "reading",
+          html: `
+            <h2>الكواكب</h2>
+            <p>خلق في نفوس عباده حاجة إلى حبّه سبحانه! هناك نوع من الحب المقدّس في قلوب العباد لا يشبعه إلا الانحناء له، والطواف ببيته، والوقوف بين يديه، والقيام من النوم لأجله، وبذل المهج في سبيله. الحياة بكل تجلياتها همس يقول لك: الذي تبحث عنه على عرشه يسمعك ﴿ الرَّحْمَنُ عَلَى الْعَرْشِ اسْتَوَى ﴾ ..</p>
+            <p>امرأة يخلو بها فاجر في إحدى الخلوات فيراودها عن نفسها، ولكنّها تأبى! فيقول حاثًّا لها: لا يرانا إلا الكواكب، فتردّ بشموخ: فأين مكوكبها؟ أين الله؟! إنّه قلب صامد إلى الله، يراقبه، متيقن أنّه عليم خبير سميع بصير محيط! وصمودك إليه بقلبك تماما كصمود المصلّي إلى الكعبة ليصلي إليها! هكذا يجب أن يكون القلب، يوزّع رغباته في كل الاتجاهات لكن الاتجاه الأمامي يجب أن يكون لله فقط .. ضع يمين قلبك ما شئت ويساره ما شئت، ولكن أمامه لا تضع إلا مرضاة الله، إلا مراقبة الله، إلا حب الله.</p>
+            <h2>وتنساه ..</h2>
+            <p>إذا بحثت عن شيء فلم تجده فدعه، وانشغل بالله. هو الذي جعل ذلك الشيء يضيع لتصمد إليه وتلتجئ، لتقول: اللهم ردّ عليّ ضالّتي، فيردّها! يريدك أن تنشغل به عن حاجتك، ولكنّك تنشغل بها، وتنساه!!</p>
+            <div class="wisdom-pearl">
+              ولشيخ الإسلام ابن تيمية رحمه الله كلام بالغ النفاسة في هذا المعنى، فتأمّله بقلبك، ثم اجعله بالقرب من أوجاعك، وكربك، وحاجاتك، يقول: «العبد قد تنزل به النازلة فيكون مقصوده طلب حاجته، وتفريج كرباته، فيسعى في ذلك بالسؤال والتضرع، وإن كان ذلك من العبادة والطاعة، ثم يكون في أول الأمر قصده حصول ذلك المطلوب: من الرزق والنصر والعافية مطلقا، ثم الدعاء والتضرع يفتح له من أبواب الإيمان بالله عز وجل ومعرفته ومحبته، والتنعم بذكره ودعائه، ما يكون هو أحب إليه وأعظم قدرا عنده من تلك الحاجة التي همته، وهذا من رحمة الله بعباده، يسوقهم بالحاجات الدنيوية إلى المقاصد العلية الدينية».
+            </div>
+            <p>تنقطع الأمطار، وتصبح الدنيا قاحلة على عهد موسى عليه السلام فيخرج هو وقومه وهم آلاف من الرجال والنساء والولدان، فيرى موسى نملة خرجت رافعة يديها إلى السماء صامدة إلى ربّ السحاب، فعلم موسى أن هذا الصمود، وهذا الذل لن يعقبه إلا هطول السماء بماء منهمر، فقال لقومه: ارجعوا فقد كُفيتم، فعادوا على صوت الرعود، ورذاذ المطر! في طفولتي كنت أسمع دعاء لأحد القرّاء فيهزني: «اللهم أوقَفْنا مطايانا ببابك .. فلا تطردنا عن جنابك» هذا الإيقاف للمطايا بباب الكريم هو معنى الصمد.</p>
+            <h2>اصمد إليه</h2>
+            <p>يجب أن تعلم أنّه لو لم يأذن للدواء أن يؤدّي مفعوله في جسدك لما ارتفع عنك ذلك المرض، فاصمد إليه أن يشفيك .. يجب أن توقن أنّه لو لم يصرف تلك السيارة المتهوّرة عنك لكنت الآن في عداد الموتى، فاصمد إليه أن يحفظك .. يجب أن تتأكد أنّه لو لم يحطك برعايته عندما ركبت البحر، لكنت الآن طُعمًا لأسماك المحيط، فاصمد إليه أن يكون معك .. ولهذا تصمد إليه لترتاح، ليهدأ لُهاثك، لأنّك بدونه تركض وتلهث وتتوتر.</p>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ هُوَ الَّذِي يُسَيِّرُكُمْ فِي الْبَرِّ وَالْبَحْرِ حَتَّى إِذَا كُنتُمْ فِي الْفُلْكِ وَجَرَيْنَ بِهِم بِرِيحٍ طَيِّبَةٍ وَفَرِحُوا بِهَا جَاءَتْهَا رِيحٌ عَاصِفٌ وَجَاءَهُمُ الْمَوْجُ مِن كُلِّ مَكَانٍ وَظَنُّوا أَنَّهُمْ أُحِيطَ بِهِمْ دَعَوُا اللَّهَ مُخْلِصِينَ لَهُ الدِّينَ لَئِنْ أَنجَيْتَنَا مِنْ هَذِهِ لَنَكُونَنَّ مِنَ الشَّاكِرِينَ ﴾</p>
+            </div>
+            <p>جعل في داخلك حاجة لأن تقول اسمه، هناك أمن يعمّ كيانك إن قلت يا الله، فإذا لم تقلها اختيارًا، قلتها اضطرارًا، وإن لم تذكرها إيمانًا، ذكرتها قهرًا، وإذا لم تكن كلمتك في الرخاء، كانت صرختك في الشدّة!</p>
+          `
+        },
+        {
+          tag: "١ • الصَّمَد",
+          title: "البوصلة .. فرّغ قلبك .. شموخ وحقيقة",
+          type: "reading",
+          html: `
+            <h2>البوصلة</h2>
+            <p>لماذا ننتظر جائحة تردّنا إليه؟ ومصيبة تذكرنا باسمه؟ وكارثة نعود بها إلى المسجد؟ ألا يستحق أن نخضع ونلتجئ إليه دون جوائح وكوارث ومصائب؟ عدّل بوصلة قلبك باتّجاهه ثم سر إليه ولو حبوًا على ركبتيك، ستصل ﴿ فَأَيْنَمَا تُوَلُّوا فَثَمَّ وَجْهُ اللَّهِ ﴾. إذا التجأت لفلان من الناس صباحًا قد يغلق بابه دونك في المساء. إذا نصرك على زيد قد لا ينصرك على عمرو. إذا أعطاك اليوم فسوف يمنعك في الغد. أما الله .. فلا! ﴿ هُوَ الْحَيُّ لَا إِلَهَ إِلَّا هُوَ فَادْعُوهُ ﴾ يعطي بالليل والنهار، ينصرك على الجميع إن كنت مظلوما، لا يغلق بابه، يده سحاء الليل والنهار، أكرم الأكرمين، لذلك تصمد إليه كل الخلائق، فإذا جرّبت أن تصمد إلى غيره في حاجة رجعت خائبا، ولا بد!</p>
+            <h2>فرّغ قلبك من غيره</h2>
+            <p>دخلت قديمًا مكتب وكيل إحدى الجامعات وقد كتبت له معروضًا في شأن من شؤون دراستي، ثم شرحت له بعض التفاصيل فقال لي: لا تكثّر (هرْج)! الناس لا يريدونك أن تكثّر من الهرج! ولكن الله يحبّك إن كثّرت من الهرج بين يديه! فهو يحب العبد اللحوح في الدعاء .. فلماذا تشكو لغيره وتتركه؟ يقول النبي ﷺ لابن عباس: «إِذَا سَأَلْتَ فَاسْأَلِ اللَّهَ» مادام أن هناك حاجة تستحق السؤال؛ فليكن الله هو من تسأله! أعجبتني مقولة نقلها أبو حامد الغزالي عن أحد العارفين يقول فيها عن اسم الله الأعظم: فرّغ قلبك من غيره ثم ادعه بأي اسم يجبك .. المرض رسالة لتذلّ له .. والفقر برقيّة لتسجد له .. والضعف مكالمة تقول لك استجلب القوّة من القويّ .. الحياة كلّها تصرخ في وجهك: لديك رب، اصمد إليه! وفي حديث ابن عباس سالف الذكر يقول المصطفى ﷺ: «احْفَظِ اللَّهَ يَحْفَظْكَ احْفَظِ اللَّهَ تَجِدْهُ تُجَاهَكَ» أمامك!! احفظه في نفسك وجوارحك وخطراتك، سيكون أمامك بحفظه ومعيّته ونصرته. الصمد لا تهدأ قلوب خلقه حتى تضع زوّاداتها عند عتبة مُلكه ..</p>
+            <h2>خطوات وشموخ وحقيقة</h2>
+            <p>انظر في أي اتجاه شئت، ولكن اجعل في قلبك عينين لا تنظران إلاّ إلى عظمته! تحدّث بكل ما تريد، ولكن اجعل في قلبك لسانًا لا ينطق إلا بذكره! استمع إلى الجميع، ولكن اصنع في قلبك سمعًا لا يدرك إلا كلامه! امش إلى حيث شئت، ولكن احفر في قلبك خطوات نهايتها عرش الملك! اصنع منبّها وعلّقه في أعلى قلبك دقاته تقول: ماذا يريد الله؟ ماذا يريد الله؟ ماذا يريد الله؟</p>
+            <p>إذا علّمت روحك الصمود إليه، فإنّها مع الزمن ستستحي أن تكثر من الطلبات الدنيويّة لأنّها ليست الحيّز الذي خلقك له، كل آمالك أُخروية .. قال الخليفة لابن عمر وهو يطوف حول الكعبة سلْني يا ابن عمر، فنظر إليك بشموخ الصامد إلى الله وقال، من أمر الدنيا أم الآخرة؟ فقال أما الآخرة فلله ولكن من شؤون الدنيا، فقال: لم أسأل الدنيا من يملكها فكيف أسألها من لا يملكها؟! وقال أمير لابن تيمية، سمعنا أنّك تريد ملكنا يا ابن تيمية! فرفع ابن تيمية رأسه بشموخ وقال: والله إن ملكك لا يساوي عندي فلسين! رجل يعرّض وجهه لله آناء الليل، كيف يذل لقطعة خزف أطراف النهار؟</p>
+            <div class="heart-keepsake-card">
+              <p>اللحظة التي تصمد فيها إليه لأجل حاجتك، هي نفسها اللحظة التي تصبح حاجتك ملك يمينك! لا عبور لأي رغبة إلا من طريق الله، لا وجود لأي حاجة إلا في ساحة الله، لا إمكانيّة لحدوث شيء إلا بالله، فإنّه وحده الذي لا حول في الوجود ولا قوّة إلا به. إذن فاجعل وجهك إليه، وألجئ ظهرك إليه، وفوّض أمرك إليه .. فهو الصمد الذي لم يلد ولم يولد ولم يكن له كفوا أحد .. اللهم أصمد قلوبنا إليك، واجعلنا لا نطلب غيرك ولا نسأل سواك ولا نستغيث بأحد من خلقك يا الله ..</p>
+            </div>
+          `
+        },
+        {
+          tag: "٢ • الحَفِيظ",
+          title: "الحَفِيظ — أيها القلب اطمئنّ",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم الثاني ✦</div>
+              <h1 class="chapter-opener">الحَفِيظ</h1>
+              <div class="divine-epigraph">نتذكر فائدة مانع الانزلاق .. وفائدة كابح السرعة ..<br/>وفائدة البالون الواقي .. وفائدة حزام الأمان .. وننسى الله!</div>
+            </div>
+            <p>إذا شعرت أن حياتك في خطر، أو أن المرض يهدد صحّتك، أو كان ابنك بعيدًا عنك وقد خشيت عليه من الضياع أو رفقاء السوء، أو أن مالك الذي جمعته قد بات قاب قوسين أو أدنى من التبدد والتلف فاعلم أنّك بحاجة إلى أن تعلم أن من أسماء ربّك سبحانه «الحفيظ» وأنّه ينبغي عليك أن تجدد إيمانك بهذا الاسم العظيم، وأنّه قد جاء الوقت المناسب لتتفكّر فيه وتتأمّل .. فهو وحده من يحفظ حياتك، ويحفظ صحّتك، ويحفظ أبناءك، ويحفظ مالك، ويحفظ كل شيء في هذه الحياة!</p>
+            <h2>أيها القلب اطمئنّ ..</h2>
+            <p>يقول الشيخ السعدي رحمه الله تعالى: «الحفيظ الذي حفظ ما خلقه، وأحاط علمه بما أوجده، وحفظ أولياءه من وقوعهم في الذنوب والهَلَكات، ولطف بهم في الحركات والسكنات». منتهى الحفظ عنده، وغاية الرعاية لديه، وأقصى الطمأنينة ستكون وأنت بمعيّته. يحفظ عبده؛ لذلك نقول دائمًا: اللهم احفظني من بين يدي ومن خلفي وعن يميني وعن شمالي ومن فوقي وأعوذ بعظمتك أن أُغتال من تحتي. إنّك تستحفظ الله جهاتك الستّ، إنّك تطلب منه هالة حفظ تحوطك من جميع الجهات، ولا يقدر على ذلك إلا هو!</p>
+            <p>يحفظ سمعك وبصرك، لذلك ندعوه في الصباح والمساء أن: اللهمّ عافني في سمعي، اللهم عافني في بصري .. ستفقد الجهاز الذي تستطيع به فهم هذا العالم إن فقدت سمعك وبصرك، ستعيش في عزلة سوداء، ستخنقك الدنيا بصمتها! ﴿ قُلْ أَرَأَيْتُمْ إِنْ أَخَذَ اللَّهُ سَمْعَكُمْ وَأَبْصَارَكُمْ وَخَتَمَ عَلَى قُلُوبِكُم مَّنْ إِلَهٌ غَيْرُ اللَّهِ يَأْتِيكُم بِهِ ﴾. ويحفظ دينك، لذلك تناجيه في السجود أن: يا مقلّب القلوب والأبصار ثبّت قلبي على دينك.</p>
+          `
+        },
+        {
+          tag: "٢ • الحَفِيظ",
+          title: "طرقات الزيغ .. وننسى الله .. والمعقّبات",
+          type: "reading",
+          html: `
+            <h2>طرقات الزيغ!</h2>
+            <p>لو لم يثبّت قلبك على دينه لتناوشتك الشبهات، وتخطّفتك الأهواء! علماء أفنوا أعمارهم بين الكتب والمحابر لم يرد الله أن يحفظ عقائدهم: فكفروا به سبحانه، وبعضهم صار مبتدعًا في الدين، وأنت بعلمك القليل ما زلت تسجد له؟ لقد حفظ الحفيظ دينك! عالم اسمه «عبد الله القصيمي» يؤلّف كتابًا يدافع فيه عن دين الله اسمه «الصراع بين الإسلام والوثنيّة» قيل عنه -مبالغة- إنّه دفع به مهر الجنّة! وأُثني عليه من منبر الحرم، ثم بعد ذلك بسنوات تطرق أصابع الزيغ قلبه – والعياذ بالله- وتبدأ الشبهات تنسج حول أفكاره بيوت الشك! ثم تغدو المسلّمات ممكنات، والحقائق آراء، وتحت تلك الشبهات ومن بين أكوام الضلال يمسك قلمه ويؤلف كتابًا يهاجم فيه الإسلام اسمه: «هذي هي الأغلال»، يقول: إن دين الله آصار وأغلال وقيود! نعوذ بالله من الخذلان! إن الحفيظ هو من يحفظ دينك، لا مجموعة المعلومات التي في رأسك! هذا «بلعام بن باعوراء» يؤتيه الله اسمه الأعظم، ليدعوه في أي وقت فيستجيب له، فلا يحول هذا الاسم العظيم بينه وبين الزيغ فيهلك في الهالكين.</p>
+            <h2>وننسى الله!</h2>
+            <p>يحفظ حياتك، لذلك نستودعه سبحانه أحبّتنا عندما نفارقهم ونقول: أستودعك الله الذي لا تضيع ودائعه! إذا صفعت الأمواج بعتوّها السفينة، وبلغت القلوب الحناجر، من الذي يحفظ السفينة من أن يبتلعها المحيط؟ يعلن قائد الطائرة عن وجود عطل في الطائرة فيتحوّل أولئك الذين كان كل واحد منهم في فلك يسبح إلى مخبتين، الكل يلتجئ إلى الله ويعلن توبته .. من هو الذي أصلح العطل بقدرته كي تنزل الطائرة بسلام ويخرج منها أولئك الذين حوّلهم الخوف إلى أشباح؟</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">ندعوه في البحر أن ينجي سفينتنا ••• فإن وصلنا إلى الشاطي عصيناهُ</div>
+              <div class="poetry-shatr">ونركب الجوّ في أمن وفي دعة ••• فما سقطنا لأن الحافظ اللهُ</div>
+            </div>
+            <h2>المعقّبات وما بين القوسين</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ لَهُ مُعَقِّبَاتٌ مِّن بَيْنِ يَدَيْهِ وَمِنْ خَلْفِهِ يَحْفَظُونَهُ مِنْ أَمْرِ اللَّهِ ﴾</p>
+            </div>
+            <p>لأجلك أنت يأمر الحفيظ سبحانه أربعة ملائكة أن يحيطوا بك حتى يحفظوك بأمره من كل ما لم يقدّره عليك. شاهدت وبذهول المقطع الذي تظهر فيه حادثة محاولة اغتيال الشيخ عائض القرني في الفلبين، وكيف أن المجرم وجّه إلى صدر الشيخ عائض ستّ رصاصات من مسافة متر تقريبًا، ولا حائل بين الطلقات والشيخ .. ثم يخرج الشيخ من تلك المحاولة الآثمة سليمًا معافى!! وأتذكر كيف أن طلقة واحدة ومن مسافة بعيدة، أودت بحياة الرئيس الأمريكي جون كندي مع أن سيّارته كانت تتحرّك، وحوله الحرس والجنود! ثم يعلن الشيخ أنّه كان قد ذكر الله، وحصّن نفسه بالأدعية!</p>
+            <p>في هذه اللحظة التي تقرأ فيها (ما بين القوسين) حفظ قلبك من التوقّف، وشرايينك من الانسداد، وعقلك من الجنون، وكليتك من الفشل، وأعصابك من التلف، ورأسك من الصداع، ومعدتك من القرحة، وأمعاءك من التهاب القولون، وأعضاءك من الشلل، وعينيك من العمى، وسمعك من الصمم، ولسانك من الخرس، كل هذا وأكثر حفظه في هذه اللحظة، ثم يستمر هذا الحفظ في اللحظة التي تليها، وهكذا .. فكم «الحمد لله» ينبغي أن نقولها في اللحظة الواحدة؟</p>
+          `
+        },
+        {
+          tag: "٢ • الحَفِيظ",
+          title: "قارورة .. ويدافع عنك .. ووديان السباع",
+          type: "reading",
+          html: `
+            <h2>قارورة .. وأعظم وأكثر وأكبر</h2>
+            <p>أربعة من الأصدقاء ذهبوا إلى مكان يبعد عن تبوك ستين كيلًا اسمه «نعمة ريط» ثم هبطوا الساعة التاسعة صباحًا سائرين على أقدامهم إلى مكان يُسمّى الشق! والشق هذا شرخ عظيم في قشرة الأرض، الهبوط إليه مغامرة، بل مجازفة بالحياة! وصلوا إلى القاع في نصف ساعة تقريبًا، ثم مكثوا إلى قريب من المغرب في محاولة الصعود إلى السطح! تعبوا، تشققت أرجلهم، أُنهكوا تمامًا، بلغ بهم العطش مبلغًا عظيمًا، باختصار: رأوا الموت!! كانت قلوبهم معلّقة بالله، يقول أحدهم إنّه دعا الله بإلحاح وقد بلغ به العطش حدّ تمنّي الموت، فإذا به، وفي مكان لا يمكن أن يكون قد وطئته قدم إنسان في القريب على الأقل يرى قارورة ماء صحّة! نظيفة، فلم يفرح بالماء الذي تقاسمه مع رفاقه، بل فرح بالله الذي كان معه في تلك اللحظة، علم أن الله الذي أوجد تلك القارورة في تلك اللحظة سينقذهم من تلك الرحلة المميتة.</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">سهرت أعين ونامت عيونُ ••• في شؤون تكون أو لا تكونُ</div>
+              <div class="poetry-shatr">إن ربًا كفاك ما كان بالأمس ••• سيكفيك في غد ما يكونُ</div>
+            </div>
+            <p>ولاسم الحفيظ مع كل مخلوق قصّة، فهو لا يخلق خلقه ثم يتركهم، بل يمدّهم بالسلاح الذي يواجهون به مفاجآت الحياة: فهو يحفظ بعض الحيوانات بقدرتها على الجري السريع كالغزال والأرنب .. ويحفظ بعضها بقرون تبقر بها بطن من يقترب منها بسوء مثل وحيد القرن والجاموس .. ويحفظ بعضها بضخامة الجثّة كالفيل والدب .. وبعضها بصعقة كهربائية مثل فانوس البحر! وبعضها بسموم كالثعابين والعقارب! ويحفظ الحرباء بأن جعلها تستطيع أن تغيّر لونها عند الحاجة!</p>
+            <h2>يدافع عنك .. ووديان السباع</h2>
+            <p>ومن صور حفظ الله أنّه سبحانه يدافع عن المؤمنين: ﴿ إِنَّ اللَّهَ يُدَافِعُ عَنِ الَّذِينَ آمَنُوا ﴾ .. وفي الحديث القدسي: «مَنْ عَادَى لِي وَلِيًّا فَقَدْ آذَنْتُهُ بِالحَرْبِ»! يتجمّع مشركو قريش حول غار فيه رجلان: محمد ﷺ وأبو بكر الصديق رضي الله عنه .. فيتسلل الخوف إلى فؤاد أبي بكر، فينظر إليه صاحبه العظيم ويقول: ما ظنّك باثنين، الله ثالثهما؟ وها هم فتية الكهف يلتجئون إليه فيلقي عليهم أحد جنوده، إنّه جندي الرعب!! ﴿ لَوِ اطَّلَعْتَ عَلَيْهِمْ لَوَلَّيْتَ مِنْهُمْ فِرَارًا وَلَمُلِئْتَ مِنْهُمْ رُعْبًا ﴾.</p>
+            <p>من يقرأ قصّة الشيخ عبد الرحمن السميط رحمه الله في سفره إلى أفريقيا للدعوة ونشر الدين وكيف أنّه خاض المستنقعات والوديان الموحشة في مجاهل القارة السوداء، وجاع وعطش ومرض، ومع ذلك لم يمسسه سوء، بل ظل خمسًا وعشرين سنة في طريقه اللاحب الذي اختاره لنفسه، ثم مات في الكويت على السرير! وذكر البعض أن سعيد بن جبير أمسك به جنديان من جند الحجاج، فتركاه في الأسفل عند صومعة راهب وصعدا، فإذا بأسد يقترب من سعيد فلا يحرّك سعيد ساكنًا بل يظلّ في عالم من الذكر دافئ، فيقترب الأسد أكثر، ثم يصل إلى سعيد وكأنّه يهمس له همسا ثم ينصرف!</p>
+            <h2>أنا الفقير .. يا غلام .. اختناق</h2>
+            <p>شاهدت في مقطع مروّع عبر اليوتيوب أحدهم يمرّ من على سكّة الحديد مشيًا، فجأة تعْلَق رجله بين حديد السكّة، والقطار مقبل بسرعة جبّارة، ولمّا تكون المسافة بينه وبين القطار أمتارا يأذن الله لحديد السكّة أن يفسح لرجله المجال فتخرج وينتقل إلى الجهة الأخرى في ومضة! ونبيّ الله لوط عليه السلام يقول بكل ضعف: ﴿ لَوْ أَنَّ لِي بِكُمْ قُوَّةً أَوْ آوِي إِلَى رُكْنٍ شَدِيدٍ ﴾ قال نبيّنا عليه الصلاة والسلام: «يَرْحَمُ اللَّهُ لُوطًا، لَقَدْ كَانَ يَأْوِي إِلَى رُكْنٍ شَدِيدٍ».</p>
+            <p>ويقال إن لصًّا دخل إلى بيت، فحمل الطفل ونقله إلى غرفة أخرى فصرخ الطفل فاستيقظ الوالدان وخرجا يبحثان عنه، واستغل اللص تلك اللحظة ودخل غرفة الأبوين لسرقتها، فجأة انهار سقف الغرفة ودفن اللص! إنّه الحفيظ الذي يحفظ عباده حتى بأعدائهم! أعد وتأمّل حديث: «يَا غُلَامُ، إِنِّي أُعَلِّمُكَ كَلِمَاتٍ: احْفَظِ اللَّهَ يَحْفَظْكَ، احْفَظِ اللَّهَ تَجِدْهُ تُجَاهَكَ، تَعَرَّفْ إِلَى اللَّهِ فِي الرَّخَاءِ يَعْرِفْكَ فِي الشِّدَّةِ».</p>
+            <div class="heart-keepsake-card">
+              <p>كلّنا في هذه الحياة ذو النون، والحياة قد التأمت علينا بكروبها، ولن ينجينا منها إلا: «لا إله إلا أنت سبحانك، إني كنت من الظالمين» .. اللهم احفظنا بحفظك، واكلأنا برعايتك، واجعل من بين أيدينا ومن خلفنا وعن أيماننا وعن شمائلنا ومن فوقنا ومن تحتنا حفظًا منك تنجينا به مما نخشى ونحاذر ..</p>
+            </div>
+          `
+        },
+        {
+          tag: "٣ • اللَّطِيف",
+          title: "اللَّطِيف — خفيّ الألطاف ونسيم اللطف",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم الثالث ✦</div>
+              <h1 class="chapter-opener">اللَّطِيف</h1>
+              <div class="divine-epigraph">إذا أراد اللطيف أن يصرف عنك السوء<br/>جعلك لا ترى السوء، أو جعل السوء لا يعرف لك طريقًا،<br/>أو جعلكما تلتقيان وتنصرفان عن بعضكما وما مسّك منه شيء!</div>
+            </div>
+            <p>هل لديك أمانٍ بعيدة المنال، بينك وبينها أهوال؟ هل أخبرك الأطباء أن لا أمل في شفاء قريبك؟ هل تشعر باليأس لأن ما يمكنك أن تفعله لن يأتي إليك بما تتمنى حصوله؟ إذن تعال معي لنتعرّف إلى اسم الله «اللطيف» والذي ستكتشف إذا ما تأمّلته أن لا مستحيل في هذه الحياة، وأن الله قادر على كل شيء، وأن أحلامك المستحيلة ستغدو ممكنة التحقق إذا ما طرقت باب اللطيف!</p>
+            <h2>خفيّ الألطاف</h2>
+            <p>في اللغة: «اللطيف: البَر بعباده، المحُسن إلى خلقه بإيصال المنافع إليهم برفق ولطف»، وتقول «لَطَفَ الله لك: أوصل إليك مرادك بلطف» واللطف أصله خفاء المسلك ودقّة المذهب .. فالله سبحانه «هو المحسن إلى عباده في خفاء وستر من حيث لا يعلمون، ويسبب لهم أسباب معيشتهم من حيث لا يحتسبون» فهو ذو لُطف وخفاء ودقّة في إكرامه وإحسانه، وفي عصمته وهدايته، وفي تقاديره وتصاريفه. وتأتي بلطفه عظائمُ المقادير والتي تستبعدُ أكثر العقول خيالًا وقوعها؛ فيجعلها كائنة حاضرة، فلا تنتبه إلا -وبقريب من المعجزات- قد بات بساحتك! فتنتظر إلى السماء وتقول: ﴿ اللَّهُ لَطِيفٌ بِعِبَادِهِ ﴾.</p>
+            <h2>نسيم اللطف</h2>
+            <p>إذا أراد اللطيف أن ينصرك أمر ما لا يكون سببًا في العادة فكان أعظم الأسباب! وإذا أراد اللطيف أن يكرمك جعل من لا ترجو الخير منه هو سبب أعظم العطايا التي تنالك! وإذا أراد اللطيف أن يعصمك من معصية جعلك تبغضها، أو جعلها صعبة المنال منك، أو أوحشك منها، أو جعلك تقدم عليها فيعرض لك عارض يصرفك به عنها!</p>
+            <p>عندما أراد اللطيف أن يُخرج يوسف عليه السلام من السجن، لم يدكدك جدران السجن، فقط جعل الملِك يرى رؤيا في المنام تكون سببًا خفيًّا لطيفًا يستنقذ به يوسف الصدّيق من أصفاد الظلم! ولما شاء اللطيف أن يعيد موسى عليه السلام إلى أمّه لم يجعل حربًا تقوم، بل جعل فم موسى لا يستسيغ حليب المرضعات! ولما شاء اللطيف أن يخرج رسولنا عليه الصلاة والسلام ومن معه من عذابات شِعب بني هاشم أرسل الأَرَضَة تأكل أطراف وثيقة الظلم بحشرة لا تكاد ترى!!</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">لغيرك ما مددت يدا ••• وغيرك لا يفيض ندى</div>
+              <div class="poetry-shatr">وليس يضيق بابك بي ••• فكيف ترد من قصدا</div>
+              <div class="poetry-shatr">وركنك لم يزل صمدا ••• فكيف تذود من وردا</div>
+              <div class="poetry-shatr">ولطفك يا خفيّ اللطف ••• إن عادي (الشرور) عدا</div>
+            </div>
+          `
+        },
+        {
+          tag: "٣ • اللَّطِيف",
+          title: "الصخرة .. والخفايا والأحلام البعيدة",
+          type: "reading",
+          html: `
+            <h2>الصخرة</h2>
+            <p>تنام فيحبّ أن تقوم تصلي بين يديه، فيرسل ريحًا هادئة تحرّك نافذتك، أو طفلًا من أسرتك يمرّ ويحدث ضوضاء بجوار غرفتك، أو حاجة شديدة في شرب شيء من الماء؛ فتستيقظ وتنظر إلى الساعة، وبعد دقائق تكون واقفًا على السجّادة تناجيه ولا تعلم أنّه هو من أيقظك! تقود سيارتك في مرتفعات الجبال ثم فجأة ترى من الضرورة أن توقف سيّارتك جانبًا لتتأكد من وجود شيء في درج السيارة (هويّتك أو محفظة نقودك) وبعد ثوانٍ ترى أمامك صخرة عظيمة هابطة من أعلى الجبل لو لم تقف لدكدكتك وسيارتَك! فتكمل رحلتك سالمًا، ولا تعلم أنّه هو من أنقذك! تخطط لمعصيته، تخرج ليلًا، فجأة تمرّ سيارة من بعيد، فتشكّ أنت أن أحدهم يراقبك، فتنغّص تلك السيارة المارّة فكرة الذنب لديك؛ فتبرد إرادتك وتعود إلى بيتك، ولا تعلم أنّه هو من صرفك بلطفه عن معصيته!</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">وكم لله من لطفٍ خفيٍّ ••• يدقّ خفاه عن فهم الذكيِّ</div>
+              <div class="poetry-shatr">وكم أمر تساء به صباحا ••• فتأتيك المسرّة في العشيِّ</div>
+              <div class="poetry-shatr">إذا ضاقت بك الأحوال يومًا ••• فثق بالواحد الفرد العليِّ</div>
+            </div>
+            <h2>الخفايا والخبايا والأحلام البعيدة</h2>
+            <p>يقول تعالى: ﴿ أَلَا يَعْلَمُ مَنْ خَلَقَ وَهُوَ اللَّطِيفُ الْخَبِيرُ ﴾. ويقول الشيخ السعدي: «وهو اللطيف الذي أحاط علمه بالسرائر والخفايا، وأدرك البواطن والخبايا». وها هي رؤيا من أعظم رؤى البشرية يراها يوسف عليه السلام: ﴿ إِنِّي رَأَيْتُ أَحَدَ عَشَرَ كَوْكَبًا وَالشَّمْسَ وَالْقَمَرَ رَأَيْتُهُمْ لِي سَاجِدِينَ ﴾ .. ثم إنّ الأحوال تقلّبت به فصار مرميًّا في بئر، ثم سلعة تباع وتشترى، ثم صار عبدًا في بيت عزيز مصر، ثم عبدًا حبيسًا في سجن! ولكنّ اللطيف سبحانه يقدر الأقدار، ويصرّف الأمور، ويخرجه من السجن، ويجعله في منصب رفيع، ثم يأتي بإخوته في ثياب الحاجة، فيعجب يوسف لسجود والديه وإخوته ويقول: ﴿ يَا أَبَتِ هَذَا تَأْوِيلُ رُؤْيَايَ مِن قَبْلُ قَدْ جَعَلَهَا رَبِّي حَقًّا ... إِنَّ رَبِّي لَطِيفٌ لِّمَا يَشَاءُ ﴾.</p>
+            <p>مهما تباعدت أحلامك وصار بينك وبينها مفاوز شاسعة فاللطيف يأتي بها: ﴿ يَا بُنَيَّ إِنَّهَا إِن تَكُ مِثْقَالَ حَبَّةٍ مِّنْ خَرْدَلٍ فَتَكُن فِي صَخْرَةٍ أَوْ فِي السَّمَاوَاتِ أَوْ فِي الْأَرْضِ يَأْتِ بِهَا اللَّهُ إِنَّ اللَّهَ لَطِيفٌ خَبِيرٌ ﴾. يصل صاحبي في رحلة شاقة من تبوك إلى حدود الأردن لحضور محاضرات في جامعة مؤتة، وفي الحدود يتذكر أن جواز سفره في بيته! يتكدّر ويقرر العودة، وفي الغد يقرأ في الصحف عن أعمال شغب في جامعة مؤتة أسفرت عن جرحى! اللطيف أنساه الجواز، حتى لا يرى الدم، أو حتى لا يصبح الصباح وهو في المستشفى!</p>
+            <h2>لطف اللحظة الحاسمة</h2>
+            <p>انظر لنفسك حينما تدخل الغرفة في اللحظة التي كاد طفلك أن يسقط فيها من على السرير وتساءل: لماذا الآن بالذات دخلت الغرفة؟ تأمّل ذاتك يوم أن تدخل المطبخ لتشرب الماء فإذا بك تسمع أزيز الكهرباء من فيش الثلاجة مثلًا، فتفصله وأدخنة الحريق كانت في بدايتها وتساءل: ما الذي أدخلك في هذه اللحظة بالذات؟</p>
+            <div class="heart-keepsake-card">
+              <p>قل في خشوع: يا خفيّ الألطاف نجّنا مما نخاف .. اللهم يا لطيف الطف بنا، والطف لنا، وقدّر لنا من ألطافك الرحيمة ما تقوّم به عوج نفوسنا، وتهدي به ضال قلوبنا، وتجمّل به شعث حياتنا.</p>
+            </div>
+          `
+        },
+        {
+          tag: "٤ • الشَّافِي",
+          title: "الشَّافِي — لا مرض بعد اليوم .. ويشفيك بلا سبب!",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم الرابع ✦</div>
+              <h1 class="chapter-opener">الشَّافِي</h1>
+              <div class="divine-epigraph">يشفيك بسبب .. ويشفيك بأضعف سبب .. ويشفيك بأغرب سبب ..<br/>ويشفيك بما يُرى أنّه ليس بسبب .. ويشفيك بلا سبب!</div>
+            </div>
+            <p>الشّافي سبحانه .. يقدّر المرض بحكمته، ثم يرفع الداء برحمته، فيجعل من الألم بابًا للأمل، ومن الوجع جسرًا للتضرع، ومن السرير الأبيض محرابًا ينكسر فيه العبد بين يدي مولاه.</p>
+            <h2>لا مرض بعد اليوم</h2>
+            <p>تخيّل لو أنّ الإنسان لا يمرض أبدًا! كيف سيكون طغيانه وغفلته؟ جاء المرض ليذكّر الإنسان بضعفه، وليهمس في أذنه بأنّ هذه القوة عارية مستردة، وأنّ هذه الحياة محطة عبور لا دار قرار. وحين يتألم الجسد تستيقظ الروح، وحين تضيق العافية يتسع الدعاء.</p>
+            <h2>يشفيك بلا سبب!</h2>
+            <p>يروي أحد الصالحين قصة طفلٍ أُصيب بداء السلّ الرئوي في زمنٍ عزّ فيه الدواء، وأجمع الأطباء على أنّ أيامه معدودة، فخرج به والده مكسور القلب إلى قريته، وهناك لقيه شيخٌ حكيمٌ فنصحه أن يطعمه «الطعام الحيّ» من الفواكه والخضروات الطازجة والعسل واللبن، وهو ما أشار إليه لاحقًا خبير التغذية الشهير جايلورد هاوزر في كتابه «الغذاء يصنع المعجزات»؛ وما هي إلا أسابيع حتى استردّ الصبي عافيته كاملةً بفضل الله الشافي الذي أودع سرّ الشفاء في أبسط الأسباب!</p>
+            <h2>لا تدري!</h2>
+            <p>لا تدري في أيّ سببٍ خبّأ الله شفاءك؛ فقد يكون في شربةٍ من ماء زمزم صادقة النية، وقد قال النبي ﷺ: «مَاءُ زَمْزَمَ لِمَا شُرِبَ لَهُ»، وقال: «إِنَّهَا مُبَارَكَةٌ، إِنَّهَا طَعَامُ طُعْمٍ وَشِفَاءُ سُقْمٍ». وقد يكون في الطب النبوي من الحبة السوداء، أو العسل، أو القسط البحري والهندي، أو التلبينة التي تجمّ فؤاد المريض وتذهب ببعض الحزن، أو في ركعتين في جوف الليل ترفع فيهما أكفّ الضراعة إلى الشافي سبحانه.</p>
+            <h2>وعاد النور ..</h2>
+            <p>في مستشفى الملك عبد العزيز بتبوك، فقد طفلٌ صغيرٌ بصره فجأةً إثر التهابٍ حادٍّ، وعجز الأطباء عن إعادة النور إلى عينيه، فلجأ والده إلى الله بالرقية الشرعية والصدقة الخفية عملًا بوصية النبي ﷺ: «دَاوُوا مَرْضَاكُمْ بِالصَّدَقَةِ»، فما لبث الطفل أن صاح فجأةً وهو يرى وجه أبيه وأمه من جديد، وسط دهشة الأطباء وحيرتهم!</p>
+          `
+        },
+        {
+          tag: "٤ • الشَّافِي",
+          title: "عُدْ إليه .. والرضا وأنهار الذنوب",
+          type: "reading",
+          html: `
+            <h2>عُدْ إليه ..</h2>
+            <p>أُصيب رجلٌ ثريٌّ بفشلٍ كلويٍّ مزمن، وأعياه الغسيل المتكرر والبحث عن متبرع، فدلّه أحدهم على امرأةٍ فقيرةٍ اضطرتها الفاقة لعرض كليتها للبيع، فلما دخل المستشفى ورأى بكاءها وشدة حاجتها رقّ قلبه، وقال لها: «والله لا آخذ منكِ شيئًا، وهذه مائة ألف ريالٍ لوجه الله تعالى»، وعاد إلى بيته منكسرًا لله؛ وبعد أيامٍ أجرى الفحوصات الدورية فإذا بكليتيه تعملان بكفاءةٍ طبيعيةٍ تامة! لقد داوى كسر أَمَةٍ من إماء الله، فداوى الشافي علّته بلا مشرطٍ ولا جراحة.</p>
+            <h2>موعد مسبق</h2>
+            <p>دُهس طفلٌ صغيرٌ أمام منزله، ونُقل إلى العناية المركزة في غيبوبةٍ تامة، وأخبر الأطباء ذويه أنّ النزيف الدماغي خطيرٌ للغاية؛ لكنّ جدّه المؤمن فرش سجادته وقال بيقينٍ لا يتزعزع: «يا شافي، أنت الذي قلتَ في كتابك: ﴿ مَّا يَفْتَحِ اللَّهُ لِلنَّاسِ مِن رَّحْمَةٍ فَلَا مُمْسِكَ لَهَا ﴾»، ففتح الطفل عينيه في اليوم التالي سليمًا معافى وكأنّ شيئًا لم يكن!</p>
+            <h2>ضع نقطة .. والرضا</h2>
+            <p>تأمّل أدب الخليل إبراهيم عليه السلام حين نسب المرض إلى نفسه والشفاء إلى ربه فقال: ﴿ وَإِذَا مَرِضْتُ فَهُوَ يَشْفِينِ ﴾، وتأمّل نداء أيوب عليه السلام بعد ثمانية عشر عامًا من البلاء: ﴿ أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ ﴾، فجاءه الفرج الإلهي الفوري: ﴿ ارْكُضْ بِرِجْلِكَ هَذَا مُغْتَسَلٌ بَارِدٌ وَشَرَابٌ ﴾.</p>
+            <p>يقول ابن القيم رحمه الله إنّ الرضا بالمرض كالدواء المرّ الذي يتجرعه المريض راضيًا لعلمه بفضله وعاقبته ومنفعته، وقد قيل:</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">دَوَاؤُكَ فِيكَ وَمَا تَشْعُرُ ••• وَدَاؤُكَ مِنْكَ وَمَا تُبْصِرُ</div>
+            </div>
+            <h2>أنهار الذنوب</h2>
+            <div class="hadith-box">
+              <p>قال رسول الله ﷺ: «مَا يُصِيبُ الْمُسْلِمَ مِنْ نَصَبٍ وَلَا وَصَبٍ وَلَا هَمٍّ وَلَا حُزْنٍ وَلَا أَذًى وَلَا غَمٍّ، حَتَّى الشَّوْكَةِ يُشَاكُهَا، إِلَّا كَفَّرَ اللَّهُ بِهَا مِنْ خَطَايَاهُ».</p>
+            </div>
+            <div class="heart-keepsake-card">
+              <p>المرض نهرٌ طهورٌ يغسل أدران الذنوب، و«مستشفى السجادة» مفتوحٌ على مدار الساعة لا يحتاج إلى موعدٍ ولا واسطة؛ فاسجد بين يدي الشافي وقل من أعماق قلبك: «اللَّهُمَّ رَبَّ النَّاسِ، أَذْهِبِ الْبَاسَ، اشْفِ أَنْتَ الشَّافِي، لَا شِفَاءَ إِلَّا شِفَاؤُكَ، شِفَاءً لَا يُغَادِرُ سَقَمًا».</p>
+            </div>
+          `
+        },
+        {
+          tag: "٥ • الوَكِيل",
+          title: "الوَكِيل — فاتخذه وكيلا .. وانكسر له",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم الخامس ✦</div>
+              <h1 class="chapter-opener">الوَكِيل</h1>
+              <div class="divine-epigraph">أمانيك مع الله حقائق .. تطلّعاتك واقع معاش ..<br/>رغباتك ستُهدى إليك .. أشواقك ستهبّ عليك .. فقط تذكّر: ﴿ وَتَوَكَّلْ عَلَى الْعَزِيزِ الرَّحِيمِ ﴾</div>
+            </div>
+            <p>الوكيل سبحانه هو الكفيل بأرزاق عباده، القائم بمصالحهم، الحافظ لشؤونهم؛ فإذا فوضتَ أمرك إليه تولّاك بعنايته، وكفاك ما أهمّك، وفتح لك الأبواب المغلقة من حيث لا تحتسب.</p>
+            <h2>فاتخذه وكيلا ..</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ رَّبُّ الْمَشْرِقِ وَالْمَغْرِبِ لَا إِلَٰهَ إِلَّا هُوَ فَاتَّخِذْهُ وَكِيلًا ﴾</p>
+            </div>
+            <p>إذا كان ربّ المشرق والمغرب هو وكيلك، فمَن ذا الذي يقدر على كيدك أو حرمانك؟ تأمّل كيف جمع الله في آيةٍ أخرى بين العزّة والرحمة ليطمئن قلب المتوكل: ﴿ وَتَوَكَّلْ عَلَى الْعَزِيزِ الرَّحِيمِ * الَّذِي يَرَاكَ حِينَ تَقُومُ * وَتَقَلُّبَكَ فِي السَّاجِدِينَ ﴾؛ فهو عزيزٌ لا يُغلب، رحيمٌ لا يخذل من لجأ إليه.</p>
+            <h2>خطّة سنويّة .. وانكسر له</h2>
+            <p>نحن نتوكل على الله في طلب الرزق ودفع البلاء، لكنّ أعظم التوكل ما أشار إليه شيخ الإسلام ابن تيمية وتلميذه ابن القيم في سرّ اقتران العبادة بالاستعانة في قوله تعالى: ﴿ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ﴾؛ فإياك نعبد تدفع الرياء، وإياك نستعين تدفع الكبر، ولا قيام لك بطاعةٍ ولا ثبات على هدى إلا إذا توكلتَ على الله واستعنتَ به وقلتَ في دبر كل صلاة: «اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ».</p>
+            <p>سافر شابٌّ للدراسة في الخارج، وكانت أمه الصالحة تودعه عند الباب وهي تقول بدموع التوكل: «اللهم إني أستودعك دين ابني وقلبه وعفته، وأتخذك عليه وكيلًا». وفي الغربة تعرض الشاب لفتنٍ عظيمةٍ كادت تعصف به، فكان في كل مرةٍ يجد حاجزًا خفيًّا يصرفه عن الحرام ويعيده إلى رشده، حتى رجع إلى أمه حافظًا لدينه، متفوقًا في علمه، ببركة توكل أمه وانكسارها للوكيل سبحانه.</p>
+            <h2>الدموع المبتسمة!</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ وَتَوَكَّلْ عَلَى الْحَيِّ الَّذِي لَا يَمُوتُ وَسَبِّحْ بِحَمْدِهِ ﴾</p>
+            </div>
+            <p>كلّ من تتكئ عليهم من البشر يغيبون أو يضعفون أو يموتون، أمّا الله فهو الحيّ الذي لا يموت؛ فمن علق قلبه به لم يعرف اليتم ولا الخذلان أبدًا.</p>
+          `
+        },
+        {
+          tag: "٥ • الوَكِيل",
+          title: "أكسجين الحياة .. وحسبي الله ونعم الوكيل",
+          type: "reading",
+          html: `
+            <h2>أكسجين الحياة .. والحياة جحيم بدونه</h2>
+            <p>التوكل هو أكسجين الروح في حفظ الصحة، وفي تربية الأبناء، وفي مواجهة تقلبات الزمان؛ فأنت تبذل الأسباب المشروعة بكلّ جدٍّ وإتقان، لكنّ قلبك لا يلتفت إلى السبب، بل يظلّ معلقًا بمسبّب الأسباب وحده. وكم من بيتٍ زوجيٍّ تحوّل إلى ساحة قلقٍ وشكٍّ لأنّ الزوجين اعتمدا على ذكائهما وحساباتهما المادية، ونسيا التوكل على من بيده القلوب! وحين يدخل التوكل إلى البيت، تحلّ المودة والسكينة، وينال أهله وسام المحبة الإلهية: ﴿ إِنَّ اللَّهَ يُحِبُّ الْمُتَوَكِّلِينَ ﴾.</p>
+            <h2>حسبي الله</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ الَّذِينَ قَالَ لَهُمُ النَّاسُ إِنَّ النَّاسَ قَدْ جَمَعُوا لَكُمْ فَاخْشَوْهُمْ فَزَادَهُمْ إِيمَانًا وَقَالُوا حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ * فَانقَلَبُوا بِنِعْمَةٍ مِّنَ اللَّهِ وَفَضْلٍ لَّمْ يَمْسَسْهُمْ سُوءٌ ﴾</p>
+            </div>
+            <p>قالها إبراهيم عليه السلام حين أُلقي في النار فصارت بردًا وسلامًا، وقالها محمد ﷺ وأصحابه في حمراء الأسد فانقلبوا بنعمةٍ من الله وفضل، ويهتف بها كلّ مؤمنٍ حرّ الفؤاد:</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">خُذُوا كُلَّ دُنْيَاكُمُ وَاتْرُكُوا ••• فُؤَادِيَ حُرًّا طَلِيقًا غَرِيبَا</div>
+              <div class="poetry-shatr">فَإِنِّي أَعْظَمُكُمْ ثَرْوَةً ••• وَإِنْ خِلْتُمُونِي وَحِيدًا سَلِيبَا</div>
+            </div>
+            <h2>سبب مقنع .. واحذر .. وأشياء تهددك</h2>
+            <p>أيعجزك سببٌ مقنعٌ للتوكل عليه وهو القائل: ﴿ وَلِلَّهِ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ وَكَفَىٰ بِاللَّهِ وَكِيلًا ﴾، والقائل: ﴿ اللَّهُ خَالِقُ كُلِّ شَيْءٍ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ وَكِيلٌ ﴾؟</p>
+            <div class="heart-keepsake-card">
+              <p>احذر أن تتخذ من دونه وكيلًا، وابدأ يومك كلّ صباحٍ حين تخرج من بيتك بقولك: «بِسْمِ اللهِ، تَوَكَّلْتُ عَلَى اللهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ»، ليُقال لك من السماء: «هُدِيتَ وَكُفِيتَ وَوُقِيتَ»!</p>
+            </div>
+          `
+        },
+        {
+          tag: "٦ • الشَّكُور",
+          title: "الشَّكُور — إذا أعطاك أدهشك .. ومثقال الذرّة",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم السادس ✦</div>
+              <h1 class="chapter-opener">الشَّكُور</h1>
+              <div class="divine-epigraph">مع كرم الله تتغيّر المسائل الحسابية!!<br/>لأنّه كرم لا يخضع للمعادلات الحسابية، بل للفضل الإلهي!!</div>
+            </div>
+            <p>الشكور سبحانه هو الذي يزكو عنده القليل من عمل العباد، فيضاعف لهم الجزاء أضعافًا كثيرة، ويشكر القليل من الطاعة فيغفر به الكثير من الزلل، ويعطي على العمل المحدود في الزمن الفاني نعيمًا غير محدودٍ في البقاء الخالد.</p>
+            <h2>إذا أعطاك أدهشك .. ومسألة حسابيّة</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ مَّثَلُ الَّذِينَ يُنفِقُونَ أَمْوَالَهُمْ فِي سَبِيلِ اللَّهِ كَمَثَلِ حَبَّةٍ أَنبَتَتْ سَبْعَ سَنَابِلَ فِي كُلِّ سُنبُلَةٍ مِّائَةُ حَبَّةٍ وَاللَّهُ يُضَاعِفُ لِمَن يَشَاءُ وَاللَّهُ وَاسِعٌ عَلِيمٌ ﴾</p>
+            </div>
+            <p>في حسابات البشر: واحد زائد واحد يساوي اثنين. أمّا في خزائن الشكور سبحانه، فالحسنة بعشر أمثالها إلى سبعمائة ضعفٍ إلى أضعافٍ كثيرة لا يعلمها إلا الله!</p>
+            <h2>واذكر في الكتاب</h2>
+            <p>من شكر الله لعباده الأصفياء أن خلد ذكرهم وثناءه عليهم في كتابه يُتلى إلى يوم القيامة؛ فأثنى على إبراهيم وموسى وإسماعيل وإدريس، وقال عن نوحٍ: ﴿ إِنَّهُ كَانَ عَبْدًا شَكُورًا ﴾، وقال عن داوود وسليمان وأيوب: ﴿ نِعْمَ الْعَبْدُ إِنَّهُ أَوَّابٌ ﴾، ورفع ذكر نبيّنا محمد ﷺ في العالمين كما قال حسان بن ثابت رضي الله عنه:</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">وَضَمَّ الإِلَهُ اسْمَ النَّبِيِّ إِلَى اسْمِهِ ••• إِذَا قَالَ فِي الخَمْسِ المُؤَذِّنُ أَشْهَدُ</div>
+              <div class="poetry-shatr">وَشَقَّ لَهُ مِنْ اسْمِهِ لِيُجِلَّهُ ••• فَذُو العَرْشِ مَحْمُودٌ وَهَذَا مُحَمَّدُ</div>
+            </div>
+            <h2>مثقال الذرّة</h2>
+            <p>لا يضيع عند الشكور مثقال ذرة: ﴿ فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُ ﴾! بل إنّه سبحانه يتقبل التمرة من الكسب الطيب فيربيها لصاحبها كما يربي أحدكم فَلُوَّه حتى تكون مثل الجبل. جمع موظفٌ وزوجته تحويشة العمر لبناء مسكنٍ لهما، ثم رأيا حيًّا فقيرًا بلا مسجدٍ فآثرا أن يبنيا به مسجدًا لله، فشكر الله صنيعهما وفتح للرجل أبواب التجارة حتى صار يملك ثلاثة عشر فرعًا تجاريًّا، وبنى لنفسه ولأبنائه أجمل البيوت! وكذلك قصة الشيخ سليمان الرحيلي الذي أوقف مساحات واسعة لمساجد المسافرين وراحتهم، فبارك الشكور في تجارته واسمه في الآفاق.</p>
+          `
+        },
+        {
+          tag: "٦ • الشَّكُور",
+          title: "أَنفق أُنفق عليك .. وانتشال",
+          type: "reading",
+          html: `
+            <h2>أَنفق .. أُنفق عليك</h2>
+            <div class="hadith-box">
+              <p>قال رسول الله ﷺ: «قَالَ اللَّهُ تَبَارَكَ وَتَعَالَى: يَا ابْنَ آدَمَ أَنْفِقْ أُنْفِقْ عَلَيْكَ».</p>
+            </div>
+            <p>طالبٌ جامعيٌّ لم يبقَ في جيبه آخر الشهر سوى خمسة ريالات، فرأى عامل نظافةٍ جائعًا فاشترى له بها طعامًا وعاد إلى غرفته طاويًا، وما إن حلّ المساء حتى طرق بابه صديقٌ يحمل له مكافأةً متأخرةً قدرها ألفا ريال! وكاتبةٌ تصدقت بآخر مائة ريالٍ في حقيبتها، فجاءها في اليوم نفسه شيكٌ بألف ريالٍ مكافأةً لمقالٍ قديمٍ كانت قد نسيته! إنّه الشكور سبحانه لا يترك معروفًا بلا جزاء.</p>
+            <h2>وافعلوا الخير .. واسكت ..</h2>
+            <p>افعل الخير في كلّ تفاصيل يومك: في قبلةٍ على رأس والديك، وفي سقيا طيرٍ، وفي إماطة أذى عن الطريق. ولما ذُكر عند الإمام أحمد بن حنبل رجلٌ مات فقيل: «مات ولم يترك خيرًا كثيرًا»، قال الإمام أحمد: «اسكت! بل مات على الخير كله؛ أليس قد مات على التوحيد والسنة؟»، وقال تعالى: ﴿ وَمَا تُقَدِّمُوا لِأَنفُسِكُم مِّنْ خَيْرٍ تَجِدُوهُ عِندَ اللَّهِ هُوَ خَيْرًا وَأَعْظَمَ أَجْرًا ﴾، وقال ﷺ: «صَنَائِعُ الْمَعْرُوفِ تَقِي مَصَارِعَ السُّوءِ».</p>
+            <h2>إلى أين؟ .. وانتشال</h2>
+            <p>قيل لأعرابيٍّ حضرته الوفاة: «أتحبّ أن تموت؟»، قال: «نعم»، قيل: «ولمَ؟»، قال: «إلى أين أذهب؟ إلى الله! وكيف أكره أن أقدِم على الذي لم أرَ الخير إلا منه؟!».</p>
+            <div class="heart-keepsake-card">
+              <p>من شكر الله لعباده أن ينتشلهم في ساعات الكرب بصالح أعمالهم السابقة؛ كما فرّج الصخرة عن الثلاثة الذين أطبقت عليهم في الغار ببرّ أحدهم بوالديه، وعفة الثاني عن الحرام، وأمانة الثالث في ردّ مال الأجير، وكما رفع نبيّه عيسى عليه السلام ونجّاه من مكر أعدائه؛ فكن مع الشكور بصالح العمل، يكن معك بلطفه والفرج.</p>
+            </div>
+          `
+        },
+        {
+          tag: "٧ • الجَبَّار",
+          title: "الجَبَّار — قلبك المهشّم .. وواجبرني",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم السابع ✦</div>
+              <h1 class="chapter-opener">الجَبَّار</h1>
+              <div class="divine-epigraph">كلّما انطفأ حلم خلق الله لك حُلما أجمل ..<br/>وكلّما بهتت في قلبك ذكرى صنع الله لك ذكرى أروع!</div>
+            </div>
+            <p>الجبّار سبحانه هو الذي يجبر الفقر بالغنى، والمرض بالصحة، والخيبة بالتوفيق، والخوف بالأمن، وهو الذي يجبر القلوب المنكسرة فيضمّد جراحها، ويمسح دموعها، ويقهر الجبابرة الظالمين بعدله وعزته.</p>
+            <h2>قلبك المهشّم .. كيف تهشّم؟</h2>
+            <p>حين ينكسر زجاجٌ بين يديك يعجز البشر عن إعادته كما كان، أمّا القلوب المهشّمة بمرارة الفقد أو خذلان الأحبة أو قسوة الظلم، فإذا عُرضت على الجبّار سبحانه أعاد صياغتها أقوى وأصفى وأجمل مما كانت! لذلك شرع الله لنا أن نقول في أخصّ لحظات القرب بين السجدتين: «اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَعَافِنِي، وَاهْدِنِي، وَارْزُقْنِي، وَاجْبُرْنِي».</p>
+            <h2>واجبرني</h2>
+            <p>يحكي المؤلف قصة وفاة ابنة أخته الصغيرة، وكيف خيّم الحزن على قلب أمها المكلومة، فما زالت تردد بيقينٍ دعاء أمّ سلمة رضي الله عنها: «إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ، اللَّهُمَّ أْجُرْنِي فِي مُصِيبَتِي، وَأَخْلِفْ لِي خَيْرًا مِنْهَا»، فربط الجبّار على قلبها، وأخلفها الله خيرًا وبركةً وسكينةً تملأ دارها.</p>
+            <h2>واحلل عقدة من لساني</h2>
+            <p>طالبٌ كان يعاني من تلعثمٍ شديدٍ في لسانه يجعله موضع سخريةٍ وإحراجٍ كلما طُلب منه القراءة أمام زملائه، فخلا بربه في جوف الليل وبكى ساجدًا يناجي الجبّار بدعاء كليم الله موسى: ﴿ رَبِّ اشْرَحْ لِي صَدْرِي * وَيَسِّرْ لِي أَمْرِي * وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي * يَفْقَهُوا قَوْلِي ﴾، فانحلّت عقدة لسانه، وصار من أفصح زملائه وأقدرهم على الخطابة والبيان!</p>
+          `
+        },
+        {
+          tag: "٧ • الجَبَّار",
+          title: "العربة .. ورقم ٨٣ والحلم والذكرى",
+          type: "reading",
+          html: `
+            <h2>يحبك مبتسمًا .. والعربة</h2>
+            <p>من أعظم القربات إلى الجبّار جبرُ خواطر عباده المنكسرين؛ فقد كان النبي ﷺ يجبر خاطر الصبي الصغير فيقول له: «يَا أَبَا عُمَيْرٍ، مَا فَعَلَ النُّغَيْرُ؟»، وكان أبو بكر الصديق وعبد الله بن المبارك وشيخ الإسلام ابن تيمية يتفقدون الأرامل واليتامى والمساكين جبرًا لقلوبهم. ويحكي أحدهم أنّه رأى عجوزًا منهكةً عند الحرم المكي لا تقوى على المشي ولا تملك أجرة العربة، فاستأجر لها عربةً وطاف وسعى بها، فرفعت يديها تحت الميزاب بدعواتٍ صادقاتٍ فتحت له أبواب البركة في عمره كله:</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">كُنْ بَلْسَمًا إِنْ كَانَ دَهْرُكَ أَرْقَمَا ••• وَحَلَاوَةً إِنْ كَانَ غَيْرُكَ عَلْقَمَا</div>
+              <div class="poetry-shatr">أَحْسِنْ وَإِنْ لَمْ تُجْزَ حَتَّى بِالثَّنَا ••• أَيَّ الجَزَاءِ الغَيْثُ يَبْغِي إِنْ هَمَى؟</div>
+            </div>
+            <h2>٨٣ .. وحجرة الخادم</h2>
+            <p>طالبٌ في جامعة أمّ القرى بمكة المكرمة كان يستعدّ لاختبار مادة «النقد الأدبي» الصعبة، وفي طريقه رأى معتمرًا تائهًا قد ضاعت نفقته، فأخرج الطالب كلّ ما في محفظته فإذا هي «٨٣ ريالًا»، فدفعها للمعتمر جبرًا لخاطره. وحين ظهرت نتائج الاختبار، فوجئ الطالب بأنّه حصل على «٨٣ درجة» بالتمام والكمال! إنّه الجبّار الذي قال: ﴿ وَإِن مِّن شَيْءٍ إِلَّا عِندَنَا خَزَائِنُهُ ﴾.</p>
+            <h2>الحلم .. والذكرى .. وكن ساجدًا</h2>
+            <p>انظر كيف جبر الله قلب نبيّه ﷺ بعد أذى ثقيفٍ في الطائف؛ فأرسل إليه نفرًا من الجنّ يستمعون القرآن ويؤمنون به، وأرسل إليه ملك الجبال طوع أمره، ثم أسرى به إلى المسجد الأقصى وعرج به إلى السماوات العلى! وكيف جبر قلب نوحٍ عليه السلام بعد تسعمائة وخمسين عامًا حين دعا: ﴿ أَنِّي مَغْلُوبٌ فَانتَصِرْ ﴾ ففتحت أبواب السماء بماءٍ منهمر.</p>
+            <div class="heart-keepsake-card">
+              <p>كن ساجدًا بين يدي الجبّار، واهتف بدموعك: «يا جابر المنكسرين، اجبر كسر قلبي، وضمّد جراحي، وأخلف لي خيرًا مما فقدتُ يا أرحم الراحمين».</p>
+            </div>
+          `
+        },
+        {
+          tag: "٨ • الهَادِي",
+          title: "الهَادِي — دفء الهداية .. وليست صُدفة!",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم الثامن ✦</div>
+              <h1 class="chapter-opener">الهَادِي</h1>
+              <div class="divine-epigraph">لا يهديك لأنّك فلان ابن فلان، بل لأنّه شاء أن يهديك!<br/>﴿ يَهْدِي مَن يَشَاءُ إِلَىٰ صِرَاطٍ مُّسْتَقِيمٍ ﴾</div>
+            </div>
+            <p>الهادي سبحانه هو الذي يدلّ الحيارى عليه، ويرشد التائهين إلى بابه، ويوقظ القلوب الغافلة بنورٍ من عنده، ويهدي كلّ مخلوقٍ في هذا الكون الفسيح إلى ما يصلح به معاشه ومعاده.</p>
+            <h2>دفء .. وليست صُدفة!</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ الَّذِينَ يَعْمَلُونَ الصَّالِحَاتِ أَنَّ لَهُمْ أَجْرًا كَبِيرًا ﴾</p>
+            </div>
+            <p>القرآن الكريم هو منبع الهدايات الأعظم؛ تأمّل كيف خرج عمر بن الخطاب رضي الله عنه متوشحًا سيفه يريد قتل النبي ﷺ، فما إن قرأ في بيت أخته فاطمة فواتح سورة طه: ﴿ طه * مَا أَنزَلْنَا عَلَيْكَ الْقُرْآنَ لِتَشْقَىٰ * إِلَّا تَذْكِرَةً لِّمَن يَخْشَىٰ ﴾ حتى ارفضّ قلبه، وانقلب من أشدّ الناس عداوةً للإسلام إلى الفاروق الذي أعزّ الله به الدين! إنّها ليست مصادفة، بل هي هداية الهادي سبحانه.</p>
+            <h2>لا .. ولا .. وقبس من نور وبوصلة ضائعة</h2>
+            <p>قد يهديك الله برؤيا صالحة، أو بآيةٍ تتأملها كقوله تعالى في آية النور: ﴿ يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ ﴾، أو يلهمك التداوي بطاعةٍ من جنس البلاء؛ كمن حفر بئرًا لسقيا العطاشى فشفاه الله من داء الاستسقاء، أو كمن تصدق بلحم شاةٍ بنية شفاء طفلته المدهوسة فعافاها الله. وقد يهدي الله شابًّا في أوج غفلته بكلمةٍ عابرةٍ كما هدى فتية الكهف: ﴿ إِنَّهُمْ فِتْيَةٌ آمَنُوا بِرَبِّهِمْ وَزِدْنَاهُمْ هُدًى ﴾. وكان شيخ الإسلام ابن تيمية رحمه الله إذا استغلق عليه فهم مسألةٍ خرج إلى المساجد المهجورة ومرّغ جبهته في التراب وهو يقول: «يا معلّم داوود علّمني، ويا مفهّم سليمان فهّمني»، فيفتح الهادي عليه من كنوز العلم ما يبهر العقول.</p>
+          `
+        },
+        {
+          tag: "٨ • الهَادِي",
+          title: "ثم هدى .. وورقة وحبل النجاة",
+          type: "reading",
+          html: `
+            <h2>ثم هدى</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ قَالَ رَبُّنَا الَّذِي أَعْطَىٰ كُلَّ شَيْءٍ خَلْقَهُ ثُمَّ هَدَىٰ ﴾</p>
+            </div>
+            <p>انظر إلى هداية الله الفطرية العجيبة في مخلوقاته: فمن ذا الذي هدى سمك السلمون ليقطع آلاف الأميال عبر المحيطات ثم يعود إلى النهر ذاته الذي وُلد فيه ليضع بيضه؟ ومن الذي هدى القنفذ إذا لدغته الأفعى أن يسرع إلى نبتةٍ بريةٍ بعينها فيأكلها فتكون ترياقًا لسمّه؟ ومن الذي هدى صغار القطة العمياء فور ولادتها لتزحف نحو ثدي أمها؟ إنّه الهادي سبحانه!</p>
+            <h2>المستنقع .. وورقة!</h2>
+            <p>لا تحتقر عاصيًا غارقًا في مستنقع الذنوب؛ فلعلّ لحظة تعظيمٍ لله تنتشله وتجعله من كبار الأولياء! هذا بِشرُ بن الحارث (بشر الحافي) كان في شبابه لاهيًا، فمرّ يومًا في الطريق فوجد رقعةً مكتوبًا فيها «بسم الله الرحمن الرحيم» ملقاةً على الأرض، فرفعها وطيّبها بالمسك ووضعها في مكانٍ رفيعٍ إجلالًا لاسم الله؛ فنودي في منامه: «يا بشر، طيّبتَ اسمنا، لنطيّبنّ اسمك في الدنيا والآخرة»، فتاب وصار إمامًا من أئمة الزهد والورع! وكذلك صاحب الغار الذي ترفّع عن الفاحشة بعد أن تمكّن منها حين ذكّرته المرأة بقولها: «اتقِ الله ولا تفضّنّ الخاتم إلا بحقّه».</p>
+            <h2>حَبْل النجاة</h2>
+            <div class="heart-keepsake-card">
+              <p>نحن نقرأ في كلّ ركعةٍ من صلواتنا: ﴿ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ﴾؛ لأنّ العبد مفتقرٌ إلى هداية الله في كلّ نفسٍ من أنفاسه: هدايةً إلى الحق، وهدايةً في الحق، وثباتًا عليه حتى يلقى الله وهو عنه راضٍ.</p>
+            </div>
+          `
+        },
+        {
+          tag: "٩ • الغَفُور",
+          title: "الغَفُور — السجن .. وغَدَراتي وفَجَراتي؟",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم التاسع ✦</div>
+              <h1 class="chapter-opener">الغَفُور</h1>
+              <div class="divine-epigraph">الذنوب ستفسد عليك حياتك، ستقهر روحك،<br/>ستجعل الماء ذا نكهة غير مستساغة، والطعام غير هنيء، والليل وحشة، والنهار ملل .. فاهرب منها إلى الغفور!</div>
+            </div>
+            <p>الغفور سبحانه هو الذي يستر الذنب على عبده في الدنيا، ويتجاوز عن عقوبته في الآخرة، بل ويبدّل سيئات التائبين الصادقين حسناتٍ بفضله وكرمه وسعة رحمته.</p>
+            <h2>السجن .. وهل تعلم؟</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ وَمَا أَصَابَكُم مِّن مُّصِيبَةٍ فَبِمَا كَسَبَتْ أَيْدِيكُمْ وَيَعْفُو عَن كَثِيرٍ ﴾</p>
+            </div>
+            <p>الخطيئة سجنٌ مظلمٌ يحيط بصاحبه كما قال تعالى: ﴿ وَأَحَاطَتْ بِهِ خَطِيئَتُهُ ﴾، ولا يفتح أقفال هذا السجن إلا مفتاح الاستغفار والإنابة إلى الغفور سبحانه.</p>
+            <h2>وغَدَراتي؟ .. وهل نسيت؟</h2>
+            <p>تأمّل سعة مغفرة الله: هذا خالد بن الوليد رضي الله عنه كان قائد الفرسان الذين التَفّوا على جبل الرماة في غزوة أُحد، ثم لمّا تاب وأسلم غفر الله له ما سلف وصار «سيف الله المسلول»! وكذلك أبو سفيان، وعكرمة بن أبي جهل، وصفوان بن أمية، وعمرو بن العاص الذي قال له النبي ﷺ: «أَمَا عَلِمْتَ أَنَّ الإِسْلَامَ يَهْدِمُ مَا كَانَ قَبْلَهُ؟». وجاء شيخٌ كبيرٌ يدعم على عصاه إلى النبي ﷺ فقال: «أرأيتَ رجلًا عمل الذنوب كلها فلم يترك منها شيئًا، وهو في ذلك لم يترك حاجةً ولا داجةً إلا أتاها، فهل له من توبة؟»، قال ﷺ: «هَلْ أَسْلَمْتَ؟»، قال: «أمّا أنا فأشهد أن لا إله إلا الله وأنّك رسول الله»، قال: «نَعَمْ، تَفْعَلُ الْخَيْرَاتِ وَتَتْرُكُ السَّيِّئَاتِ فَيَجْعَلُهُنَّ اللَّهُ لَكَ خَيْرَاتٍ كُلَّهُنَّ»، قال: «وغَدَراتي وفَجَراتي؟»، قال: «نَعَمْ»، فولّى الرجل وهو يكبّر حتى توارى!</p>
+            <p>ولمّا رأى النبي ﷺ امرأةً من السبي تبحث عن رضيعها بلهفةٍ حتى إذا وجدته ألزقته ببطنها وأرضعته، قال لأصحابه: «أَتُرَوْنَ هَذِهِ طَارِحَةً وَلَدَهَا فِي النَّارِ؟»، قالوا: «لا والله»، فقال ﷺ: «لَلَّهُ أَرْحَمُ بِعِبَادِهِ مِنْ هَذِهِ بِوَلَدِهَا».</p>
+          `
+        },
+        {
+          tag: "٩ • الغَفُور",
+          title: "طوبى .. ولا تقنطوا من رحمة الله",
+          type: "reading",
+          html: `
+            <h2>طوبى .. ولا تقنطوا</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ ﴾</p>
+            </div>
+            <p>انظر إلى منتهى التحبّب في قوله: ﴿ يَا عِبَادِيَ ﴾؛ فلم يطردهم بسبب إسرافهم، بل نسبهم إليه، ونهاهم عن القنوط، ووعدهم بمغفرة الذنوب جميعًا! وقد قال النبي ﷺ: «طُوبَى لِمَنْ وَجَدَ فِي صَحِيفَتِهِ اسْتِغْفَارًا كَثِيرًا».</p>
+            <h2>أعظم مشيئة! .. والأجمل .. ولا تندهش!</h2>
+            <p>يقول تعالى: ﴿ وَمَن يَعْمَلْ سُوءًا أَوْ يَظْلِمْ نَفْسَهُ ثُمَّ يَسْتَغْفِرِ اللَّهَ يَجِدِ اللَّهَ غَفُورًا رَّحِيمًا ﴾. ولا تندهش من كرم الغفور؛ فقد قال لأهل بدرٍ: «اعْمَلُوا مَا شِئْتُمْ فَقَدْ غَفَرْتُ لَكُمْ»، وبشّر حارثة بن سراقة رضي الله عنه بقوله لأمه: «يَا أُمَّ حَارِثَةَ إِنَّهَا جِنَانٌ فِي الْجَنَّةِ، وَإِنَّ ابْنَكِ أَصَابَ الْفِرْدَوْسَ الأَعْلَى».</p>
+            <h2>ابدأ ..</h2>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ قُلْ إِن كُنتُمْ تُحِبُّونَ اللَّهَ فَاتَّبِعُونِي يُحْبِبْكُمُ اللَّهُ وَيَغْفِرْ لَكُمْ ذُنُوبَكُمْ وَاللَّهُ غَفُورٌ رَّحِيمٌ ﴾</p>
+            </div>
+            <div class="heart-keepsake-card">
+              <p>ابدأ الآن صفحةً بيضاء مع الله، وتوضأ وصلِّ ركعتين، وقل بقلبٍ خاشعٍ سيّد الاستغفار: «اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ».</p>
+            </div>
+          `
+        },
+        {
+          tag: "١٠ • القَرِيب",
+          title: "القَرِيب — إنّه يراك الآن .. ودبيب النملة",
+          type: "opener",
+          html: `
+            <div class="divine-name-opener">
+              <div class="letter-envelope-header">✦ الاسم العاشر ✦</div>
+              <h1 class="chapter-opener">القَرِيب</h1>
+              <div class="divine-epigraph">قال لي صديقي مرّة قبل أن يخرج من زيارتي في غرفتي بإسكان الجامعة:<br/>اكتب لي في هذه الورقة كلمة لأقرأها وأنا عائد إلى غرفتي، فكتبت له: «إنّه يراك الآن» .. أخبرني فيما بعد أنّه فُجع بها!!</div>
+            </div>
+            <p>القريب سبحانه .. فوق سماواته مستوٍ على عرشه بائنٌ من خلقه، وهو مع ذلك قريبٌ بعلمه وسمعه وبصره وإحاطته ورحمته وإجابته، أقرب إلى العبد من حبل الوريد، يسمع همس الشفاه، ويبصر خلجات الضمائر.</p>
+            <h2>يا الله! .. ومن أجلك</h2>
+            <div class="hadith-box">
+              <p>قال رسول الله ﷺ لأصحابه حين رفعوا أصواتهم بالتكبير: «يَا أَيُّهَا النَّاسُ، ارْبَعُوا عَلَى أَنْفُسِكُمْ، فَإِنَّكُمْ لَا تَدْعُونَ أَصَمَّ وَلَا غَائِبًا، إِنَّكُمْ تَدْعُونَ سَمِيعًا قَرِيبًا، وَهُوَ مَعَكُمْ».</p>
+            </div>
+            <p>يروي المؤلف كيف داهمه ألمٌ شديدٌ في أذنه وهو في المسجد، فوضع يده عليها وناجى ربه القريب همسًا، فزال الألم في التوّ واللحظة! وتأمّل مشاعر أُبيّ بن كعب رضي الله عنه حين قال له النبي ﷺ: «إِنَّ اللَّهَ أَمَرَنِي أَنْ أَقْرَأَ عَلَيْكَ الْقُرْآنَ»، فقال أُبيّ والدموع تملأ عينيه: «آللَّهُ سَمَّانِي لَكَ؟»، قال: «نَعَمْ»، فبكى أُبيّ شوقًا وإجلالًا لقرب ربه العظيم من عبده!</p>
+            <h2>دبيب النملة .. ويراك الآن! .. وابتسم</h2>
+            <p>سبحان من يبصر دبيب النملة السوداء، على الصخرة الصمّاء، في الليلة الظلماء! وسبحان من سمع شكوى خولة بنت ثعلبة من فوق سبع سماوات وهي تهمس للنبي ﷺ في طرف الحجرة، وعائشة رضي الله عنها في الحجرة نفسها يخفى عليها بعض كلامها، فأنزل الله: ﴿ قَدْ سَمِعَ اللَّهُ قَوْلَ الَّتِي تُجَادِلُكَ فِي زَوْجِهَا وَتَشْتَكِي إِلَى اللَّهِ وَاللَّهُ يَسْمَعُ تَحَاوُرَكُمَا ﴾. ولما اعترض قاطع طريقٍ أحد الصالحين ليقتله، استأذنه أن يصلي ركعتين، فقرأ في صلاته: ﴿ أَمَّن يُجِيبُ الْمُضْطَرَّ إِذَا دَعَاهُ وَيَكْشِفُ السُّوءَ ﴾، فجاء فارسٌ فأنقذه في الحال! وكذا سمع القريب نداء يونس عليه السلام في الظلمات الثلاث: ﴿ لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ ﴾. وفي الحديث القدسي الجليل: «أَنَا عِنْدَ ظَنِّ عَبْدِي بِي، وَأَنَا مَعَهُ إِذَا ذَكَرَنِي، فَإِنْ ذَكَرَنِي فِي نَفْسِهِ ذَكَرْتُهُ فِي نَفْسِي، وَإِنْ ذَكَرَنِي فِي مَلَإٍ ذَكَرْتُهُ فِي مَلَإٍ خَيْرٍ مِنْهُمْ، وَإِنْ تَقَرَّبَ إِلَيَّ شِبْرًا تَقَرَّبْتُ إِلَيْهِ ذِرَاعًا، وَإِنْ تَقَرَّبَ إِلَيَّ ذِرَاعًا تَقَرَّبْتُ إِلَيْهِ بَاعًا، وَإِنْ أَتَانِي يَمْشِي أَتَيْتُهُ هَرْوَلَةً».</p>
+          `
+        },
+        {
+          tag: "١٠ • القَرِيب • الخَاتِمَة",
+          title: "إذا سألوك .. وخاتمة الرحلة إلى السماء السابعة",
+          type: "reading",
+          html: `
+            <h2>وصلت إليه .. وإذا سألوك</h2>
+            <p>سُئل طفلٌ نابغٌ: «كيف تصل إلى الله؟»، فأجاب بكلمةٍ تكتب بماء الذهب: «إذا تفكّرتَ في مخلوقاته وصلتَ إليه!». وتأمّل كيف جاءت كلّ أسئلة القرآن بلفظ «يسألونك .. فقل»، إلا سؤال القرب والدعاء فقد تولّى الله الجواب عنه بنفسه دون واسطةٍ ليُشعرك بكمال القرب:</p>
+            <div class="quran-box">
+              <p class="quran-verse">﴿ وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ فَلْيَسْتَجِيبُوا لِي وَلْيُؤْمِنُوا بِي لَعَلَّهُمْ يَرْشُدُونَ ﴾</p>
+            </div>
+            <h2>من بين الأدخنة .. ومراتب القرب الثلاث</h2>
+            <p>حين تشتدّ المحن وتدلهمّ الخطوب ويتصاعد دخان الكرب، تذكّر مراتب القرب الثلاث في كتاب الله: قرب الإجابة: ﴿ إِنَّهُ سَمِيعٌ قَرِيبٌ ﴾، وقرب الرحمة: ﴿ إِنَّ رَحْمَتَ اللَّهِ قَرِيبٌ مِّنَ الْمُحْسِنِينَ ﴾، وقرب النصر والفرج: ﴿ أَلَا إِنَّ نَصْرَ اللَّهِ قَرِيبٌ ﴾.</p>
+            <div class="poetry-stanza">
+              <div class="poetry-shatr">يَا مَنْ يَرَى مَا فِي الضَّمِيرِ وَيَسْمَعُ ••• أَنْتَ المُعَدُّ لِكُلِّ مَا يُتَوَقَّعُ</div>
+              <div class="poetry-shatr">يَا مَنْ يُرَجَّى لِلشَّدَائِدِ كُلِّهَا ••• يَا مَنْ إِلَيْهِ المُشْتَكَى وَالمَفْزَعُ</div>
+              <div class="poetry-shatr">مَا لِي سِوَى فَقْرِي إِلَيْكَ وَسِيلَةٌ ••• فَبِالافْتِقَارِ إِلَيْكَ فَقْرِي أَدْفَعُ</div>
+            </div>
+            <h2>الخَاتِمَة</h2>
+            <p>وهنا تحطّ رحلتنا رحالها بعد أن حلّقنا في رحاب عشرةٍ من أسماء الله الحسنى: <strong>الصّمد، الحفيظ، اللطيف، الشافي، الوكيل، الشكور، الجبّار، الهادي، الغفور، القريب</strong>. وما هذه الصفحات إلا قبساتٌ يسيرةٌ تدعوك لأن تعيش مع الله بقلبك، فتصمد إليه في حاجاتك، وتستحفظه دينك وأهلك، وتستشعر لطفه في أقداره، وتطلب الشفاء منه، وتتوكل عليه، وتشكره ليزيدك، وتجبر به كسرك، وتستهديه صراطه، وتستغفره لذنبك، وتأنس بقربه في كلّ حين.</p>
+            <div class="heart-keepsake-card">
+              <p>اللهمّ إنّا نسألك بكلّ اسمٍ هو لك، سمّيتَ به نفسك، أو أنزلته في كتابك، أو علّمته أحدًا من خلقك، أو استأثرتَ به في علم الغيب عندك، أن تجعل القرآن العظيم ربيع قلوبنا، ونور صدورنا، وجلاء أحزاننا، وذهاب همومنا، وأن تملأ قلوبنا بمعرفتك، ومحبتك، والحياء منك، والأنس بقربك، والشوق إلى لقائك في غير ضرّاء مضرّة ولا فتنةٍ مضلّة. والحمد لله ربّ العالمين، وصلّى الله وسلّم على نبيّنا محمد وعلى آله وصحبه أجمعين.</p>
+            </div>
+          `
+        }
+      ]
+    };
+
+    (function() {
+      const STORAGE_KEY_PAGE = "maktabati_lianaka_allah_page_v4";
+      const STORAGE_KEY_BOOKMARKS = "maktabati_lianaka_allah_bookmarks_v4";
+
+      let currentPage = 0;
+      let bookmarks = [];
+
+      const activePageArticle = document.getElementById("activePageArticle");
+      const runningHeader = document.getElementById("runningHeader");
+      const runningHeaderTag = document.getElementById("runningHeaderTag");
+      const pageCounter = document.getElementById("pageCounter");
+      const btnPrevPage = document.getElementById("btnPrevPage");
+      const btnNextPage = document.getElementById("btnNextPage");
+      const bookmarkBtn = document.getElementById("bookmarkBtn");
+      const searchOpen = document.getElementById("searchOpen");
+      const searchClose = document.getElementById("searchClose");
+      const searchPanel = document.getElementById("searchPanel");
+      const searchInput = document.getElementById("searchInput");
+      const searchResults = document.getElementById("searchResults");
+      const tocBtn = document.getElementById("tocBtn");
+      const tocClose = document.getElementById("tocClose");
+      const tocPanel = document.getElementById("tocPanel");
+      const tocPanelList = document.getElementById("tocPanelList");
+
+      function normalizeArabic(text) {
+        if (!text) return "";
+        return text
+          .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "")
+          .replace(/[أإآٱ]/g, "ا")
+          .replace(/ة/g, "ه")
+          .replace(/ى/g, "ي");
+      }
+
+      function loadState() {
+        try {
+          const saved = parseInt(localStorage.getItem(STORAGE_KEY_PAGE), 10);
+          if (!isNaN(saved) && saved >= 0 && saved < BOOK_DATA.pages.length) {
+            currentPage = saved;
+          }
+          const savedBm = JSON.parse(localStorage.getItem(STORAGE_KEY_BOOKMARKS) || "[]");
+          if (Array.isArray(savedBm)) bookmarks = savedBm;
+        } catch (e) {}
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY_PAGE, String(currentPage));
+          localStorage.setItem(STORAGE_KEY_BOOKMARKS, JSON.stringify(bookmarks));
+        } catch (e) {}
+        try {
+          const total = BOOK_DATA.pages.length;
+          const progress = total > 1 ? Math.round((currentPage / (total - 1)) * 100) : 100;
+          if (window.MaktabatiBridge && typeof window.MaktabatiBridge.onPageChanged === "function") {
+            window.MaktabatiBridge.onPageChanged(currentPage + 1, total, progress);
+          }
+        } catch (e) {}
+      }
+
+      function renderPage(idx) {
+        if (idx < 0 || idx >= BOOK_DATA.pages.length) return;
+        currentPage = idx;
+        const p = BOOK_DATA.pages[idx];
+        activePageArticle.innerHTML = p.html || "";
+
+        if (p.tag && p.type !== "cover") {
+          runningHeaderTag.textContent = p.tag + " — " + p.title;
+          runningHeader.hidden = false;
+        } else {
+          runningHeader.hidden = true;
+        }
+
+        const total = BOOK_DATA.pages.length;
+        pageCounter.textContent = (idx + 1) + " / " + total;
+        btnPrevPage.disabled = idx === 0;
+        btnNextPage.disabled = idx === total - 1;
+        bookmarkBtn.classList.toggle("active", bookmarks.includes(idx));
+
+        buildToc();
+        const stage = document.getElementById("bookStage");
+        if (stage) stage.scrollTop = 0;
+        window.scrollTo(0, 0);
+        saveState();
+      }
+
+      function buildToc() {
+        tocPanelList.innerHTML = "";
+        BOOK_DATA.pages.forEach((p, idx) => {
+          const item = document.createElement("div");
+          item.className = "toc-item" + (idx === currentPage ? " active" : "");
+          item.innerHTML = "<strong>" + (p.tag ? p.tag + " • " : "") + p.title + "</strong><span>صفحة " + (idx + 1) + "</span>";
+          item.addEventListener("click", () => {
+            tocPanel.classList.remove("open");
+            renderPage(idx);
+          });
+          tocPanelList.appendChild(item);
+        });
+      }
+
+      function runSearch(q) {
+        searchResults.innerHTML = "";
+        const normQ = normalizeArabic(q.trim());
+        if (normQ.length < 2) return;
+        const tmp = document.createElement("div");
+        BOOK_DATA.pages.forEach((p, idx) => {
+          tmp.innerHTML = p.html || "";
+          const raw = tmp.textContent || "";
+          const normRaw = normalizeArabic(raw);
+          const pos = normRaw.indexOf(normQ);
+          if (pos !== -1 || normalizeArabic(p.title).includes(normQ)) {
+            const start = Math.max(0, pos - 40);
+            const snippet = raw.substring(start, start + 120).trim();
+            const item = document.createElement("div");
+            item.className = "search-item";
+            item.innerHTML = "<strong>" + (p.tag ? p.tag + " — " : "") + p.title + " (ص " + (idx + 1) + ")</strong><p>…" + snippet + "…</p>";
+            item.addEventListener("click", () => {
+              searchPanel.classList.remove("open");
+              renderPage(idx);
+            });
+            searchResults.appendChild(item);
+          }
+        });
+      }
+
+      window.goToPage = function(idx) { renderPage(idx); };
+      window.nextPage = function() { if (currentPage < BOOK_DATA.pages.length - 1) renderPage(currentPage + 1); };
+      window.prevPage = function() { if (currentPage > 0) renderPage(currentPage - 1); };
+
+      searchOpen.addEventListener("click", () => {
+        searchPanel.classList.add("open");
+        setTimeout(() => searchInput.focus(), 100);
+      });
+      searchClose.addEventListener("click", () => searchPanel.classList.remove("open"));
+      tocBtn.addEventListener("click", () => tocPanel.classList.add("open"));
+      tocClose.addEventListener("click", () => tocPanel.classList.remove("open"));
+      bookmarkBtn.addEventListener("click", () => {
+        const i = bookmarks.indexOf(currentPage);
+        if (i === -1) bookmarks.push(currentPage);
+        else bookmarks.splice(i, 1);
+        bookmarkBtn.classList.toggle("active", bookmarks.includes(currentPage));
+        saveState();
+      });
+      searchInput.addEventListener("input", (e) => runSearch(e.target.value));
+
+      loadState();
+      renderPage(currentPage);
+    })();
+  </script>
+</body>
+</html>
