@@ -62,6 +62,19 @@ interface AppStrings {
     val bookDetailDeleteConfirmMessage: (title: String) -> String
     val bookDetailCancel: String
     val bookDetailConfirmDelete: String
+    val bookMenuSelectMultiple: String
+    val batchSelectedCount: (count: Int) -> String
+    val batchSelectAll: String
+    val batchDeselectAll: String
+    val batchMoveToShelf: String
+    val batchShare: String
+    val batchDelete: String
+    val batchClearSelection: String
+    val batchMoveDialogTitle: String
+    val batchMoveGeneralShelf: String
+    val batchMoveCreateNewShelf: String
+    val batchDeleteConfirmTitle: String
+    val batchDeleteConfirmMessage: (count: Int) -> String
 
     // Cloud Sync Menu & Banner
     val cloudAccountFallback: String
@@ -171,6 +184,21 @@ object ArabicStrings : AppStrings {
     }
     override val bookDetailCancel = "إلغاء"
     override val bookDetailConfirmDelete = "حذف نهائي"
+    override val bookMenuSelectMultiple = "تحديد متعدد"
+    override val batchSelectedCount: (Int) -> String = { count -> "$count محددة" }
+    override val batchSelectAll = "تحديد الكل"
+    override val batchDeselectAll = "إلغاء الكل"
+    override val batchMoveToShelf = "نقل لرف"
+    override val batchShare = "مشاركة"
+    override val batchDelete = "حذف"
+    override val batchClearSelection = "إلغاء التحديد"
+    override val batchMoveDialogTitle = "نقل الكتب المحددة إلى رف"
+    override val batchMoveGeneralShelf = "الرف العام (بدون رف مخصص)"
+    override val batchMoveCreateNewShelf = "+ إنشاء رف جديد ونقل الكتب إليه"
+    override val batchDeleteConfirmTitle = "تأكيد الحذف الجماعي"
+    override val batchDeleteConfirmMessage: (Int) -> String = { count ->
+        "هل أنت متأكد من حذف ($count) كتب محددة من مكتبتي؟ سيتم إزالة نسخها المحفوظة وسجل قراءتها نهائياً دون المساس بملفاتك الأصلية في الجهاز."
+    }
 
     override val cloudAccountFallback = "حساب جوجل"
     override val cloudSyncReadyStatus = "متصل بالسحابة وجاهز للمزامنة"
@@ -278,6 +306,21 @@ object EnglishStrings : AppStrings {
     }
     override val bookDetailCancel = "Cancel"
     override val bookDetailConfirmDelete = "Delete"
+    override val bookMenuSelectMultiple = "Select Books"
+    override val batchSelectedCount: (Int) -> String = { count -> "$count Selected" }
+    override val batchSelectAll = "Select All"
+    override val batchDeselectAll = "Deselect All"
+    override val batchMoveToShelf = "Move to Shelf"
+    override val batchShare = "Share"
+    override val batchDelete = "Delete"
+    override val batchClearSelection = "Clear Selection"
+    override val batchMoveDialogTitle = "Move Selected Books to Shelf"
+    override val batchMoveGeneralShelf = "General Library (No Custom Shelf)"
+    override val batchMoveCreateNewShelf = "+ Create New Shelf & Move Books"
+    override val batchDeleteConfirmTitle = "Confirm Batch Deletion"
+    override val batchDeleteConfirmMessage: (Int) -> String = { count ->
+        "Are you sure you want to delete ($count) selected books from your library? Their saved copies and reading progress will be permanently removed without affecting your original device files."
+    }
 
     override val cloudAccountFallback = "Google Account"
     override val cloudSyncReadyStatus = "Connected & ready to sync"

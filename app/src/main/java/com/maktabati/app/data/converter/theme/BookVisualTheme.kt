@@ -32,7 +32,7 @@ enum class BookVisualTheme(
     val paperEdgeHex: String,
     val fontBody: String = "Noto Naskh Arabic",
     val fontHeadings: String = "Aref Ruqaa",
-    val fontChapterTitles: String = "Reem Kufi",
+    val fontChapterTitles: String = "Noto Kufi Arabic",
     val fontQuotes: String = "Amiri",
     val fontQuran: String = "Amiri Quran"
 ) {
@@ -61,7 +61,7 @@ enum class BookVisualTheme(
         textSecondaryHex = "#4B5E54",
         paperEdgeHex = "#D8CEB8",
         fontBody = "Amiri",
-        fontHeadings = "Reem Kufi",
+        fontHeadings = "Noto Kufi Arabic",
         fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
@@ -89,7 +89,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#DDD1C4",
         fontBody = "Noto Naskh Arabic",
         fontHeadings = "Aref Ruqaa",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
     ),
@@ -169,7 +169,7 @@ enum class BookVisualTheme(
         textSecondaryHex = "#4A584F",
         paperEdgeHex = "#D9CEB8",
         fontBody = "Scheherazade New",
-        fontHeadings = "Reem Kufi",
+        fontHeadings = "Noto Kufi Arabic",
         fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
@@ -197,7 +197,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#D6CBB5",
         fontBody = "Amiri",
         fontHeadings = "Aref Ruqaa",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri Quran",
         fontQuran = "Amiri Quran"
     ),
@@ -228,7 +228,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#D8C8B0",
         fontBody = "Noto Naskh Arabic",
         fontHeadings = "Amiri",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
     ),
@@ -336,7 +336,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#DFD1C5",
         fontBody = "Amiri",
         fontHeadings = "Aref Ruqaa",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
     ),
@@ -367,7 +367,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#E6CBD7",
         fontBody = "Noto Naskh Arabic",
         fontHeadings = "Aref Ruqaa",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
     ),
@@ -421,7 +421,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#D8CEEE",
         fontBody = "Readex Pro",
         fontHeadings = "El Messiri",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
     ),
@@ -533,7 +533,7 @@ enum class BookVisualTheme(
         paperEdgeHex = "#D9D0C4",
         fontBody = "Markazi Text",
         fontHeadings = "El Messiri",
-        fontChapterTitles = "Reem Kufi",
+        fontChapterTitles = "Noto Kufi Arabic",
         fontQuotes = "Amiri",
         fontQuran = "Amiri Quran"
     ),

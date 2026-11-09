@@ -1,8 +1,14 @@
 package com.maktabati.app.ui.screens.library
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
@@ -10,11 +16,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -22,14 +31,23 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -42,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,12 +81,122 @@ import com.maktabati.app.ui.screens.library.components.CloudSyncBanner
 import com.maktabati.app.ui.screens.library.components.LibraryTopAppBar
 import com.maktabati.app.ui.screens.library.components.ReadingStatsHeaderBar
 import com.maktabati.app.ui.screens.library.dialogs.AboutMaktabatiDialog
+import com.maktabati.app.ui.screens.library.dialogs.BatchDeleteConfirmDialog
+import com.maktabati.app.ui.screens.library.dialogs.BatchMoveToShelfDialog
 import com.maktabati.app.ui.screens.library.dialogs.DeleteBookConfirmDialog
 import com.maktabati.app.ui.screens.library.dialogs.ImportStateDialogs
 import com.maktabati.app.ui.screens.library.dialogs.MultiBookZipDialog
 import com.maktabati.app.ui.viewmodel.LibraryViewModel
 import com.maktabati.app.ui.viewmodel.ViewMode
 import kotlinx.coroutines.delay
+
+@Composable
+fun BatchSelectionActionBar(
+    selectedCount: Int,
+    allVisibleSelected: Boolean,
+    onClearSelection: () -> Unit,
+    onSelectAllToggle: () -> Unit,
+    onMoveToShelfClick: () -> Unit,
+    onShareClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val strings = LocalAppStrings.current
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        tonalElevation = 6.dp,
+        shadowElevation = 4.dp,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .testTag("batch_selection_bar")
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onClearSelection,
+                    modifier = Modifier.testTag("batch_clear_selection_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = strings.batchClearSelection,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = strings.batchSelectedCount(selectedCount),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                TextButton(
+                    onClick = onSelectAllToggle,
+                    modifier = Modifier.testTag("batch_select_all_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SelectAll,
+                        contentDescription = if (allVisibleSelected) strings.batchDeselectAll else strings.batchSelectAll,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (allVisibleSelected) strings.batchDeselectAll else strings.batchSelectAll,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                IconButton(
+                    onClick = onMoveToShelfClick,
+                    modifier = Modifier.testTag("batch_move_shelf_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = strings.batchMoveToShelf,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                IconButton(
+                    onClick = onShareClick,
+                    modifier = Modifier.testTag("batch_share_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = strings.batchShare,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.testTag("batch_delete_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = strings.batchDelete,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +213,7 @@ fun LibraryScreen(
     val allRawBooks by viewModel.rawBooks.collectAsStateWithLifecycle()
     val shelves by viewModel.shelves.collectAsStateWithLifecycle()
     val selectedShelfId by viewModel.selectedShelfId.collectAsStateWithLifecycle()
+    val selectedBookIds by viewModel.selectedBookIds.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val filterType by viewModel.filterType.collectAsStateWithLifecycle()
     val viewMode by viewModel.viewMode.collectAsStateWithLifecycle()
@@ -101,6 +231,15 @@ fun LibraryScreen(
     val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
     val cardScaleFactor = (gridCardWidthDp / 135f).coerceIn(0.68f, 1.25f)
 
+    val isSelectionMode = selectedBookIds.isNotEmpty()
+    val allVisibleSelected = remember(books, selectedBookIds) {
+        books.isNotEmpty() && books.all { it.id in selectedBookIds }
+    }
+
+    BackHandler(enabled = isSelectionMode) {
+        viewModel.clearSelection()
+    }
+
     LaunchedEffect(cloudSyncState) {
         if (cloudSyncState is CloudSyncState.Success) {
             delay(4000)
@@ -110,6 +249,9 @@ fun LibraryScreen(
 
     var isSearchActive by remember { mutableStateOf(false) }
     var showCreateShelfDialog by remember { mutableStateOf(false) }
+    var moveSelectedBooksAfterCreatingShelf by remember { mutableStateOf(false) }
+    var showBatchMoveDialog by remember { mutableStateOf(false) }
+    var showBatchDeleteConfirmDialog by remember { mutableStateOf(false) }
     var selectedBookForDetails by remember { mutableStateOf<Book?>(null) }
     var bookPendingDelete by remember { mutableStateOf<Book?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -181,28 +323,30 @@ fun LibraryScreen(
         },
         floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
-            AddBookFabMenu(
-                onPasteFromClipboard = { viewModel.pasteFromClipboardAsBook() },
-                onPickLocalFiles = {
-                    multiFilePickerLauncher.launch(
-                        arrayOf(
-                            "text/html",
-                            "application/xhtml+xml",
-                            "application/zip",
-                            "application/x-zip-compressed",
-                            "text/plain",
-                            "text/markdown",
-                            "text/x-markdown",
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "application/vnd.oasis.opendocument.text",
-                            "application/rtf",
-                            "text/rtf",
-                            "application/epub+zip",
-                            "*/*"
+            if (!isSelectionMode) {
+                AddBookFabMenu(
+                    onPasteFromClipboard = { viewModel.pasteFromClipboardAsBook() },
+                    onPickLocalFiles = {
+                        multiFilePickerLauncher.launch(
+                            arrayOf(
+                                "text/html",
+                                "application/xhtml+xml",
+                                "application/zip",
+                                "application/x-zip-compressed",
+                                "text/plain",
+                                "text/markdown",
+                                "text/x-markdown",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/rtf",
+                                "text/rtf",
+                                "application/epub+zip",
+                                "*/*"
+                            )
                         )
-                    )
-                }
-            )
+                    }
+                )
+            }
         },
         modifier = modifier
     ) { innerPadding ->
@@ -216,6 +360,22 @@ fun LibraryScreen(
                 onDismiss = { viewModel.dismissCloudSyncState() }
             )
 
+            AnimatedVisibility(
+                visible = isSelectionMode,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                BatchSelectionActionBar(
+                    selectedCount = selectedBookIds.size,
+                    allVisibleSelected = allVisibleSelected,
+                    onClearSelection = { viewModel.clearSelection() },
+                    onSelectAllToggle = { viewModel.selectAllVisibleBooks() },
+                    onMoveToShelfClick = { showBatchMoveDialog = true },
+                    onShareClick = { viewModel.shareSelectedBooks(context) },
+                    onDeleteClick = { showBatchDeleteConfirmDialog = true }
+                )
+            }
+
             ReadingStatsHeaderBar(
                 allRawBooks = allRawBooks,
                 isScrollingDown = isScrollingDown
@@ -227,7 +387,10 @@ fun LibraryScreen(
                 filterType = filterType,
                 onSelectFilter = { viewModel.setFilterType(it) },
                 onSelectShelf = { viewModel.selectShelf(it) },
-                onAddShelfClick = { showCreateShelfDialog = true },
+                onAddShelfClick = {
+                    moveSelectedBooksAfterCreatingShelf = false
+                    showCreateShelfDialog = true
+                },
                 onDeleteShelf = { viewModel.deleteShelf(it) }
             )
 
@@ -293,6 +456,7 @@ fun LibraryScreen(
                     ) {
                         items(books, key = { it.id }) { book ->
                             val shelf = shelves.find { it.id == book.shelfId }
+                            val isBookSelected = book.id in selectedBookIds
                             BookGridItem(
                                 book = book,
                                 shelfName = shelf?.name,
@@ -301,6 +465,9 @@ fun LibraryScreen(
                                 onDetailsClick = { selectedBookForDetails = book },
                                 onShareClick = { viewModel.shareBook(context, book) },
                                 onDeleteClick = { bookPendingDelete = book },
+                                isSelectionMode = isSelectionMode,
+                                isSelected = isBookSelected,
+                                onToggleSelect = { viewModel.toggleBookSelection(book.id) },
                                 scaleFactor = cardScaleFactor
                             )
                         }
@@ -316,6 +483,7 @@ fun LibraryScreen(
                     ) {
                         items(books, key = { it.id }) { book ->
                             val shelf = shelves.find { it.id == book.shelfId }
+                            val isBookSelected = book.id in selectedBookIds
                             BookListItem(
                                 book = book,
                                 shelfName = shelf?.name,
@@ -323,7 +491,10 @@ fun LibraryScreen(
                                 onFavoriteToggle = { viewModel.toggleFavorite(book) },
                                 onDetailsClick = { selectedBookForDetails = book },
                                 onShareClick = { viewModel.shareBook(context, book) },
-                                onDeleteClick = { bookPendingDelete = book }
+                                onDeleteClick = { bookPendingDelete = book },
+                                isSelectionMode = isSelectionMode,
+                                isSelected = isBookSelected,
+                                onToggleSelect = { viewModel.toggleBookSelection(book.id) }
                             )
                         }
                     }
@@ -334,11 +505,47 @@ fun LibraryScreen(
 
     if (showCreateShelfDialog) {
         CreateShelfDialog(
-            onDismiss = { showCreateShelfDialog = false },
+            onDismiss = {
+                showCreateShelfDialog = false
+                moveSelectedBooksAfterCreatingShelf = false
+            },
             onConfirm = { name, colorHex, iconName ->
-                viewModel.createShelf(name, colorHex, iconName)
+                if (moveSelectedBooksAfterCreatingShelf && selectedBookIds.isNotEmpty()) {
+                    viewModel.createShelfAndMoveSelectedBooks(name, colorHex, iconName)
+                } else {
+                    viewModel.createShelf(name, colorHex, iconName)
+                }
+                moveSelectedBooksAfterCreatingShelf = false
                 showCreateShelfDialog = false
             }
+        )
+    }
+
+    if (showBatchMoveDialog) {
+        BatchMoveToShelfDialog(
+            selectedCount = selectedBookIds.size,
+            shelves = shelves,
+            onSelectShelf = { targetShelfId ->
+                showBatchMoveDialog = false
+                viewModel.moveSelectedBooksToShelf(targetShelfId)
+            },
+            onCreateNewShelfAndMove = {
+                showBatchMoveDialog = false
+                moveSelectedBooksAfterCreatingShelf = true
+                showCreateShelfDialog = true
+            },
+            onDismiss = { showBatchMoveDialog = false }
+        )
+    }
+
+    if (showBatchDeleteConfirmDialog) {
+        BatchDeleteConfirmDialog(
+            selectedCount = selectedBookIds.size,
+            onConfirmBatchDelete = {
+                showBatchDeleteConfirmDialog = false
+                viewModel.deleteSelectedBooks()
+            },
+            onDismiss = { showBatchDeleteConfirmDialog = false }
         )
     }
 

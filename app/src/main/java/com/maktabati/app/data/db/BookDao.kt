@@ -41,11 +41,20 @@ interface BookDao {
     @Query("DELETE FROM books WHERE id = :id")
     suspend fun deleteBookById(id: String)
 
+    @Query("SELECT * FROM books WHERE id IN (:bookIds)")
+    suspend fun getBooksByIdsOnce(bookIds: List<String>): List<Book>
+
+    @Query("DELETE FROM books WHERE id IN (:bookIds)")
+    suspend fun deleteBooksByIdsBatch(bookIds: List<String>)
+
     @Query("UPDATE books SET readingProgress = :progress, scrollY = :scrollY, currentPage = :currentPage, lastReadTimestamp = :timestamp WHERE id = :id")
     suspend fun updateReadingProgress(id: String, progress: Float, scrollY: Int, currentPage: Int, timestamp: Long)
 
     @Query("UPDATE books SET shelfId = :shelfId WHERE id = :id")
     suspend fun updateBookShelf(id: String, shelfId: String?)
+
+    @Query("UPDATE books SET shelfId = :shelfId WHERE id IN (:bookIds)")
+    suspend fun updateBooksShelfBatch(bookIds: List<String>, shelfId: String?)
 
     @Query("UPDATE books SET isFavorite = :isFavorite WHERE id = :id")
     suspend fun updateBookFavorite(id: String, isFavorite: Boolean)

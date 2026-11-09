@@ -789,7 +789,7 @@ object SandboxJsRuntimeBuilder {
             }
 
             const INTERACTIVE_PROTECTED_SELECTOR =
-              'input,textarea,select,button,a,label,audio,video,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay,.panel,#searchPanel,#tocPanel';
+              'input,textarea,select,button,a,label,audio,video,.term-btn,.term-popover,#termPopover,.flip-card,.quiz-option,.toc-drawer,.drawer,.modal,.overlay,.panel,#searchPanel,#tocPanel';
 
             function isProtectedInteractiveTarget(tgt) {
               if (!tgt || !tgt.closest) return false;

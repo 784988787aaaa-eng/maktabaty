@@ -88,26 +88,44 @@ internal object ReaderWebViewStyleApplicator {
                             --bg-primary: ${theme.bgHex} !important;
                             --bg-secondary: $bgSecondary !important;
                             --paper-bg: ${theme.bgHex} !important;
+                            --bg-card: $bgSecondary !important;
+                            --bg-soft-rose: $cardSurface !important;
+                            --bg-soft-sage: $cardSurface !important;
+                            --bg-pearl-gold: $cardSurface !important;
                             --text-primary: ${theme.textHex} !important;
                             --ink-main: ${theme.textHex} !important;
+                            --text-secondary: ${theme.textHex}CC !important;
+                            --paper-edge: $cardBorder !important;
+                            --line: $cardBorder !important;
                         }
                         html, body, .app, .book-stage, .page-canvas, .page, .book-page {
                             background: ${theme.bgHex} !important;
                             background-color: ${theme.bgHex} !important;
                             color: ${theme.textHex} !important;
                         }
+                        .top-bar, .bottom-nav-dock, .panel, .term-popover, .toc-item, .search-result, #searchInput {
+                            background: $bgSecondary !important;
+                            background-color: $bgSecondary !important;
+                            color: ${theme.textHex} !important;
+                            border-color: $cardBorder !important;
+                        }
+                        .brand, .panel-head h2, .panel-head h3, .term-popover-title, .page h1, .page h2, .page h3, .cover-page h1 {
+                            color: ${theme.textHex} !important;
+                        }
                         .reading p, .page-body p, .page-content p, li, td, th {
                             color: ${theme.textHex} !important;
                         }
                         .quran-box, .ayah-box, .hadith-box, .wisdom-pearl, .heart-keepsake-card,
-                        .quote-card, .quote-box, .interactive-box, .step-card {
+                        .reflection-card, .did-you-know-card, .epigraph-box, .contrast-box, .poetry-stanza,
+                        .quote-card, .quote-box, .interactive-box, .step-card, .cover-page, .cover-title-frame {
                             background: $cardSurface !important;
                             background-color: $cardSurface !important;
                             border-color: $cardBorder !important;
                             color: ${theme.textHex} !important;
                         }
                         .quran-box p, .ayah-box p, .hadith-box p, .wisdom-pearl p,
-                        .heart-keepsake-card p, .quote-card p, .quote-box p {
+                        .heart-keepsake-card p, .reflection-card p, .did-you-know-card p,
+                        .epigraph-box p, .contrast-box p, .poetry-stanza div, .quote-card p, .quote-box p, .term-popover-body {
                             color: ${theme.textHex} !important;
                         }
                     `;

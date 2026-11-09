@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="إسلام جمال">
+<meta name="book-author" content="إسلام جمال">
+<meta name="category" content="تزكية وتطوير الذات">
+<meta name="description" content="لماذا يحافظ البعض على الصلاة.. بينما يتركها الكثير؟ تعرف على أسرار هؤلاء الذين قلما فاتتهم صلاة — طبعة رقمية تفاعلية كاملة وفق منظومة الاستيعاب البنيوي v5.0 (٢٣١ صفحة مصدرية)">
+<title>فاتتني صلاة !!</title>
+<style>
+:root {
+  --bg-page: #FAF6EE;
+  --bg-card: #F3ECE0;
+  --bg-accent-soft: #EDE3D2;
+  --text-main: #1F1A17;
+  --text-muted: #5C4E43;
+  --accent-primary: #8C5A2B;
+  --accent-secondary: #1E4D40;
+  --accent-gold: #C59B27;
+  --border-ornate: #D6C5B3;
+  --quote-bg: #F5EFE4;
+  --verse-bg: #EDF4F1;
+  --summary-bg: #183930;
+  --summary-text: #FAF6EE;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #141817;
+    --bg-card: #1D2321;
+    --bg-accent-soft: #252D2A;
+    --text-main: #ECE6DC;
+    --text-muted: #A99E90;
+    --accent-primary: #D8A657;
+    --accent-secondary: #589A87;
+    --accent-gold: #E2B857;
+    --border-ornate: #343E3A;
+    --quote-bg: #1B211F;
+    --verse-bg: #182521;
+    --summary-bg: #0F231D;
+    --summary-text: #F2ECE1;
+  }
+}
+
+body.theme-dark, body.dark-mode, [data-theme="dark"] {
+  --bg-page: #141817;
+  --bg-card: #1D2321;
+  --bg-accent-soft: #252D2A;
+  --text-main: #ECE6DC;
+  --text-muted: #A99E90;
+  --accent-primary: #D8A657;
+  --accent-secondary: #589A87;
+  --accent-gold: #E2B857;
+  --border-ornate: #343E3A;
+  --quote-bg: #1B211F;
+  --verse-bg: #182521;
+  --summary-bg: #0F231D;
+  --summary-text: #F2ECE1;
+}
+
+body.theme-sepia, [data-theme="sepia"] {
+  --bg-page: #F4ECD8;
+  --bg-card: #EAE0C8;
+  --bg-accent-soft: #DFD3B8;
+  --text-main: #2C221E;
+  --text-muted: #66564B;
+  --accent-primary: #8B4513;
+  --accent-secondary: #2E5A44;
+  --accent-gold: #B8860B;
+  --border-ornate: #C9B99B;
+  --quote-bg: #ECE2CA;
+  --verse-bg: #E4E8D8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: 'Amiri', 'Scheherazade New', 'Lateef', serif;
+  font-size: 1.18rem;
+  line-height: 2.02;
+  direction: rtl;
+  text-align: justify;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 780px;
+  margin: 0 auto 2.5rem auto;
+  padding: 2.2rem 1.8rem;
+  background-color: var(--bg-page);
+  border: 1px solid var(--border-ornate);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+/* Cover & Title Page Styling */
+.cover-page {
+  min-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  background: radial-gradient(circle at 50% 25%, var(--bg-accent-soft) 0%, var(--bg-page) 78%);
+  border: 2px solid var(--accent-gold);
+  padding: 2.8rem 1.8rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.cover-frame {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border-ornate);
+  border-radius: 12px;
+  padding: 2.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cover-badge {
+  font-family: 'Noto Kufi Arabic', 'Tajawal', sans-serif;
+  font-size: 0.92rem;
+  color: var(--accent-secondary);
+  letter-spacing: 0.04em;
+  padding: 0.35rem 1.2rem;
+  border: 1px solid var(--accent-secondary);
+  border-radius: 999px;
+  background-color: var(--verse-bg);
+}
+
+.cover-title {
+  font-family: 'Aref Ruqaa', 'Noto Kufi Arabic', serif;
+  font-size: 3.5rem;
+  line-height: 1.35;
+  color: var(--accent-primary);
+  margin: 1rem 0 0.5rem 0;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.cover-subtitle {
+  font-family: 'Tajawal', 'Cairo', sans-serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: var(--text-main);
+  max-width: 540px;
+  line-height: 1.75;
+  margin-bottom: 0.85rem;
+  text-align: center;
+}
+
+.cover-tagline {
+  font-family: 'Amiri', serif;
+  font-size: 1.12rem;
+  color: var(--accent-secondary);
+  background-color: var(--verse-bg);
+  padding: 0.55rem 1.3rem;
+  border-radius: 8px;
+  border-right: 3px solid var(--accent-gold);
+  border-left: 3px solid var(--accent-gold);
+  margin: 0.6rem 0;
+  text-align: center;
+}
+
+.cover-author-box {
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border-ornate);
+  width: 75%;
+  text-align: center;
+}
+
+.cover-author-label {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.cover-author-name {
+  font-family: 'Aref Ruqaa', 'Noto Kufi Arabic', serif;
+  font-size: 1.85rem;
+  color: var(--accent-primary);
+  margin-top: 0.2rem;
+}
+
+.cover-author-note {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Chapter Headers */
+.chapter-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.6rem 1.2rem;
+  background: linear-gradient(180deg, var(--bg-accent-soft) 0%, var(--bg-page) 100%);
+  border-top: 3px solid var(--accent-gold);
+  border-bottom: 1px solid var(--border-ornate);
+  border-radius: 12px;
+}
+
+.chapter-number {
+  font-family: 'Noto Kufi Arabic', 'Tajawal', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  display: inline-block;
+  padding: 0.2rem 0.95rem;
+  background-color: var(--verse-bg);
+  border-radius: 99px;
+  margin-bottom: 0.55rem;
+}
+
+.chapter-title {
+  font-family: 'Aref Ruqaa', 'Noto Kufi Arabic', serif;
+  font-size: 2.15rem;
+  color: var(--accent-primary);
+  line-height: 1.45;
+  margin: 0.25rem 0;
+  text-align: center;
+}
+
+.chapter-meta-badge {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+
+/* Subheadings */
+h2.section-title, h3.sub-title {
+  font-family: 'Noto Kufi Arabic', 'Cairo', sans-serif;
+  font-size: 1.38rem;
+  color: var(--accent-secondary);
+  margin: 1.85rem 0 0.9rem 0;
+  padding-right: 0.85rem;
+  border-right: 4px solid var(--accent-gold);
+  line-height: 1.55;
+  text-align: right;
+}
+
+/* Paragraphs */
+p {
+  margin-bottom: 1.2rem;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+p.lead-para {
+  font-size: 1.24rem;
+  color: var(--accent-primary);
+  font-weight: 700;
+  line-height: 1.95;
+}
+
+p.center-callout {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.22rem;
+  color: var(--accent-primary);
+  background-color: var(--bg-card);
+  padding: 0.95rem 1.2rem;
+  border-radius: 10px;
+  border: 1px dashed var(--accent-gold);
+  margin: 1.4rem 0;
+}
+
+/* Quranic Verses */
+.quran-verse {
+  background-color: var(--verse-bg);
+  border-right: 4px solid var(--accent-secondary);
+  border-left: 1px solid var(--border-ornate);
+  border-top: 1px solid var(--border-ornate);
+  border-bottom: 1px solid var(--border-ornate);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+  margin: 1.5rem 0;
+  font-family: 'Scheherazade New', 'Amiri', serif;
+  font-size: 1.32rem;
+  line-height: 2.15;
+  color: var(--text-main);
+  text-align: center;
+}
+
+.quran-verse .surah-ref {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.88rem;
+  color: var(--accent-secondary);
+  font-weight: 700;
+}
+
+/* Hadith & Athar Block */
+.hadith-box {
+  background-color: var(--quote-bg);
+  border-right: 4px solid var(--accent-gold);
+  border-radius: 10px;
+  padding: 1.15rem 1.35rem;
+  margin: 1.4rem 0;
+  font-size: 1.18rem;
+  line-height: 2.0;
+}
+
+.hadith-box .hadith-source {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+/* Did You Know / Prayer Insights Box (هل تعلم..؟!) */
+.did-you-know-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--accent-gold);
+  border-top: 4px solid var(--accent-primary);
+  border-radius: 12px;
+  padding: 1.3rem 1.4rem;
+  margin: 1.5rem 0;
+}
+
+.did-you-know-title {
+  font-family: 'Noto Kufi Arabic', 'Cairo', sans-serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Lists & Recommendations */
+ul.book-list, ol.book-list {
+  margin: 1rem 1.5rem 1.4rem 0.5rem;
+  padding-right: 1rem;
+}
+
+ul.book-list li, ol.book-list li {
+  margin-bottom: 0.65rem;
+  line-height: 1.9;
+}
+
+.scholars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.65rem;
+  margin: 1.2rem 0;
+}
+
+.scholar-chip {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-ornate);
+  border-right: 3px solid var(--accent-secondary);
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+/* Poetry Stanzas */
+.poetry-box {
+  background-color: var(--quote-bg);
+  border: 1px solid var(--border-ornate);
+  border-radius: 12px;
+  padding: 1.35rem 1.2rem;
+  margin: 1.5rem auto;
+  max-width: 640px;
+  text-align: center;
+  font-family: 'Amiri', serif;
+  font-size: 1.22rem;
+  line-height: 2.1;
+}
+
+.poetry-verse {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-bottom: 0.45rem;
+}
+
+/* Chapter Closing Summary Cards (اللوحات الختامية للفصول) */
+.chapter-summary-card {
+  background-color: var(--summary-bg);
+  color: var(--summary-text);
+  border: 2px solid var(--accent-gold);
+  border-radius: 14px;
+  padding: 1.65rem 1.5rem;
+  margin-top: 2rem;
+}
+
+.chapter-summary-header {
+  font-family: 'Aref Ruqaa', 'Noto Kufi Arabic', serif;
+  font-size: 1.45rem;
+  color: var(--accent-gold);
+  text-align: center;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(197, 155, 39, 0.35);
+}
+
+.chapter-summary-item {
+  margin-bottom: 0.95rem;
+  padding-right: 0.85rem;
+  border-right: 3px solid var(--accent-gold);
+}
+
+.chapter-summary-item strong {
+  color: var(--accent-gold);
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* Page Footer Info */
+.page-footer-meta {
+  margin-top: 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-ornate);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* TOC Styling */
+.toc-list {
+  list-style: none;
+  margin: 1.2rem 0;
+  padding: 0;
+}
+
+.toc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 0.95rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  border-right: 3px solid var(--accent-primary);
+  text-decoration: none;
+  color: var(--text-main);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.toc-item:hover {
+  background-color: var(--bg-accent-soft);
+  transform: translateX(-3px);
+}
+
+.toc-chapter-name {
+  font-family: 'Noto Kufi Arabic', 'Tajawal', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.toc-page-badge {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.85rem;
+  color: var(--accent-secondary);
+  background-color: var(--verse-bg);
+  padding: 0.15rem 0.65rem;
+  border-radius: 99px;
+}
+
+.ornament-divider {
+  text-align: center;
+  color: var(--accent-gold);
+  font-size: 1.25rem;
+  margin: 1.4rem 0;
+  letter-spacing: 0.35em;
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== UNIT B00: FRONT MATTER (PDF 1-5) ==================== -->
+<section class="page cover-page" id="unit-B00-cover" data-unit-id="B00" data-pdf-pages="1-4" data-printed-pages="غلاف-2">
+  <div class="cover-frame">
+    <div class="cover-badge">الطبعة الرقمية الكاملة المحققة • ٢٣١ صفحة مصدرية</div>
+
+    <div style="margin: 1.8rem 0;">
+      <svg width="88" height="88" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="50" cy="50" r="45" stroke="#C59B27" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <path d="M50 12L59 37L85 37L64 53L72 79L50 63L28 79L36 53L15 37L41 37L50 12Z" stroke="#8C5A2B" stroke-width="1.8" fill="rgba(197, 155, 39, 0.12)"/>
+        <circle cx="50" cy="50" r="14" stroke="#1E4D40" stroke-width="1.8"/>
+      </svg>
+      <h1 class="cover-title">فاتتني صلاة !!</h1>
+      <p class="cover-subtitle">لماذا يحافظ البعض على الصلاة .. بينما يتركها الكثير ؟</p>
+      <div class="cover-tagline">تعرف على أسرار هؤلاء الذين قلما فاتتهم صلاة ..</div>
+    </div>
+
+    <div class="hadith-box" style="max-width: 620px; text-align: center; font-size: 1.06rem;">
+      <p style="text-align: center; margin-bottom: 0.6rem;">
+        «في الصغر اعتدنا أن يأمرنا من يكبرنا بالصلاة.. فنمتثل للأمر.. ثم نذهب لنصلي.. فنجد أن الصلاة ثقيلة.. فنتركها !! نسمع شيخاً يتحدث عن الصلاة وأهميتها وعقوبة تاركها.. فنذهب لنصلي.. فنجد أن الصلاة ثقيلة فنتركها !! ظننا أن من يأمرنا بها لا يشعر بما نشعر به.. ظننا أن من يحافظ عليها لديه هبة إلهية ليست عندنا.. انتظرنا تلك الهبة الإلهية طويلاً.. حتى فاتتنا صلاة بعد الصلاة !! لأننا لم نحل أصل المشكلة.. وهو لماذا تبدو الصلاة ثقيلة؟؟»
+      </p>
+    </div>
+
+    <div class="cover-author-box">
+      <span class="cover-author-label">تأليف</span>
+      <div class="cover-author-name">إسلام جمال</div>
+      <div class="cover-author-note">مؤلف كتاب «آيات تغير حياتك» • مؤسسة زحمة كُتّاب للثقافة والنشر (الطبعة الأولى ٢٠١٨م — رقم الإيداع ٢١٧٥١ / ٢٠١٨ — ISBN 978-977-8350-62-3)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== UNIT B00: TABLE OF CONTENTS (PDF 5) ==================== -->
+<section class="page" id="unit-B00-toc" data-unit-id="B00" data-pdf-pages="5" data-printed-pages="فهرس">
+  <div class="chapter-header">
+    <span class="chapter-number">الفهرس الهيكلي الكامل</span>
+    <h1 class="chapter-title">فهرس فصول كتاب «فاتتني صلاة !!»</h1>
+    <div class="chapter-meta-badge">مقابلة دقيقة بين ترقيم الكتاب المطبوع (١–٢٢٦) وصفحات ملف المصدر (PDF ١–٢٣١)</div>
+  </div>
+
+  <ul class="toc-list">
+    <li><a class="toc-item" href="#unit-C01"><span class="toc-chapter-name">( ١ ) فاتتني صلاة !!!</span><span class="toc-page-badge">ص ١ – ٦ | PDF ٦ – ١١</span></a></li>
+    <li><a class="toc-item" href="#unit-C02"><span class="toc-chapter-name">( ٢ ) يوماً ما !!</span><span class="toc-page-badge">ص ٧ – ١٤ | PDF ١٢ – ١٩</span></a></li>
+    <li><a class="toc-item" href="#unit-C03"><span class="toc-chapter-name">( ٣ ) قبل أن تُصلي</span><span class="toc-page-badge">ص ١٥ – ٢٥ | PDF ٢٠ – ٣٠</span></a></li>
+    <li><a class="toc-item" href="#unit-C04"><span class="toc-chapter-name">( ٤ ) أنت أفكارك</span><span class="toc-page-badge">ص ٢٦ – ٤٣ | PDF ٣١ – ٤٨</span></a></li>
+    <li><a class="toc-item" href="#unit-C05"><span class="toc-chapter-name">( ٥ ) الصفة المعجزة</span><span class="toc-page-badge">ص ٤٤ – ٥٦ | PDF ٤٩ – ٦١</span></a></li>
+    <li><a class="toc-item" href="#unit-C06"><span class="toc-chapter-name">( ٦ ) ألك حاجة ؟!</span><span class="toc-page-badge">ص ٥٧ – ٧٥ | PDF ٦٢ – ٨٠</span></a></li>
+    <li><a class="toc-item" href="#unit-C07"><span class="toc-chapter-name">( ٧ ) دواء العادة</span><span class="toc-page-badge">ص ٧٦ – ١٠١ | PDF ٨١ – ١٠٦</span></a></li>
+    <li><a class="toc-item" href="#unit-C08"><span class="toc-chapter-name">( ٨ ) كُن صباحاً</span><span class="toc-page-badge">ص ١٠٢ – ١٣١ | PDF ١٠٧ – ١٣٦</span></a></li>
+    <li><a class="toc-item" href="#unit-C09"><span class="toc-chapter-name">( ٩ ) بيتٌ هناك</span><span class="toc-page-badge">ص ١٣٢ – ١٤١ | PDF ١٣٧ – ١٤٦</span></a></li>
+    <li><a class="toc-item" href="#unit-C10"><span class="toc-chapter-name">( ١٠ ) وترتيبها</span><span class="toc-page-badge">ص ١٤٢ – ١٤٩ | PDF ١٤٧ – ١٥٤</span></a></li>
+    <li><a class="toc-item" href="#unit-C11"><span class="toc-chapter-name">( ١١ ) حماقات ارتكبتها</span><span class="toc-page-badge">ص ١٥٠ – ١٥٧ | PDF ١٥٥ – ١٦٢</span></a></li>
+    <li><a class="toc-item" href="#unit-C12"><span class="toc-chapter-name">( ١٢ ) لا طاقة لك</span><span class="toc-page-badge">ص ١٥٨ – ١٧٦ | PDF ١٦٣ – ١٨١</span></a></li>
+    <li><a class="toc-item" href="#unit-C13"><span class="toc-chapter-name">( ١٣ ) واصطبر عليها</span><span class="toc-page-badge">ص ١٧٧ – ١٨٨ | PDF ١٨٢ – ١٩٣</span></a></li>
+    <li><a class="toc-item" href="#unit-C14"><span class="toc-chapter-name">( ١٤ ) هكذا عرفته</span><span class="toc-page-badge">ص ١٨٩ – ٢١٩ | PDF ١٩٤ – ٢٢٤</span></a></li>
+    <li><a class="toc-item" href="#unit-C15"><span class="toc-chapter-name">( ١٥ ) خاتمة عاشق</span><span class="toc-page-badge">ص ٢٢٠ – ٢٢٦ | PDF ٢٢٥ – ٢٣١</span></a></li>
+  </ul>
+
+  <div class="page-footer-meta">
+    <span>الوحدة البنيوية: B00 (المواد التمهيدية والفهرس)</span>
+    <span>صفحات المصدر: PDF ١ – ٥</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C01: فاتتني صلاة !!! (PDF 6-11 | ط 1-6) ==================== -->
+<section class="page" id="unit-C01" data-unit-id="C01" data-pdf-pages="6-11" data-printed-pages="1-6">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الأول • ( ١ )</span>
+    <h1 class="chapter-title">فاتتني صلاة !!!</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١ – ٦ • صفحات ملف المصدر: ٦ – ١١</div>
+  </div>
+
+  <p class="lead-para">
+    كنت أتابعه كلما مرّ من أمامي بنظراتٍ هادئة علّني أعرف سرّ هذا الشيخ العجوز الذي قارب عمره الثمانين، فقبل الأذان بدقائق أجده متكئاً على عصاه، في طريقه إلى المسجد يتهادى في مشيته بابتسامةٍ هادئة غامضة، كأنه عاشق في طريقه إلى محبوبته..
+  </p>
+
+  <p>
+    أنظر إليه وتبدأ معها عاصفة من الأعذار الدقيقة، تُلقيها نفسي في وجهي دون أن أسألها، لتهرب من وخز الضمير ولتُريح ذلك الشعور بالتقصير، فتقنعني بأنني ما زلت شاباً وأن هذا الشيخ العجوز ليس لديه ما يشغله كمشاغلي، ليُدعّم الشيطان ذلك المنطق البائس هاتفاً: «إنك مشغول فلتصلِّ عندما تنتهي»، فألوذ بسكوتٍ ظاهري يغلّفه ضجة داخلية عنيفة تهتف بحسرة: <strong>لقد فاتتني صلاة !!!</strong>
+  </p>
+
+  <div class="ornament-divider">✦ ✦ ✦</div>
+
+  <p>
+    كانت نافذة غرفتي تطل على شارع هادئ، كثيراً ما كنت أسهر في غرفتي إلى الفجر، وقبيل الفجر بربع ساعة كنت أسمع يومياً صوت طقطقة عصا تتردد في جنبات هذا الشارع الهادئ، لم أكن أحتاج أن أنظر من النافذة لأعرف صاحب هذه العصا، إنه ذلك الرجل الأنيق المرح الذي يؤذن لصلاة الفجر، كنت أتعجب من مواظبته، كانت طقطقة عصاه لا يمنعها برد ولا مطر، لا يوقفها صيف ولا شتاء..
+  </p>
+
+  <p>
+    تُرى ما سر هذا الرجل؟ وكيف واظب على تلك الشعيرة هكذا؟؟ لماذا لا أذهب معه؟؟ وتبدأ نفسي في سرد قصتها المفضلة من الأعذار، فأنا طالب في الجامعة أحتاج أن أنام جيداً لأستطيع التركيز في يومي الدراسي، فلأنام الآن حتى أستطيع الاستيقاظ مبكراً.. «يوماً ما سأفعل» هكذا كنت أردد لنفسي لتهدأ!
+  </p>
+
+  <p>
+    ولكن مرت سنوات تخرجت فيها من الجامعة ثم التحقت بعملي وتغيرت ظروف حياتي ولم يتغير صوت طقطقة عصا الرجل كل فجر ولم أنفذ وعدي بأن أصلي الفجر في المسجد.. ترى ما هي قصته؟ لا بد أن هذا الرجل ينام بعد صلاة العشاء مباشرة ليستطيع الاستيقاظ هكذا! فلأسأله حتى يرتاح بالي وتهدأ نفسي.. هكذا قررت.
+  </p>
+
+  <p>
+    وذات يوم قابلته فسلمت عليه وسألته، وأخبرني أنه ينام متأخراً لطبيعة عمله! ثم يستيقظ ليؤذن لصلاة الفجر.. كانت إجابته صادمة ومُحبطة لنفسي، إذ كانت تتمنى أن يخبرني بأنه ينام مبكراً ولا يعمل، وعندها ستتنفس الصعداء فقد وجدت عذرها.. هذا الرجل ينام فقط سويعات قليلة ومع ذلك يستيقظ ليؤذن الفجر ثم ينطلق بعدها إلى عمله!!
+  </p>
+
+  <p>
+    حسناً ما السر إذن في حفاظه على تلك الصلاة؟ فلتهدأ ولا تُكثر التفكير، إنه فضل الله يؤتيه من يشاء، يوماً ما سيهديك الله وتكون مثله! كانت هذه إجابة نفسي حتى تكف عن التفكير أو ربما حتى تتهرب من هذا التكليف!
+  </p>
+
+  <div class="ornament-divider">✦ ✦ ✦</div>
+
+  <p>
+    لا أدري لماذا كنت شغوفاً دائماً بمراقبة هؤلاء الذين يحافظون على الصلاة، كأنها أمنية دفينة بداخلي أراها تتحقق فيهم، فهذا عامل بسيط لا تفارق الابتسامة وجهه، بمجرد أن يبدأ النداء للصلاة يغلق دكانه وينطلق إلى المسجد، كثيراً ما كنت أصلي بجانبه، ألاحظ أنه يفضل الصلاة بجانب الجدران، كان يدخل في الصلاة كأنه قد خرج من عالمنا، كنت أسمع له أنيناً خافتاً كأنه في حالة عشق، يُطيل الركوع ويطيل القيام بعد الركوع ويطيل الجلسة بين السجدتين!
+  </p>
+
+  <p>
+    أتعجب كيف يستغرق كل هذا الوقت في هذه الأركان، ماذا يقول؟! أيعرف أذكاراً لا يعرفها غيره؟.. الأغرب من ذلك كله أنه عندما ينتهي من صلاته ينخرط مع الناس يضحك ويمزح ويبيع ويشتري، كنت أظن أن أصحاب هذا الخشوع هم كائنات ملائكية لا تضحك ولا تمزح مثلنا! لماذا يشتاق للصلاة هكذا بينما أشعر كأنها حمل ثقيل عليّ أن أؤديه؟!
+  </p>
+
+  <p>
+    سؤال طالما راودني.. لماذا يحافظ بعض الناس على الصلاة لهذه الدرجة بينما لا يستطيع الكثير حتى أن يصلي صلاة واحدة؟؟ لا بد أن هناك سراً ما يميزهم عن أولئك الذين تفوتهم صلاة بعد صلاة، ماذا يعرفون ولا نعرفه؟ كيف يفكرون؟ وبماذا يشعرون؟
+  </p>
+
+  <p>
+    وقررت أن أبحث عن إجابات لكل هذه الأسئلة.. ولم أجد وسيلة أفضل من سؤال أصحاب الشأن أنفسهم، فاقتربت منهم وسألتهم وحاورتهم وراقبتهم، ودرست سير الصالحين وعادات الناجحين، وبدأت رحلة من أمتع اللحظات التي مرت عليّ في حياتي..
+  </p>
+
+  <p class="center-callout">
+    وجدت تشابهاً كبيراً في العادات والصفات والأفكار بين هؤلاء المحافظين على صلاتهم، وبدأت أتعلم أسرارهم حتى تغيرت حياتي كلياً.. والآن أنا أكتب هذا الفصل بينما أتناول قهوتي بعد أن صليت الفجر في وقتها..
+  </p>
+
+  <p style="text-align: center; font-weight: 700; color: var(--accent-secondary);">
+    وفي الفصول القادمة ستتعرف على هذه الأسرار التي عرفتها فجعلتني نادراً ما أقول.. «فاتتني صلاة»!
+  </p>
+
+  <div class="page-footer-meta">
+    <span>الفصل الأول: فاتتني صلاة !!!</span>
+    <span>ص ١ – ٦ | PDF ٦ – ١١</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C02: يوماً ما !! (PDF 12-19 | ط 7-14) ==================== -->
+<section class="page" id="unit-C02" data-unit-id="C02" data-pdf-pages="12-19" data-printed-pages="7-14">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثاني • ( ٢ )</span>
+    <h1 class="chapter-title">يوماً ما !!</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٧ – ١٤ • صفحات ملف المصدر: ١٢ – ١٩</div>
+  </div>
+
+  <p class="lead-para">
+    تمنيت كثيراً أن أكون من المصلين.. كنت أعلم أن حياتي ستكون أهدأ وأسعد لو واظبت على الصلاة.. كثيراً ما أخبرت نفسي بأنها ستكون عادة في حياتي.. ولكن هناك في هذا العالم الذي صنعته لنفسي.. وأسميته «يوماً ما»!
+  </p>
+
+  <div class="hadith-box">
+    <ul class="book-list" style="margin-bottom: 0;">
+      <li>يوماً ما سألتزم بالصلاة وأواظب عليها..</li>
+      <li>يوماً ما سأصلي الفجر يومياً..</li>
+      <li>مع بداية العام الجديد سألتزم بها..</li>
+      <li>رمضان القادم سيكون بدايتي مع الصلاة..</li>
+      <li>عندما أستقر في عملي سأكون من المصلين..</li>
+      <li>عندما أتزوج سألتزم وأحافظ على كل الصلوات..</li>
+      <li>يوماً ما سأرتدي الحجاب وألتزم بالصلاة..</li>
+      <li>يوماً ما سيهديني الله وأكون مثلهم.. يوماً ما..</li>
+    </ul>
+  </div>
+
+  <p>
+    كانت هذه أشهر الجمل في هذا العالم الذي يعيش فيه الكثير.. أما اللغة الرسمية فيه فهي الأعذار!!
+  </p>
+
+  <ul class="book-list">
+    <li>طبيعة عملي لا تسمح لي بصلاة الفجر..</li>
+    <li>إنني أعمل لساعات طويلة وأكون مرهقاً..</li>
+    <li>حاولت كثيراً ولكني لم أستطع أن أواظب عليها..</li>
+    <li>يومي مزدحم بالأنشطة ووقتي ضيق..</li>
+    <li>الأمر ليس بيدي، ادعُ لي بالهداية..</li>
+    <li>لو فاتتني صلاة واحدة أشعر بالإحباط ولا أصلي..</li>
+    <li>إن على ملابسي نجاسة لا تصلح معها الصلاة..</li>
+    <li>أنا على جنابة والماء بارد، سأغتسل لاحقاً وأجمع الصلوات..</li>
+    <li>إنني أرتكب بعض المعاصي والذنوب، عندما أتوب منها سأواظب على الصلاة..</li>
+    <li>إني لا أستطيع الخشوع في الصلاة، أشعر أنني لا أستفيد منها لذلك أتركها!</li>
+  </ul>
+
+  <p>
+    وهناك نوع آخر من الأعذار يبدو في ظاهره مريحاً خادعاً، وهو أن تعطي مبررات عن أولئك الملتزمين في صلاتهم، مبررات تجعلك تشعر أن لديهم قدرات خاصة ليست عندك، وكأن لديهم تركيبة بيولوجية تختلف عنك، أو أنهم يتلقون دعماً سماوياً لم يحالفك الحظ لتناله بعد!
+  </p>
+
+  <ul class="book-list">
+    <li>لقد نشأ في بيت ملتزم، इसलिए الصلاة سهلة بالنسبة له..</li>
+    <li>ليت لي صحبة صالحة كصحبته تعينني على الصلاة..</li>
+    <li>إنه شخص مبارك يحبه الله لذلك هداه..</li>
+    <li>تُرى ماذا فعل هذا الشخص مع الله حتى يهديه للصلاة هكذا؟!</li>
+  </ul>
+
+  <p>
+    وهكذا تمضي الأيام وتنقضي السنوات وما زال سكان هذا العالم باقين فيه.. ينتظرون «يوماً ما»!
+  </p>
+
+  <p class="center-callout">
+    والحقيقة هي أن اليوم الذي تنتظره.. لن يأتي أبداً إلا أن تصنعه أنت..
+  </p>
+
+  <p>
+    ما لم تقرر أن تخرج من عالم «يوماً ما»، وتكف عن التحدث بلغته، وتنسف كل الأعذار الواهية والمبررات الخادعة.. وتتحمل مسؤولية نفسك وحياتك.. فلن يتغير شيء.
+  </p>
+
+  <p>
+    تأمل معي قليلاً.. عندما تسمع الأذان ولا تقوم للصلاة.. ماذا يحدث بداخلك؟ تبدأ معركة نفسية طاحنة؛ ضميرك يصرخ بك، ونفسك تسوق لك الأعذار، وعقلك يحاول الهروب والانشغال بأي شيء، ثم ينقضي وقت الصلاة فتبدأ موجة من تأنيب الضمير والشعور بالذنب، وتتوعد نفسك بأنك ستصلي الصلاة القادمة، ثم يأتي وقت الصلاة التي تليها فيتكرر السيناريو نفسه!
+  </p>
+
+  <p>
+    إن المجهود النفسي والذهني الذي تبذله لـ <strong>(عدم الصلاة)</strong> من اختلاق للأعذار ومقاومة لوخز الضمير وتحمل لمشاعر الذنب والندم.. يعادل أو يكاد يكون أكبر من المجهود البدني الذي تبذله لـ <strong>(أداء الصلاة)</strong> نفسها!!
+  </p>
+
+  <p>
+    ومع تكرار هذا الأمر يومياً، يدخل الإنسان في حالة نفسية خطيرة تُسمى <strong>«حالة إدمان اللافعل»</strong>؛ حيث يعتاد عقلك أن يقرر ثم لا ينفذ، فتهتز صورتك الذاتية أمام نفسك، وتفقد الثقة في قدرتك على الالتزام بأي قرار، ويتحول الأمر إلى تحقير للذات وشعور دائم بالعجز!
+  </p>
+
+  <h2 class="section-title">الذبابة والنافذة المغلقة</h2>
+
+  <p>
+    هل رأيت يوماً ذبابة محبوسة في غرفة مظلمة، تحاول الخروج من نافذة زجاجية مغلقة؟ إنها ترى النور خلف الزجاج، فتندفع بكل قوتها نحوه، فتصطدم بالزجاج المغلق.. ثم تعود للوراء وتندفع مرة أخرى بأقصى سرعتها لتصطدم بالزجاج نفسه.. وتظل تكرر المحاولة لساعات طويلة، تضرب الزجاج بجسمها الصغير حتى تستهلك كل طاقتها وعمرها وتسقط ميتة على حافة النافذة! بينما على بُعد خطوات قليلة منها كان باب الغرفة مفتوحاً على مصراعيه، لو أنها فقط غيرت اتجاهها وبحثت عن طريق آخر لخرجت في ثوانٍ معدودة!
+  </p>
+
+  <p>
+    هكذا يفعل الكثيرون منا مع الصلاة؛ يحاولون بنفس الطريقة القديمة (سماع موعظة مؤثرة أو الخوف المؤقت، ثم الحماس اللحظي، ثم الاصطدام بثقل الصلاة، ثم الترك والانتكاس)، ويظلون يكررون النمط نفسه لسنوات دون أن يسألوا أنفسهم: لماذا نصطدم دائماً؟ وما هو الباب المفتوح الذي لم نسلكه بعد؟
+  </p>
+
+  <p class="center-callout">
+    الخطوة الأولى للخروج من عالم «يوماً ما» هي أن تعترف الآن وبكل وضوح: أنك تستطيع أن تحافظ على الصلاة، أياً كانت ظروفك ومشاغلك وطبيعة حياتك.. فقط إذا اتبعت الطريق الصحيح.
+  </p>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثاني: يوماً ما !!</span>
+    <span>ص ٧ – ١٤ | PDF ١٢ – ١٩</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C03: قبل أن تُصلي (PDF 20-30 | ط 15-25) ==================== -->
+<section class="page" id="unit-C03" data-unit-id="C03" data-pdf-pages="20-30" data-printed-pages="15-25">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثالث • ( ٣ )</span>
+    <h1 class="chapter-title">قبل أن تُصلي</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٥ – ٢٥ • صفحات ملف المصدر: ٢٠ – ٣٠</div>
+  </div>
+
+  <p class="lead-para">
+    لطالما كنت شغوفاً بمعرفة «بداية الأشياء».. كيف بدأ هذا التاجر ثروته؟ كيف بدأ هذا العالِم رحلته؟ كيف التزم هذا المصلي بصلاته أول مرة؟ فهناك دائماً «أول مرة» لكل شيء!
+  </p>
+
+  <p>
+    كثيراً ما نسمع شيخاً يتحدث عن الصلاة وأهميتها وعقوبة تاركها، فنتأثر بكلامه ونذهب لنصلي.. ثم نجد أن الصلاة ثقيلة فنتركها بعد يوم أو يومين! وعندما نرى شخصاً محافظاً على صلاته خاشعاً فيها، يلجأ العقل الباطن إلى حيلة دفاعية تُعرف في علم النفس بـ <strong>«الاستثناء أو العزل»</strong>؛ فيقنعك عقلك بأن هذا الشخص حالة استثنائية، وأن لديه هبة إلهية أو ظروفاً خاصة ليست عندك، وبذلك يعزلك عن المحاولة ويريحك من تأنيب الضمير!
+  </p>
+
+  <h2 class="section-title">لماذا فُرضت الصلاة بعد اثني عشر عاماً؟</h2>
+
+  <p>
+    هل سألت نفسك يوماً: لماذا لم تُفرض الصلوات الخمس في أول يوم من بعثة النبي ﷺ؟ لماذا انتظر فرضها قرابة اثني عشر عاماً كاملة حتى ليلة الإسراء والمعراج؟!
+  </p>
+
+  <p>
+    طوال تلك السنوات في مكة، كانت الآيات تتنزل لتُعرّف الناس بالله سبحانه وتعالى؛ بأسمائه وصفاته، برحمته وقدرته، بعظمته ولطفه، بنعمه التي لا تُحصى.. كان النبي ﷺ يغرس في قلوب الصحابة حب الله ومعرفته وتعظيمه أولاً، حتى امتلأت قلوبهم بحبه سبحانه والشوق إليه.. فلما فُرضت الصلاة في ليلة الإسراء والمعراج، لم يستقبلوها كتكليف ثقيل أو عبء شاق، بل استقبلوها كـ <strong>هبة من محبوب لحبيبه</strong>، وفرصة للقاء من أحبوه وعرفوه!
+  </p>
+
+  <p class="center-callout">
+    القاعدة الذهبية تقول: «إذا عُرف الآمر، سَهُل تنفيذ الأمر».. أما نحن في الصغر فقد أُمرنا بالصلاة قبل أن نعرف مَن الذي نصلّي له!
+  </p>
+
+  <p>
+    لقد ترسخ في أذهان الكثيرين منذ الطفولة اعتقاد خاطئ بأن العلاقة مع الله هي علاقة أمر ونهي وعقاب فقط («صلِّ وإلا سيعذبك الله في النار»)، فتحولت الصلاة في اللاوعي إلى ضريبة ندفعها اتقاءً للغضب، وليست موعداً مع الحبيب القريب!
+  </p>
+
+  <p>
+    تحتاج قبل أن تصلي أن تتعرف على ربك من جديد؛ أن تعرف أنه <strong>الرحيم، الودود، التواب، الواسع، الحافظ، السميع، الشكور، الصمد، السلام، اللطيف، الحنّان</strong>.. القاهر لمن قهرك، والمُذلّ لمن أذلك، والجابر لكسر قلبك حين يتخلى عنك الجميع.
+  </p>
+
+  <div class="quran-verse">
+    ﴿ قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا ۚ إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ ﴾
+    <span class="surah-ref">سورة الزمر: الآية ٥٣</span>
+  </div>
+
+  <h2 class="section-title">الخطوة العملية الأولى: اسمع من يحدثك عن الله</h2>
+
+  <p>
+    لأن الإيمان في القلب يبلى كما يبلى الثوب، ولأن زحام الدنيا ينسينا، فإن أعظم ما يحيي قلبك ويجعلك تشتاق للصلاة هو أن تغذي قلبك يومياً بمعرفة الله، تحقيقاً لقوله تعالى:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ وَذَكِّرْ فَإِنَّ الذِّكْرَىٰ تَنفَعُ الْمُؤْمِنِينَ ﴾
+    <span class="surah-ref">سورة الذاريات: الآية ٥٥</span>
+  </div>
+
+  <p>
+    لا تُفوّت يوماً واحداً إلا وتسمع فيه لمدة <strong>١٥ أو ٣٠ دقيقة</strong> أحداً يحدثك عن الله سبحانه وتعالى وعن أسمائه وصفاته وآياته.. أثناء ذهابك للعمل، أو في المواصلات، أو قبل نومك. وفيما يلي قائمة من العلماء والدعاة والمفكرين الذين كان لسماعهم أثر كبير في رحلتي، فاختر منهم من يرتاح له قلبك:
+  </p>
+
+  <div class="scholars-grid">
+    <div class="scholar-chip">الشيخ محمد راتب النابلسي</div>
+    <div class="scholar-chip">الدكتور عبد المحسن الأحمد</div>
+    <div class="scholar-chip">الشيخ الحبيب علي الجفري</div>
+    <div class="scholar-chip">الشيخ محمد متولي الشعراوي</div>
+    <div class="scholar-chip">الشيخ عمر عبد الكافي</div>
+    <div class="scholar-chip">الدكتور علي أبو الحسن</div>
+    <div class="scholar-chip">الدكتور محمد سعود الرشيدي</div>
+    <div class="scholar-chip">الشيخ مبروك زاد الخير</div>
+    <div class="scholar-chip">الدكتور مصطفى محمود</div>
+    <div class="scholar-chip">الداعية مصطفى حسني</div>
+    <div class="scholar-chip">الشيخ نبيل العوضي</div>
+    <div class="scholar-chip">الشيخ صالح المغامسي</div>
+    <div class="scholar-chip">الداعية مشاري الخراز</div>
+    <div class="scholar-chip">الشيخ محمد مختار الشنقيطي</div>
+  </div>
+
+  <h3 class="sub-title">برامج وتلاوات وقصائد تُحيي القلب</h3>
+
+  <ul class="book-list">
+    <li><strong>برنامج «اهتديت بالقرآن»:</strong> يقدمه القارئ الشيخ <strong>فهد الكندري</strong>، يحاور فيه مسلمين جدداً حول الآية التي هزت قلوبهم فقادته للإسلام.</li>
+    <li><strong>قراء القرآن الكريم ذوو الأصوات الخاشعة الندية:</strong> القارئ أحمد النفيس، القارئ عمر شلبي، القارئ وديع اليمني، القارئ مشاري راشد العفاسي، القارئ محمد صديق المنشاوي، القارئ عبد الرشيد الصوفي، القارئ ناصر القطامي، القارئ حاتم فريد الواعر، القارئ إدريس أبكر.</li>
+    <li><strong>المناظرات الفكرية والعقدية:</strong> مناظرات الشيخ <strong>أحمد ديدات</strong> رحمه الله وتلميذه الدكتور <strong>ذاكر نايك</strong>، لما فيها من إعمال للعقل وترسيخ لليقين.</li>
+    <li><strong>القصائد والابتهالات الإيمانية الرقيقة:</strong> قصيدة «أطع أمرنا» (سامر الدرة)، وقصيدة «أغيب وذو اللطف لا يغيب» (مشاري راشد)، وقصيدة «ليس الغريب» (مشاري راشد)، وقصائد المنشد مصطفى عاطف، وقراءة كتيب «أنيس المؤمنين».</li>
+  </ul>
+
+  <div class="did-you-know-card">
+    <div class="did-you-know-title">✦ قاعدة الخمس دقائق اليومية</div>
+    <p style="margin-bottom: 0.5rem;">
+      خصّص كل يوم <strong>٥ دقائق فقط</strong> تجلس فيها بهدوء وتركيز تام لتذكر الله سبحانه، تتأمل في نعمه عليك، وتستحضر عظمته.. تذكر دائماً قول النبي ﷺ: <strong>«أحب الأعمال إلى الله تعالى أدومها وإن قل»</strong>. وعلّق أمام عينيك في غرفتك أو مكتبك أو خلفية هاتفك لوحة كُتب عليها: <strong>﴿ وَذَكِّرْ فَإِنَّ الذِّكْرَىٰ تَنفَعُ الْمُؤْمِنِينَ ﴾</strong>.
+    </p>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثالث: قبل أن تُصلي</span>
+    <span>ص ١٥ – ٢٥ | PDF ٢٠ – ٣٠</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C04: أنت أفكارك (PDF 31-48 | ط 26-43) ==================== -->
+<section class="page" id="unit-C04-p1" data-unit-id="C04" data-pdf-pages="31-39" data-printed-pages="26-34">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الرابع • ( ٤ ) — الجزء الأول</span>
+    <h1 class="chapter-title">أنت أفكارك</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٢٦ – ٣٤ • صفحات ملف المصدر: ٣١ – ٣٩</div>
+  </div>
+
+  <p class="center-callout">
+    «أياً كان اعتقادك .. بأنك سوف تنجح في أمرٍ ما .. أو لن تنجح فيه .. فأنت على صواب في الحالتين!»
+  </p>
+
+  <p>
+    فأنت المسؤول عن الفكرة التي تضعها في عقلك، والتي بدورها ستحدد شخصيتك وتصرفاتك تجاه الأشياء.. فإن كنت تعتقد أن الصلاة ثقيلة وشاقة وأنك لا تستطيع المواظبة عليها، فعقلك سيثبت لك صحة اعتقادك وسيجعلها ثقيلة فعلاً! وإن كنت تعتقد أن الصلاة راحة وسكينة وأنك قادر على الحفاظ عليها، فعقلك أيضاً سيثبت لك ذلك ويساعدك عليه!
+  </p>
+
+  <p>
+    تأمل قصة أسطورة الملاكمة <strong>محمد علي كلاي</strong>؛ فقبل أن يصبح بطلاً للعالم، كان يردد دائماً أمام نفسه وأمام الجميع عبارته الشهيرة: <strong>«أنا الأعظم! (I am the greatest)»</strong>.. كان يزرع هذه الفكرة في عقله الباطن باستمرار حتى تحولت إلى اعتقاد راسخ، فتحركت كل جوارحه وتدريباته وتصرفاته لتحقيق تلك الفكرة على أرض الواقع!
+  </p>
+
+  <p>
+    إن عقلك الباطن يشبه التربة الخصبة تماماً؛ لا يهمه نوع البذرة التي تضعها فيه، فإن زرعت فيه بذرة طيبة (فكرة إيجابية عن قدرتك على الصلاة) سقاها ونمّاها وأخرج لك ثمارها، وإن زرعت فيه بذرة شوك وحنظل (أنا كسول، أنا لا أستطيع الاستيقاظ للفجر) سقاها أيضاً ونمّاها في حياتك! ولهذا علّمنا النبي ﷺ قيمة الكلمة الطيبة وأثرها حتى على النفس فقال: <strong>«والكلمة الطيبة صدقة»</strong>.
+  </p>
+
+  <h2 class="section-title">الألم والسعادة</h2>
+
+  <p>
+    يقول علماء النفس إن كل نشاط أو سلوك يقوم به الإنسان في حياته إنما يفعله بدافع من اثنين: إما <strong>لتجنب الألم</strong>، أو <strong>لجلب السعادة والمتعة</strong>.
+  </p>
+
+  <p>
+    فماذا يفعل الشيطان معك حين تسمع الأذان؟ إنه يربط الصلاة في ذهنك بـ <strong>الألم والمشقة</strong>! يصور لك ترك الفراش الدافئ أو إيقاف العمل أو الفيلم والقيام للوضوء بماء بارد على أنه «ألم ومشقة وفقدان للمتعة»، ويصور لك البقاء مكانك على أنه «راحة ولذة».. ولأن عقلك مبرمج فطرياً على الهروب من الألم نحو الراحة، فإنه يتثاقل عن الصلاة!
+  </p>
+
+  <h2 class="section-title">ميل الأربع دقائق (قصة روجر بانيستر)</h2>
+
+  <p>
+    طوال قرون طويلة، كان هناك اعتقاد راسخ لدى الأطباء والرياضيين بأن الإنسان يستحيل عليه بشرياً أن يركض مسافة «ميل واحد» في أقل من ٤ دقائق، وكانوا يزعمون أن قلب الإنسان سينفجر ورئتيه ستتمزقان لو حاول كسر هذا الحاجز!
+  </p>
+
+  <p>
+    وظل هذا الاعتقاد سجين العقول حتى جاء شاب بريطاني يدرس الطب اسمه <strong>روجر بانيستر (Roger Bannister)</strong>، فقرر أن يكسر هذا الحاجز في عقله أولاً قبل مضمار السباق؛ فواظب على تصور نفسه وهو يقطع الميل في أقل من أربع دقائق، ويتحدث مع ذاته بإيجابية ويقين.. وفي يوم ٦ مايو عام ١٩٥٤م، ركض روجر بانيستر مسافة الميل في <strong>٣ دقائق و٥٩ ثانية و٤ أجزاء من الثانية</strong>!
+  </p>
+
+  <p>
+    المعجزة الحقيقية لم تكن في تحطيم الرقم فحسب، بل في ما حدث بعد ذلك؛ ففي خلال عام واحد فقط بعد إنجاز بانيستر، استطاع <strong>٣٧ عدّاءً آخر</strong> أن يقطعوا الميل في أقل من أربع دقائق، وفي العام التالي فعلها ٣٠٠ عدّاء! ماذا تغير في التركيبة الجسدية للبشر خلال عام واحد؟ لم يتغير شيء في أجسادهم، بل تغيرت <strong>«أفكارهم»</strong>! لقد أصبحت تجربة بانيستر <strong>نقطة مرجعية (Reference Point)</strong> للعقل البشري أثبتت أن الأمر ممكن!
+  </p>
+
+  <div class="page-footer-meta">
+    <span>الفصل الرابع: أنت أفكارك (١/٢)</span>
+    <span>ص ٢٦ – ٣٤ | PDF ٣١ – ٣٩</span>
+  </div>
+</section>
+
+<section class="page" id="unit-C04-p2" data-unit-id="C04" data-pdf-pages="40-48" data-printed-pages="35-43">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الرابع • ( ٤ ) — الجزء الثاني</span>
+    <h1 class="chapter-title">تابع: أنت أفكارك (صورة الصلاة والتوكيدات)</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٣٥ – ٤٣ • صفحات ملف المصدر: ٤٠ – ٤٨</div>
+  </div>
+
+  <h2 class="section-title">صورة الصلاة</h2>
+
+  <p>
+    لكي تحب الصلاة وتقبل عليها بشوق، عليك أن تغير <strong>«الصورة الذهنية للصلاة»</strong> في عقلك. بدلاً من أن تتخيل الوضوء البارد والجهد البدني، استحضر في ذهنك أجمل صلاة صليتها في حياتك.. تذكر تلك الليلة في شهر رمضان وأنت تصلي التراويح ودموعك تنساب على خديك، وتذكر تلك السكينة العجيبة والانشراح الذي ملأ صدرك بعدما سلمت منها!
+  </p>
+
+  <div class="hadith-box">
+    كان النبي ﷺ إذا حزبه أمر أو اشتد عليه كرب نادى مؤذنه بلال بن رباح رضي الله عنه وقال: <strong>«أَرِحْنَا بِهَا يَا بِلَالُ»</strong>.. لم يقل «أرحنا منها» كأنها عبء نزيحه عن كاهلنا، بل قال «أرحنا بها» لأنها هي عين الراحة ومصدر السعادة!
+  </div>
+
+  <h2 class="section-title">عبارات (التوكيدات الإيجابية Self-Talk)</h2>
+
+  <p>
+    تأمل كيف وصف الله سبحانه وتعالى طبيعة النفس البشرية في سورة المعارج، وكيف استثنى فئة واحدة فقط من الهلع والجزع والضيق:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ إِنَّ الْإِنسَانَ خُلِقَ هَلُوعًا * إِذَا مَسَّهُ الشَّرُّ جَزُوعًا * وَإِذَا مَسَّهُ الْخَيْرُ مَنُوعًا * إِلَّا الْمُصَلِّينَ * الَّذِينَ هُمْ عَلَىٰ صَلَاتِهِمْ دَائِمُونَ ﴾
+    <span class="surah-ref">سورة المعارج: الآيات ١٩ – ٢٣</span>
+  </div>
+
+  <p>
+    اجعل شعارك الذي تردده لنفسك كلما سمعت الأذان أو حدثتك نفسك بالكسل: <strong>«إلا المصلين.. أنا من المصلين.. الصلاة راحة»</strong>. ففي علم النفس الحديث يُسمى هذا الأسلوب بـ <strong>التوكيدات الإيجابية (Affirmations / Self-Talk)</strong>؛ فالكلمات التي ترددها على مسامع نفسك باستمرار تتحول إلى برمجة داخلية تقود جوارحك دون عناء.
+  </p>
+
+  <h2 class="section-title">استخدم عقلك</h2>
+
+  <p>
+    العقل كالعضلة تماماً، ينمي الفكرة ويكبرها بالتكرار. اسأل نفسك بصدق: لو كان لديك غداً موعد طائرة للسفر في رحلة أحلامك الساعة الرابعة فجراً، أو مقابلة وظيفة العمر في الصباح الباكر.. هل ستقول «نومي ثقيل ولا أستطيع الاستيقاظ»؟! بل ستجد نفسك تستيقظ قبل المنبه بدقائق بكل نشاط! لماذا؟ لأن عقلك أدرك عظم المكسب وفداحة الخسارة، فأيقظك في الموعد المحدد!
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصول السابقة (لوحة المراجعة — ص ٤٢ – ٤٣) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. قرر اليوم أن تخرج من عالم «يوماً ما»:</strong>
+      انسف كل الأعذار الواهية والمبررات الخادعة، واعلم أن اليوم الذي تنتظره لن يأتي إلا أن تصنعه أنت الآن.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. قبل أن تُصلي (تعرّف على الله):</strong>
+      استمع يومياً لمدة ١٥ إلى ٣٠ دقيقة لمن يحدثك عن الله وأسمائه وصفاته ورحمته، وخصص ٥ دقائق لذكره بهدوء؛ فإذا عُرف الآمر سَهُل الأمر.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٣. أياً كان اعتقادك (أنت أفكارك):</strong>
+      غيّر الصورة الذهنية للصلاة في عقلك لتراها راحة وسكينة («أرحنا بها يا بلال»)، وردد التوكيدات الإيجابية: «إلا المصلين.. الصلاة راحة».
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الرابع: أنت أفكارك (٢/٢)</span>
+    <span>ص ٣٥ – ٤٣ | PDF ٤٠ – ٤٨</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C05: الصفة المعجزة (PDF 49-61 | ط 44-56) ==================== -->
+<section class="page" id="unit-C05" data-unit-id="C05" data-pdf-pages="49-61" data-printed-pages="44-56">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الخامس • ( ٥ )</span>
+    <h1 class="chapter-title">الصفة المعجزة</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٤٤ – ٥٦ • صفحات ملف المصدر: ٤٩ – ٦١</div>
+  </div>
+
+  <h2 class="section-title">ضبط النفس (Self Discipline)</h2>
+
+  <p class="lead-para">
+    ما هي الصفة المشتركة التي تجمع بين كل الناجحين في الدنيا والمحافظين على صلاتهم للآخرة؟ إنها صفة واحدة لو امتلكتها لتغيرت حياتك بأكملها: «ضبط النفس» (Self Discipline).
+  </p>
+
+  <p>
+    يُعرّف الخبراء ضبط النفس بأنه: <strong>«القدرة على أن تجعل نفسك تقوم بما عليك فعله، في الوقت المحدد له، سواء أحببت هذا العمل أم لم تحبه!»</strong>. فالحقيقة المؤكدة هي أن ثمن الانضباط والمجاهدة في وقته أقل بكثير جداً من ثمن الندم والحسرة بعد فوات الأوان!
+  </p>
+
+  <p>
+    وضبط النفس ليس موهبة وراثية يولد بها البعض ويُحرم منها الآخرون، بل هو مهارة تكتسب وتنمو بالتدريب الممارس تماماً كتعلم <strong>قيادة الدراجة الهوائية</strong>؛ في البداية تشعر بصعوبة التوازن وتتعثر مرة أو مرتين، ثم مع التكرار يصبح الأمر تلقائياً يسيراً ممتعاً.
+  </p>
+
+  <h2 class="section-title">لا تشاور عقلك (Non-Negotiable Mind)</h2>
+
+  <p>
+    السر الأكبر في تطبيق ضبط النفس عند سماع الأذان هو قاعدة: <strong>«لا تشاور عقلك!»</strong>. فعندما تسمع «الله أكبر» وتبدأ في محاورة نفسك: «هل أقوم الآن أم بعد خمس دقائق؟ الجو بارد.. سأنهي هذا المشهد أولاً..»، فإن هذه المشاورة العقلية تستهلك طاقة ذهنية هائلة وهي السبب الرئيسي للتكاسل والقعود!
+  </p>
+
+  <div class="hadith-box">
+    يُروى عن أحد الصالحين وكان يعمل مزارعاً في أرضه، أنه كان إذا رفع يده بالفأس ليضرب الأرض فسمع المؤذن يقول «الله أكبر»، لم ينتظر حتى ينزل الفأس في الأرض، بل كان يلقي بها خلف ظهره فوراً وينطلق للوضوء والمسجد! كان لا يمنح عقله ثانية واحدة للمساومة أو التفاوض!
+  </div>
+
+  <p>
+    وسأل شاب أباه الشيخ الكبير الذي لم تفُته صلاة الجماعة في المسجد قط، وكان الجو في ذلك اليوم عاصفاً شديد المطر والبرودة: «يا أبتِ، أتصلي في المسجد في مثل هذا الجو؟!» فأجابه الشيخ بكلمة حاسمة لا تقبل التفاوض: <strong>«يا بني، والله لو كانت تُمطر حجراً، ما تركت صلاة المسجد!»</strong>.
+  </p>
+
+  <h2 class="section-title">النقطة المرجعية (Reference Point)</h2>
+
+  <p>
+    يحكي أحد المشايخ أنه عاد إلى بيته في ليلة شتوية باردة قارصة في وقت متأخر جداً وهو في قمة الإرهاق والتعب، وما إن وضع رأسه على الوسادة حتى سمع أذان الفجر.. فدارت معركة شرسة بينه وبين نفسه التي تدعوه للنوم، فقرر أن يصنع لنفسه «نقطة مرجعية»؛ فقام من فراشه، وتوضأ بالماء البارد، ولبس أجمل ثيابه وتعطر، وخرج يمشي في البرد القارس حتى صلى الفجر في جماعة!
+  </p>
+
+  <p>
+    يقول الشيخ: منذ تلك الليلة، كلما حدثتني نفسي بالكسل عن صلاة من الصلوات، ذكّرتها بتلك الليلة الباردة وقلت لها: «لقد قمتِ في أشد الليالي برداً وتعباً ولم تموتي، فكيف تتكاسلين الآن والجو معتدل وأنتِ في كامل راحتك؟!» فصارت تلك الليلة <strong>نقطة مرجعية (Reference Point)</strong> يهزم بها الكسل طوال حياته! ومن هنا أيضاً تتجلى حكمة المحافظة على <strong>السنن الرواتب والنوافل</strong>، لأنها توسع أفق ضبط النفس لديك، فإذا كسلت نفسك يوماً كان أقصى تقصيرها أن تترك نافلة، وتبقى الفريضة في حصن حصين!
+  </p>
+
+  <h2 class="section-title">هذا الوقت سيمضي</h2>
+
+  <p>
+    يُحكى أن ملكاً طلب من وزيره الحكيم أن يصنع له خاتماً وينقش عليه جملة واحدة، إذا قرأها الملك وهو حزين فرح واطمأن، وإذا قرأها وهو في قمة الفرح والنشوة اعتدل وتواضع.. فنقش له الوزير على الخاتم ثلاث كلمات: <strong>«هذا الوقت سيمضي»</strong>!
+  </p>
+
+  <p>
+    تذكر هذه العبارة كلما ثقلت عليك صلاة؛ عندما تستيقظ لصلاة الفجر وتشعر بمدافعة النوم وبرد الماء.. قل لنفسك: «هي دقائق معدودة وهذا الوقت سيمضي، وسيذهب التعب ويبقى الأجر والانشراح!». وعندما تذهب لصلاة الجمعة في حر الظهيرة، أو تقوم لصلاة العشاء بعد يوم عمل شاق.. تذكر أن التعب اللحظي سيمضي سريعاً، وستربح بعده حالة عجيبة من السكينة الداخلية والضمان الغامض الذي يملأ قلبك؛ <strong>«لأنك متصل مع الله.. وإن كان الله معك فمن عليك؟!»</strong>.
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل الخامس (لوحة المراجعة — ص ٥٦) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. الصفة المعجزة (ضبط النفس):</strong>
+      أن تقوم بما عليك فعله في وقته المحدد سواء أحببته أم كرهته، وثمن الانضباط أقل بكثير من ثمن الندم.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. لا تشاور عقلك:</strong>
+      اقطع حبل التفاوض والمساومة فور سماع الأذان، واصنع لنفسك «نقطة مرجعية» في أصعب الظروف تهزم بها كسلك دائماً، وتذكر أن «هذا الوقت سيمضي».
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الخامس: الصفة المعجزة</span>
+    <span>ص ٤٤ – ٥٦ | PDF ٤٩ – ٦١</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C06: ألك حاجة ؟! (PDF 62-80 | ط 57-75) ==================== -->
+<section class="page" id="unit-C06-p1" data-unit-id="C06" data-pdf-pages="62-71" data-printed-pages="57-66">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل السادس • ( ٦ ) — الجزء الأول</span>
+    <h1 class="chapter-title">ألك حاجة ؟!</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٥٧ – ٦٦ • صفحات ملف المصدر: ٦٢ – ٧١</div>
+  </div>
+
+  <p class="lead-para">
+    في تلك اللحظات الهادئة التي تفصل بين الأذان وإقامة الصلاة.. يظهر معدن الإيمان الحقيقي في القلب! فالإنسان في أوقات الرخاء قد يظن أنه متوكل على الله، لكن عند مواجهة التحديات والأزمات والهموم يظهر الفرق بين من يلجأ إلى الخلق وينسى الخالق، وبين من يفزع إلى الصلاة فوراً!
+  </p>
+
+  <h2 class="section-title">المعنى الحقيقي للأخذ بالأسباب</h2>
+
+  <p>
+    كثيراً ما نسمع عبارة «خذ بالأسباب»، فيظن الناس أن الأسباب محصورة في الأسباب المادية الدنيوية فقط (المال، الواسطة، العلاقات، الدواء)، وينسون أن <strong>أعظم سبب على الإطلاق هو التوجه إلى مسبب الأسباب سبحانه وتعالى!</strong>
+  </p>
+
+  <p>
+    تأمل في قصص الأنبياء عليهم السلام حين انقطعت بهم كل الأسباب المادية الأرضية، فلم يبقَ لهم إلا سبب السماء:
+  </p>
+
+  <ul class="book-list">
+    <li><strong>يونس عليه السلام في بطن الحوت:</strong> في ظلمات ثلاث (ظلمة الليل، وظلمة البحر، وظلمة بطن الحوت)، أي سبب مادي يمكن أن ينقذه هناك؟ لم يكن له إلا التسبيح والدعاء: ﴿ لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ ﴾، فكانت النتيجة: ﴿ فَاسْتَجَبْنَا لَهُ وَنَجَّيْنَاهُ مِنَ الْغَمِّ ۚ وَكَذَٰلِكَ نُنجِي الْمُؤْمِنِينَ ﴾.</li>
+    <li><strong>إبراهيم عليه السلام في النار:</strong> حين قُذف في النار العظيمة وعرض عليه جبريل عليه السلام: «ألك إليّ حاجة؟»، قال إبراهيم بيقين العارفين: <strong>«أما إليك فلا، حسبي الله ونعم الوكيل!»</strong>، فجاء الأمر الإلهي المباشر لتغيير قوانين الطبيعة: ﴿ قُلْنَا يَا نَارُ كُونِي بَرْدًا وَسَلَامًا عَلَىٰ إِبْرَاهِيمَ ﴾، حتى نظر إليه أبوه آزر مذهولاً وقال: <strong>«نِعم الرب ربك يا إبراهيم!!»</strong>.</li>
+    <li><strong>موسى عليه السلام أمام البحر:</strong> البحر أمامهم وفرعون وجنوده خلفهم، وقال أصحاب موسى: ﴿ إِنَّا لَمُدْرَكُونَ ﴾، فهتف موسى بيقين لا يتزلزل: ﴿ كَلَّا ۖ إِنَّ مَعِيَ رَبِّي سَيَهْدِينِ ﴾، ثم أُمر بضرب البحر بعصاه الخشبية فصار كل فرق كالطود العظيم!</li>
+    <li><strong>يوسف عليه السلام في غياهب السجن:</strong> لبث بضع سنين مظلوماً، فلما انقطع رجاؤه من البشر وتعلق بربه وحده، خرج من السجن ليصبح عزيز مصر على خزائن الأرض!</li>
+    <li><strong>نوح عليه السلام وبناء السفينة في الصحراء:</strong> ظل يدعو قومه ألف سنة إلا خمسين عاماً ويبني السفينة على الرمال وهم يسخرون منه، فلما دعا ربه بثلاث كلمات فقط: ﴿ أَنِّي مَغْلُوبٌ فَانتَصِرْ ﴾، انقلبت موازين الأرض والسماء: ﴿ فَفَتَحْنَا أَبْوَابَ السَّمَاءِ بِمَاءٍ مُّنْهَمِرٍ * وَفَجَّرْنَا الْأَرْضَ عُيُونًا فَالْتَقَى الْمَاءُ عَلَىٰ أَمْرٍ قَدْ قُدِرَ ﴾!</li>
+  </ul>
+
+  <div class="quran-verse">
+    ﴿ وَأَعِدُّوا لَهُم مَّا اسْتَطَعْتُم مِّن قُوَّةٍ ﴾
+    <span class="surah-ref">سورة الأنفال: الآية ٦٠ — أنت مطالب بما «استطعت» من الأسباب، والله يتولى ما لا تستطيع!</span>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل السادس: ألك حاجة ؟! (١/٢)</span>
+    <span>ص ٥٧ – ٦٦ | PDF ٦٢ – ٧١</span>
+  </div>
+</section>
+
+<section class="page" id="unit-C06-p2" data-unit-id="C06" data-pdf-pages="72-80" data-printed-pages="67-75">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل السادس • ( ٦ ) — الجزء الثاني</span>
+    <h1 class="chapter-title">تابع: ألك حاجة ؟! (هو الحكيم وتوزيع الهموم)</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٦٧ – ٧٥ • صفحات ملف المصدر: ٧٢ – ٨٠</div>
+  </div>
+
+  <p>
+    تخيل أن الصلوات الخمس المفروضة عليك كل يوم هي <strong>خمس زيارات ومقابلات رسمية مفتوحة</strong> مع مَن له ملك السموات والأرض، يدعوك فيها لتعرض عليه حاجاتك وهمومك ومخاوفك! ولهذا شرع الإسلام صلاة الكسوف والخسوف عند تغير أحوال الكون، وصلاة الاستسقاء عند انقطاع المطر، وصلاة الاستخارة عند الحيرة، وصلاة الحاجة عند الشدائد؛ ليربط قلبك دائماً بأن حل كل مشكلة يبدأ من سجادة صلاتك!
+  </p>
+
+  <h2 class="section-title">هو الحكيم</h2>
+
+  <div class="hadith-box">
+    يقول الله تبارك وتعالى في الحديث القدسي: <strong>«أنا أغنى الشركاء عن الشرك، من عمل عملاً أشرك فيه معي غيري، تركته وشركه»</strong>. وعندما سمع أحد الأعراب النبي ﷺ يخبر أن الله سبحانه يضحك من قنوط عباده وقرب غيره (أي قرب فرجه وتغييره للحال)، تساءل الأعرابي متعجباً: «أويضحك ربنا يا رسول الله؟!» قال: «نعم»، فقال الأعرابي بفطرته السليمة: <strong>«والله لن نعدم خيراً من ربٍّ يضحك!»</strong>.
+  </div>
+
+  <h3 class="sub-title">وزّع همومك على صلواتك الخمس</h3>
+
+  <p>
+    بدلاً من أن تحمل هموم يومك كلها فوق ظهرك، تعلم فن <strong>«توزيع الهموم على الصلوات»</strong>:
+  </p>
+
+  <ul class="book-list">
+    <li>ما أهمّك في ليلك وأقلق مضجعك، فاطرحه بين يدي الله في <strong>صلاة الفجر</strong> واستودعه يومك.</li>
+    <li>وما واجهك من تعسر وصعوبات في عملك وسعيك، فاطرحه بين يدي الميسّر سبحانه في <strong>صلاة الظهر</strong>.</li>
+    <li>وما أرهق بدنك واستنزف طاقتك وأربك قراراتك، فاعرضه على العليم الحكيم في <strong>صلاة العصر</strong>.</li>
+    <li>وما ضاق به صدرك عند غروب الشمس وانتهاء النهار، فاجبره في <strong>صلاة المغرب</strong>.</li>
+    <li>واختم يومك بتفريغ قلبك من كل شائبة وهمّ في <strong>صلاة العشاء</strong> لتنام قرير العين في حفظ الله!</li>
+  </ul>
+
+  <p>
+    وإذا وسوس لك الشيطان قائلاً: «بأي وجه تدعو الله وتطلب منه حاجتك وأنت مقصر ومذنب؟!»، فردّ عليه فوراً بآيتين من كتاب الله: قوله تعالى: <strong>﴿ أَمَّن يُجِيبُ الْمُضْطَرَّ إِذَا دَعَاهُ وَيَكْشِفُ السُّوءَ ﴾</strong> (فالله يجيب المضطر لشدة اضطراره وافتقاره إليه)، وقوله تعالى: <strong>﴿ إِنَّ اللَّهَ يُحِبُّ التَّوَّابِينَ وَيُحِبُّ الْمُتَطَهِّرِينَ ﴾</strong>!
+  </p>
+
+  <div class="poetry-box">
+    <div class="poetry-verse"><span>فلو شاهدت عيناك من حسننا</span><span>الذي رأوه لما وليت عنا لغيرنا</span></div>
+    <div class="poetry-verse"><span>ولو سمعت أذناك حسن خطابنا</span><span>خلعت عنك ثياب العجب وجئتنا</span></div>
+    <div class="poetry-verse"><span>ولو ذقت من طعم المحبة ذرة</span><span>عذرت الذي أضحى قتيلاً بحبنا</span></div>
+    <div class="poetry-verse"><span>ولو نسمت من قربنا لك نسمة</span><span>لمت غريباً واشتياقاً لقربنا</span></div>
+    <div class="poetry-verse"><span>ولو تركت نفسك من كل ما ترى</span><span>لأقبلت بالكلية نحونا</span></div>
+    <div class="poetry-verse"><span>فما حبنا سهل وكل من ادعى</span><span>سهولته قلنا له قد جهلتنا</span></div>
+    <div class="poetry-verse"><span>فأيسر ما في الحب للصب قتله</span><span>وأصعب من قتل الفتى يوم هجرنا</span></div>
+  </div>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل السادس (لوحة المراجعة — ص ٧٥) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. ألك حاجة؟! (أعظم الأسباب):</strong>
+      اجعل الصلوات الخمس خمس زيارات يومية تعرض فيها حاجاتك وهمومك على من بيده ملكوت كل شيء.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. توزيع الهموم على الصلوات:</strong>
+      لا تحمل همومك وحدك؛ ألقِ بكل همّ في الصلاة التي تليه، ولا تسمح للشيطان أن يحجبك عن الدعاء بحجة التقصير.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل السادس: ألك حاجة ؟! (٢/٢)</span>
+    <span>ص ٦٧ – ٧٥ | PDF ٧٢ – ٨٠</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C07: دواء العادة (PDF 81-106 | ط 76-101) ==================== -->
+<section class="page" id="unit-C07-p1" data-unit-id="C07" data-pdf-pages="81-92" data-printed-pages="76-87">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل السابع • ( ٧ ) — الجزء الأول</span>
+    <h1 class="chapter-title">دواء العادة</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٧٦ – ٨٧ • صفحات ملف المصدر: ٨١ – ٩٢</div>
+  </div>
+
+  <p class="lead-para">
+    في مطلع القرن العشرين، لم يكن تنظيف الأسنان بالفرشاة والمعجون عادة يومية لدى الشعب الأمريكي؛ حتى إن الجيش الأمريكي إبان الحرب العالمية الأولى اعتبر تدهور صحة أسنان الجنود خطراً يهدد الأمن القومي! فكيف تحول غسيل الأسنان من أمر نادر ثقيل إلى عادة يومية لا يستغني عنها الملايين حول العالم؟
+  </p>
+
+  <p>
+    بدأت القصة حين عُرض على رائد الإعلانات والتسويق الأمريكي الشهير <strong>كلود هوبكنز (Claude Hopkins)</strong> ترويج معجون أسنان جديد يُدعى <strong>«بيبسودينت» (Pepsodent)</strong>. أدرك هوبكنز أنه لكي ينجح، لا بد أن يحول استخدام المعجون إلى «عادة يومية» راسخة عبر حلقة العادة الثلاثية:
+  </p>
+
+  <h2 class="section-title">١. مُحفز العادة (The Cue)</h2>
+
+  <p>
+    قرأ هوبكنز كتب طب الأسنان حتى وجد إشارة إلى طبقة رقيقة طبيعية تتكون على الأسنان تُسمى <strong>«غشاء الأسنان» (Plaque/Film)</strong>، فجعل إعلاناته تقول للناس: «مرّر لسانك على أسنانك.. ستشعر بغشاء لزج يغطيها ويفقدها بريقها!». كان هذا المحفز عبقرياً لأن كل شخص يقرأ الإعلان يمرر لسانه فوراً فيشعر بذلك الغشاء!
+  </p>
+
+  <h2 class="section-title">٢. المكافأة الفورية (The Reward)</h2>
+
+  <p>
+    اكتشف العلماء لاحقاً أن السر الأكبر لنجاح «بيبسودينت» لم يكن في الإعلان وحده، بل في أن مصنّعيه أضافوا إلى تركيبته <strong>حامض الستريك وزيت النعناع</strong>؛ وهي مواد تحدث وخزاً لطيفاً وبرودة وانتعاشاً فورياً في الفم! فعندما كان الناس ينسون غسيل أسنانهم، كانوا يفتقدون ذلك الإحساس المنعش (المكافأة الفورية)، فيسارعون لتنظيفها!
+  </p>
+
+  <p>
+    وقد أكدت هذا المبدأ دراسة أجرتها <strong>جامعة نيو ميكسيكو</strong> على <strong>٢٢٦ شخصاً</strong> يمارسون الرياضة بانتظام؛ فوجدت أن غالبيتهم يواظبون عليها بسبب المكافأة الفورية التي تفرزها أدمغتهم (الإندروفينات وشعور الإنجاز والنشاط المباشر) وليس فقط لهدف بعيد المدى!
+  </p>
+
+  <h2 class="section-title">العادة والصلاة: السكينة هي المكافأة الفورية</h2>
+
+  <p>
+    كيف نطبق هذا القانون على الصلاة؟ <strong>مُحفز العادة</strong> في الصلاة واضح يتكرر خمس مرات يومياً وهو صوت <strong>«الأذان»</strong>، والروتين هو القيام الفوري للوضوء والصلاة.. أما <strong>المكافأة الفورية</strong> التي يجدها العبد فور فراغه من صلاته الخاشعة فهي: <strong>«السكينة»</strong>!
+  </p>
+
+  <div class="hadith-box">
+    يصف الدكتور <strong>محمد راتب النابلسي</strong> أثر السكينة بكلمات من ذهب فيقول:
+    <br>
+    «ينام الإنسان على الشوكِ مع السكينة فإذا هو مِهادٌ وثير.. وينام على الحريرِ بلا سكينة فإذا هو شوكُ القتاد! يبسط الله الرزق مع السكينة فإذا هو متعة وبركة، ويبسطه بلا سكينة فإذا هو شقاء وحسرة.. يمنح الله الذرية مع السكينة فإذا هم قرة عين، ويمنحها بلا سكينة فإذا هم همٌّ ونكد.. يهب الله الصحة والعافية مع السكينة فإذا هي طاقة للخير، ويهبها بلا سكينة فإذا هي وبال على صاحبها.. ويعطي الله الجاه والقوة مع السكينة فإذا هما عدل ورحمة، ويعطيهما بلا سكينة فإذا هما طغيان وظلم!»
+  </div>
+
+  <h2 class="section-title">الخشوع سبيل السكينة</h2>
+
+  <p>
+    قد تقول: «كيف أحصل على مكافأة السكينة وأنا أصلي دون خشوع؟». يخبرنا علم النفس الحديث أن هناك <strong>علاقة تبادلية</strong> وثيقة بين حالة الجوارح الخارجية (Body Language) والشعور النفسي الداخلي؛ فكما أن خشوع القلب يظهر على الجوارح، فإن <strong>تعديل هيئة الجوارح وإبطاء حركتها وتوقيرها يورث الخشوع في القلب!</strong>
+  </p>
+
+  <div class="hadith-box">
+    رأى أمير المؤمنين <strong>عمر بن الخطاب</strong> رضي الله عنه رجلاً يمشي متماوتاً يحني ظهره ويطأطئ رأسه ظناً منه أن هذا هو الزهد والخشوع، فصاح به الفاروق: <strong>«أَمِتَّ علينا ديننا أماتك الله! اعتدل في مشيتك وأظهر عزة الإسلام.. ما بال أقوامٍ حسبوا الزهدَ ضعفاً والنسكَ تماوتاً؟!»</strong>.
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل السابع: دواء العادة (١/٢)</span>
+    <span>ص ٧٦ – ٨٧ | PDF ٨١ – ٩٢</span>
+  </div>
+</section>
+
+<section class="page" id="unit-C07-p2" data-unit-id="C07" data-pdf-pages="93-106" data-printed-pages="88-101">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل السابع • ( ٧ ) — الجزء الثاني</span>
+    <h1 class="chapter-title">تابع: دواء العادة (مسببات الخشوع والمناجاة)</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٨٨ – ١٠١ • صفحات ملف المصدر: ٩٣ – ١٠٦</div>
+  </div>
+
+  <h2 class="section-title">مسببات الخشوع العملية في الصلاة</h2>
+
+  <p>
+    جرب في صلاتك القادمة أن تبطئ حركة يديك عند تكبيرة الإحرام، وأن تقف وقفة المعتز بربه المفتقر إليه، وأن تتوقف ثانية واحدة بعد كل آية من الفاتحة لتستشعر ردّ الله عليك كما في الحديث القدسي الصحيح: <strong>«قسمتُ الصلاةَ بيني وبين عبدي نصفين ولعبدي ما سأل؛ فإذا قال العبد: ﴿الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ﴾ قال الله تعالى: حَمِدَني عبدي...»</strong>.
+  </p>
+
+  <p>
+    وتذكر ذلك العامل البسيط الذي حدثتك عنه في الفصل الأول والذي كان يطيل الركوع والقيام والسجود؛ لقد كان السر في أنه ينوّع في أذكار الصلاة ويستشعر معانيها العظيمة الواردة عن النبي ﷺ:
+  </p>
+
+  <div class="did-you-know-card">
+    <div class="did-you-know-title">✦ هل تعلم ..؟! (١) — دعاء الاستفتاح</div>
+    <p style="margin-bottom: 0;">
+      بعد تكبيرة الإحرام وقبل الفاتحة، استفتح صلاتك بهذا الدعاء النبوي العظيم لتغسل قلبك من خطاياه:
+      <br>
+      <strong>«اللهم باعد بيني وبين خطاياي كما باعدت بين المشرق والمغرب، اللهم نقّني من خطاياي كما يُنقّى الثوب الأبيض من الدنس، اللهم اغسلني من خطاياي بالثلج والماء والبرد»</strong>.
+    </p>
+  </div>
+
+  <div class="did-you-know-card">
+    <div class="did-you-know-title">✦ هل تعلم ..؟! (٢) — أذكار الركوع</div>
+    <p style="margin-bottom: 0;">
+      مع قولك «سبحان ربي العظيم» ثلاثاً، يمكنك أن تضيف بتدبر وخشوع:
+      <br>
+      <strong>«سُبّوحٌ قُدّوسٌ ربُّ الملائكةِ والروح، اللهم لك ركعتُ، وبك آمنتُ، ولك أسلمتُ، خشع لك سمعي وبصري ومخي وعظمي وعصبي، وما استقلّت به قدمي لله رب العالمين»</strong>.
+    </p>
+  </div>
+
+  <div class="did-you-know-card">
+    <div class="did-you-know-title">✦ هل تعلم ..؟! (٣) — دعاء القيام من الركوع</div>
+    <p style="margin-bottom: 0;">
+      عندما ترفع رأسك من الركوع قائلاً «سمع الله لمن حمده»، لا تكتفِ بـ «ربنا ولك الحمد» سريعة، بل أطِل القيام وقل:
+      <br>
+      <strong>«ربنا ولك الحمد والشكر، حمداً كثيراً طيباً مباركاً فيه، ملء السماوات وملء الأرض وملء ما بينهما وملء ما شئت من شيء بعد، أهل الثناء والمجد، أحق ما قال العبد وكلنا لك عبد، اللهم لا مانع لما أعطيت ولا معطي لما منعت ولا ينفع ذا الجد منك الجد»</strong>.
+    </p>
+  </div>
+
+  <div class="did-you-know-card">
+    <div class="did-you-know-title">✦ هل تعلم ..؟! (٤) — دعاء السجود والجلسة بين السجدتين</div>
+    <p style="margin-bottom: 0;">
+      في سجودك مع «سبحان ربي الأعلى»، قل: <strong>«سبحانك اللهم ربنا وبحمدك اللهم اغفر لي، اللهم لك سجدت وبك آمنت ولك أسلمت، سجد وجهي للذي خلقه وصوّره وشق سمعه وبصره تبارك الله أحسن الخالقين»</strong>.
+      <br>
+      وفي الجلسة بين السجدتين أطِل الجلوس وادعُ بسبع حاجات تجمع خير الدنيا والآخرة:
+      <br>
+      <strong>«اللهم اغفر لي، واعفُ عني، وعافني، وارزقني، واهدني، واجبرني، وارحمني يا أرحم الراحمين»</strong>.
+    </p>
+  </div>
+
+  <h2 class="section-title">المناجاة</h2>
+
+  <p>
+    ما الفرق بين أن تسجل رسالة صوتية آلية لشخص غائب، وبين أن تتحدث وجهاً لوجه مع ملك عظيم يسمعك ويرد عليك؟ الكثيرون يصلون كأنهم يسجلون رسالة صوتية سريعة يفرغون منها ويمضون! بينما الصلاة الحقيقية هي <strong>مناجاة حية</strong>؛ استحضر فيها هيبة الموقف يوم القيامة حين تصطف الخلائق: <strong>﴿ يَوْمَئِذٍ يَتَّبِعُونَ الدَّاعِيَ لَا عِوَجَ لَهُ ۖ وَخَشَعَتِ الْأَصْوَاتُ لِلرَّحْمَٰنِ فَلَا تَسْمَعُ إِلَّا هَمْسًا * يَوْمَئِذٍ لَّا تَنفَعُ الشَّفَاعَةُ إِلَّا مَنْ أَذِنَ لَهُ الرَّحْمَٰنُ وَرَضِيَ لَهُ قَوْلًا ﴾</strong>.. وأنت الآن في صلاتك قد أذن لك الرحمن أن تناجيه وتخاطبه في التشهد قائلاً: «التحيات لله والصلوات والطيبات..»!
+  </p>
+
+  <p class="center-callout">
+    يقول الإمام ابن القيم الجوزية رحمه الله كلمة تهز القلوب:<br>
+    «أما وإنك تُصلي .. فلتصلِّ صلاةً تليقُ بمعبودك .. أو تُفتش لك عن معبودٍ تليقُ به صلاتك !!»
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل السابع (لوحة المراجعة — ص ١٠١) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. دواء العادة (المحفز والمكافأة):</strong>
+      اجعل الأذان محفزاً تلقائياً للقيام، واجعل «السكينة» مكافأتك الفورية من كل صلاة.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. مسببات الخشوع والمناجاة:</strong>
+      أبطئ حركاتك في الصلاة، وتوقف بين آيات الفاتحة، ونوّع في أذكار الركوع والقيام والسجود والجلسة بين السجدتين لتذوق حلاوة المناجاة.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل السابع: دواء العادة (٢/٢)</span>
+    <span>ص ٨٨ – ١٠١ | PDF ٩٣ – ١٠٦</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C08: كُن صباحاً (PDF 107-136 | ط 102-131) ==================== -->
+<section class="page" id="unit-C08-p1" data-unit-id="C08" data-pdf-pages="107-121" data-printed-pages="102-116">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثامن • ( ٨ ) — الجزء الأول</span>
+    <h1 class="chapter-title">كُن صباحاً</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٠٢ – ١١٦ • صفحات ملف المصدر: ١٠٧ – ١٢١</div>
+  </div>
+
+  <p class="lead-para">
+    في عام ٢٠٠٧م، إبان الأزمة الاقتصادية العالمية، انهارت أعمال الشاب الأمريكي <strong>هال إيلرود (Hal Elrod)</strong>، وتراكمت عليه الديون حتى بلغت ٤٠٠ ألف دولار، ودخل في حالة اكتئاب شديد وعجز عن النهوض من فراشه..
+  </p>
+
+  <p>
+    نصحه صديقه المقرب بأن يخرج كل صباح لممارسة رياضة الجري ليصفو ذهنه، وفي أثناء جريه سمع مقولة للمحاضر <strong>جيم رون</strong> غيرت مجرى تفكيره، وتأمل في مقولة الكاتب <strong>ماثيو كيللي (Matthew Kelly)</strong>: <strong>«كلنا نريد أن نكون سعداء.. كلنا نعرف الأشياء التي تجعلنا سعداء.. ولكننا لا نفعل تلك الأشياء!! لماذا؟! ببساطة.. لأننا مشغولون.. مشغولون بماذا؟! مشغولون بأن لا نكون سعداء!»</strong>.
+  </p>
+
+  <p>
+    واستحضر مقولة <strong>كيفن براسي (Kevin Bracy)</strong>: <strong>«إذا أردت أن تعيش حياة مختلفة عن تلك التي تعيشها، فعليك أن تفعل أشياء مختلفة عن تلك التي تفعلها!»</strong>، وهو المعنى الذي قرره القرآن الكريم قبل أربعة عشر قرناً في قانون التغيير الكوني:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ ﴾
+    <span class="surah-ref">سورة الرعد: الآية ١١ — وكما يلخصها د. محمد راتب النابلسي: «غيّر كي يُغيّر.. ما بتغيّر ما بيغيّر!»</span>
+  </div>
+
+  <h2 class="section-title">الصباح المعجزة (The Miracle Morning)</h2>
+
+  <p>
+    قرر هال إيلرود أن يستيقظ كل يوم الساعة الخامسة صباحاً — قبل موعد استيقاظه المعتاد بساعة كاملة — ويمارس في هذه الساعة ست عادات تطويرية (التأمل الهادئ، التوكيدات، التصور، القراءة، الكتابة، الرياضة). وفي خلال أشهر قليلة تضاعف دخله وسدد ديونه وألّف كتابه الشهير <strong>«الصباح المعجزة» (The Miracle Morning)</strong> الذي تُرجم لعشرات اللغات!
+  </p>
+
+  <p>
+    وحين قرأت كتابه، ابتسمت وقلت في نفسي: لقد اكتشف هال إيلرود بالتجربة البشرية جزءاً مما شرعه الله للمسلمين كل يوم في <strong>«صلاة الفجر والجلوس بعدها إلى الشروق»</strong>! غير أننا حين حولنا صلاة الفجر إلى «واجب ثقيل نؤديه ونعود للنوم»، أو سهرنا الليل كله وضيعنا بركة البكور، حُرمنا من <strong>«الصلاة المعجزة»</strong>!
+  </p>
+
+  <h2 class="section-title">الصلاة المُعجزة</h2>
+
+  <p>
+    عانيت لسنوات طويلة من فوات صلاة الفجر، وكنت أظن أن المشكلة روحانية معقدة، حتى اكتشفت أن السبب الرئيسي وراء فوات صلاة الفجر عند ٩٠٪ من الناس هو سبب مادي منطقي بسيط جداً: <strong>«أننا لا ننام مبكراً أصلاً!!»</strong>. فمن يسهر أمام الهاتف والتلفاز حتى الساعة الواحدة أو الثانية بعد منتصف الليل، كيف يطالب جسده المنهك بالاستيقاظ النشيط في الرابعة فجراً؟!
+  </p>
+
+  <h2 class="section-title">هل لك أهداف؟! (الساعة السحرية Magic Hour)</h2>
+
+  <p>
+    أثبتت الدراسات الإدارية أن <strong>٨٠٪ من الناس لا يكتبون أهدافهم</strong>، ومن يكتبونها ويخصصون لها ساعة الصباح الأولى — التي يسميها خبراء الإنجاز <strong>«الساعة السحرية» (Magic Hour)</strong> — يحققون أضعاف ما يحققه غيرهم. وقد درست مجلة «فوربس» عادات الرؤساء التنفيذيين لأنجح عشر شركات في العالم فوجدت القاسم المشترك بينهم جميعاً هو الاستيقاظ قبل الخامسة صباحاً!
+  </p>
+
+  <div class="hadith-box">
+    وهذا مصداق دعاء النبي ﷺ لأمته: <strong>«اللهم بارك لأمتي في بكورها»</strong>، وقوله ﷺ: <strong>«ركعتا الفجر خيرٌ من الدنيا وما فيها»</strong>!
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثامن: كُن صباحاً (١/٢)</span>
+    <span>ص ١٠٢ – ١١٦ | PDF ١٠٧ – ١٢١</span>
+  </div>
+</section>
+
+<section class="page" id="unit-C08-p2" data-unit-id="C08" data-pdf-pages="122-136" data-printed-pages="117-131">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثامن • ( ٨ ) — الجزء الثاني</span>
+    <h1 class="chapter-title">تابع: كُن صباحاً (برنامج الفجر، معركة الفراش، والضحى)</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١١٧ – ١٣١ • صفحات ملف المصدر: ١٢٢ – ١٣٦</div>
+  </div>
+
+  <h2 class="section-title">مع الصباح: قاعدة «أدومها وإن قل !!»</h2>
+
+  <p>
+    عندما واظبت على الاستيقاظ لصلاة الفجر وعدم النوم بعدها، طبقت قاعدة ذهبية غيرت حياتي: تقسيم الساعة التي تلي صلاة الفجر إلى <strong>ثلاثة أثلاث (٢٠ دقيقة + ٢٠ دقيقة + ٢٠ دقيقة)</strong>:
+  </p>
+
+  <ol class="book-list">
+    <li><strong>٢٠ دقيقة للقرآن والموعظة:</strong> حفظ ٣ آيات فقط يومياً من القرآن الكريم في ١٠ دقائق (ثلاث آيات يومياً تعني حفظ نحو ١٠٠٠ آية في العام!)، مع قراءة تفسيرها وتدبرها — ومن ثمار هذه الدقائق الصباحية المباركة وُلد كتيبي الأول <strong>«آيات تغير حياتك»</strong>!</li>
+    <li><strong>٢٠ إلى ٣٠ دقيقة للقراءة والكتابة:</strong> قراءة كتاب نافع بمعدل ٢٠ دقيقة صباحاً و٢٠ دقيقة مساءً تضمن لك قراءة أكثر من <strong>٤٠ كتاباً في العام الواحد</strong>! في هذا الوقت الصباحي الصافي كنت أحاور بعقلي الشيخ الشعراوي، والدكتور مصطفى محمود، والملياردير السير <strong>ريتشارد برانسون (Richard Branson)</strong> مؤسس مجموعة «فيرجين» عبر قراءة كتبهم وخلاصة تجاربهم.. وفي هذا الصباح نفسه كُتبت فصول هذا الكتاب <strong>«فاتتني صلاة»</strong>!</li>
+    <li><strong>٢٠ دقيقة للرياضة الصباحية:</strong> تمارين بسيطة أو مشي سريع يضخ الأكسجين في خلايا الجسم ويفجر طاقة النشاط طوال اليوم.</li>
+  </ol>
+
+  <h2 class="section-title">معركة الفراش ومضاعفات الساعة والنصف</h2>
+
+  <p>
+    يقول علماء وكالة الفضاء <strong>«ناسا» (NASA)</strong> إن مكوك الفضاء يستهلك في <strong>الدقائق الثلاث الأولى للإطلاق</strong> وقوداً وطاقة أكبر مما يستهلكه في بقية رحلته كاملة حول الأرض؛ لأنه في الدقائق الأولى يكسر قانون الجاذبية الأرضية! وكذلك أنت في <strong>«معركة الفراش»</strong>؛ الدقائق الثلاث الأولى بعد رنين منبه الفجر هي أصعب مرحلة، فإذا قفزت من فراشك فوراً دون مشاورة عقلك («سأنام عشر دقائق إضافية»)، وتوضأت بالماء البارد وتطيبت، فقد كسرت جاذبية الكسل وانطلقت في مدار يومك!
+  </p>
+
+  <div class="did-you-know-card">
+    <div class="did-you-know-title">✦ قاعدة دورات النوم (مضاعفات الساعة والنصف)</div>
+    <p style="margin-bottom: 0;">
+      أكد أطباء النوم أن دورة النوم الكاملة للإنسان (من النوم الخفيف إلى العميق ثم حركة العين السريعة) تستغرق <strong>٩٠ دقيقة (ساعة ونصف)</strong>. فإذا استيقظت في نهاية الدورة، ستشعر بنشاط وحيوية حتى لو نمت ساعات أقل! لذلك اضبط ساعات نومك قبل الفجر لتكون من <strong>مضاعفات الساعة والنصف</strong>: (<strong>ساعة ونصف، أو ٣ ساعات، أو ٤ ساعات ونصف، أو ٦ ساعات، أو ٧ ساعات ونصف</strong>)، وادعم نشاطك في وسط النهار بـ <strong>قيلولة خفيفة</strong> (من ١٠ إلى ٢٠ دقيقة، ولا تزيد أبداً عن نصف ساعة حتى لا تدخل في النوم العميق).
+    </p>
+  </div>
+
+  <h2 class="section-title">والضحى: الإعجاز الطبي والنفسي للاستيقاظ فجراً</h2>
+
+  <p>
+    تأمل كيف أقسم الله سبحانه بوقت الضحى وبالليل إذا سجى في سورة الضحى حين حزن النبي ﷺ لتأخر الوحي، فجاءت السورة تفيض بالرحمة والأمل: <strong>﴿ وَالضُّحَىٰ * وَاللَّيْلِ إِذَا سَجَىٰ * مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ * وَلَلْآخِرَةُ خَيْرٌ لَّكَ مِنَ الْأُولَىٰ * وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَىٰ ﴾</strong>.
+  </p>
+
+  <p>
+    وقد أثبتت دراسة علمية بـ <strong>جامعة تورنتو الكندية</strong> أُجريت على <strong>٧٣٥ متطوعاً</strong> أن الأشخاص الصباحيين الذين يستيقظون مع الفجر يتمتعون بمناعة أقوى وسعادة نفسية أعلى بكثير من الساهرين بالليل. كما أوضح <strong>الدكتور حسام موافي</strong> (استشاري طب الحالات الحرجة وأمراض القلب) حقيقة طبية مذهلة؛ وهي أن <strong>٨٠٪ من جلطات القلب والمخ تحدث حوالي الساعة الثامنة صباحاً</strong> بسبب بطء سريان الدم وتراكم الصفائح الدموية أثناء النوم الطويل المتصل، وأن استيقاظ المسلم لصلاة الفجر ووضوءه وحركته في هذا التوقيت الدقيق يقطع حالة الركود الدموي ويحمي الشرايين من الجلطات.. فصدق المؤذن حين ينادي كل فجر: <strong>«الصلاة خيرٌ من النوم !!»</strong>.
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل الثامن (لوحة المراجعة — ص ١٣١) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. كُن صباحاً (الصلاة المعجزة):</strong>
+      نم مبكراً وفق مضاعفات الساعة والنصف، واكسر جاذبية الفراش في الدقائق الأولى دون مشاورة عقلك.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. برنامج الساعة السحرية بعد الفجر:</strong>
+      ٢٠ دقيقة للقرآن (حفظ ٣ آيات وتدبرها) + ٢٠ دقيقة للقراءة النافعة + ٢٠ دقيقة للرياضة؛ ففي البكور بركة العمر وصحة القلب.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثامن: كُن صباحاً (٢/٢)</span>
+    <span>ص ١١٧ – ١٣١ | PDF ١٢٢ – ١٣٦</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C09: بيتٌ هناك (PDF 137-146 | ط 132-141) ==================== -->
+<section class="page" id="unit-C09" data-unit-id="C09" data-pdf-pages="137-146" data-printed-pages="132-141">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل التاسع • ( ٩ )</span>
+    <h1 class="chapter-title">بيتٌ هناك</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٣٢ – ١٤١ • صفحات ملف المصدر: ١٣٧ – ١٤٦</div>
+  </div>
+
+  <p class="lead-para">
+    تخيل أنك استيقظت يوماً فوجدت رسالة رسمية موثقة تخبرك بأن ملكاً عظيماً قد وهبك قصراً فاخراً على شاطئ البحر، تحيط به الحدائق والزهور من كل جانب، ولا يُطلب منك لتأكيد ملكيتك لهذا القصر إلا أن تضع اثنتي عشرة طوبة صغيرة كل يوم.. هل كنت ستتكاسل يوماً واحداً عن وضعها؟!
+  </p>
+
+  <div class="hadith-box">
+    فكيف إذا كان الوعد من ملك الملوك سبحانه وتعالى على لسان الصادق المصدوق ﷺ حين قال:<br>
+    <strong>«مَنْ صَلَّى اثْنَتَيْ عَشْرَةَ رَكْعَةً فِي يَوْمٍ وَلَيْلَةٍ، بُنِيَ لَهُ بِهِنَّ بَيْتٌ فِي الْجَنَّةِ»</strong>!
+  </div>
+
+  <h2 class="section-title">السُّنن الرواتب هي:</h2>
+
+  <ul class="book-list">
+    <li><strong>ركعتان قبل صلاة الفجر</strong> (وهما خير من الدنيا وما فيها).</li>
+    <li><strong>أربع ركعات قبل صلاة الظهر، وركعتان بعدها.</strong></li>
+    <li><strong>ركعتان بعد صلاة المغرب.</strong></li>
+    <li><strong>ركعتان بعد صلاة العشاء.</strong></li>
+  </ul>
+
+  <p>
+    إن المحافظة على هذه الركعات الاثنتي عشرة لا تبني لك بيتاً في الجنة فحسب، بل تمثل <strong>السياج الواقي والحصن المنيع للفرائض الخمس</strong>؛ فالشيطان حين يريد أن يسقطك في ترك الفريضة لا يبدأ بها مباشرة إن كنت محافظاً على السنن، بل يبدأ بتثقيل السنة الراتبة عليك، فإذا جاهدته فيها بقيت فريضتك مصونة آمنة! فضلاً عن أن السنن الرواتب تجبر أي نقص أو سهو أو شرود قد يقع في صلاة الفريضة.
+  </p>
+
+  <h2 class="section-title">حتى أُحبه</h2>
+
+  <p>
+    هناك سر أعظم للنوافل والسنن الرواتب؛ إنها الطريق الموصل إلى مقام <strong>«محبة الله للعبد»</strong>! تأمل هذا الحديث القدسي الجليل:
+  </p>
+
+  <div class="hadith-box">
+    قال رسول الله ﷺ إن الله تعالى قال:<br>
+    <strong>«مَنْ عَادَى لِي وَلِيًّا فَقَدْ آذَنْتُهُ بِالْحَرْبِ، وَمَا تَقَرَّبَ إِلَيَّ عَبْدِي بِشَيْءٍ أَحَبَّ إِلَيَّ مِمَّا افْتَرَضْتُ عَلَيْهِ، وَمَا يَزَالُ عَبْدِي يَتَقَرَّبُ إِلَيَّ بِالنَّوَافِلِ حَتَّى أُحِبَّهُ؛ فَإِذَا أَحْبَبْتُهُ كُنْتُ سَمْعَهُ الَّذِي يَسْمَعُ بِهِ، وَبَصَرَهُ الَّذِي يُبْصِرُ بِهِ، وَيَدَهُ الَّتِي يَبْطِشُ بِهَا، وَرِجْلَهُ الَّتِي يَمْشِي بِهَا، وَإِنْ سَأَلَنِي لَأُعْطِيَنَّهُ، وَلَئِنِ اسْتَعَاذَنِي لَأُعِيذَنَّهُ»</strong>.
+  </div>
+
+  <h2 class="section-title">حب الله ..</h2>
+
+  <p>
+    وماذا يحدث إذا أحبك الله سبحانه وتعالى؟ اسمع إلى الموكب الملائكي المهيب الذي يُعلن فيه اسمك في السماوات السبع:
+  </p>
+
+  <div class="hadith-box">
+    قال النبي ﷺ: <strong>«إِذَا أَحَبَّ اللَّهُ عَبْدًا نَادَى جِبْرِيلَ: إِنَّ اللَّهَ يُحِبُّ فُلَانًا فَأَحِبَّهُ، فَيُحِبُّهُ جِبْرِيلُ، فَيُنَادِي جِبْرِيلُ فِي أَهْلِ السَّمَاءِ: إِنَّ اللَّهَ يُحِبُّ فُلَانًا فَأَحِبُّوهُ، فَيُحِبُّهُ أَهْلُ السَّمَاءِ، ثُمَّ يُوضَعُ لَهُ الْقَبُولُ فِي الْأَرْضِ»</strong>!
+  </div>
+
+  <p>
+    عندما يمتلئ قلبك بحب الله واليقين ببيته الذي يُبنى لك هناك في الجنة، تتغير نظرتك لكل مصائب الدنيا؛ كحال تلك المرأة العجوز الصالحة التي أخبروها بأن حريقاً قد أتى على زرعها وأرضها، فرفعت رأسها إلى السماء مطمئنة وقالت: <strong>«الحمد لله.. إن حديقتي ليست هنا، بل هناك في الجنة!»</strong>، على النقيض تماماً من صاحب الجنتين في سورة الكهف الذي ظن أن جنته الدنيوية لن تبيد أبداً فأُحيط بثمره وأصبح يقلّب كفيه على ما أنفق فيها وهي خاوية على عروشها!
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل التاسع (لوحة المراجعة — ص ١٤١) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. بيتٌ هناك (السنن الرواتب):</strong>
+      حافظ على اثنتي عشرة ركعة في يومك وليلتك؛ يُبنى لك بهن بيت في الجنة، وتكون حصناً واقياً لفرائضك وجابراً لنقصها.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. وما يزال عبدي يتقرب إليّ بالنوافل حتى أحبه:</strong>
+      اجعل النوافل جسر محبتك لله ليوضع لك القبول في الأرض والتسديد في السمع والبصر واليد والقدم.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل التاسع: بيتٌ هناك</span>
+    <span>ص ١٣٢ – ١٤١ | PDF ١٣٧ – ١٤٦</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C10: وترتيبها (PDF 147-154 | ط 142-149) ==================== -->
+<section class="page" id="unit-C10" data-unit-id="C10" data-pdf-pages="147-154" data-printed-pages="142-149">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل العاشر • ( ١٠ )</span>
+    <h1 class="chapter-title">وترتيبها</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٤٢ – ١٤٩ • صفحات ملف المصدر: ١٤٧ – ١٥٤</div>
+  </div>
+
+  <p class="lead-para">
+    كان لي أستاذ جليل أحترمه كثيراً، لاحظت أمراً لافتاً في طريقته لتحديد أي موعد؛ فحين كنت أسأله: «متى نلتقي يا أستاذي؟»، لم يكن يقول لي «الساعة الرابعة» أو «الساعة الثامنة»، بل كان يقول دائماً: «نلتقي بعد صلاة العصر إن شاء الله»، أو «موعدنا بعد صلاة العشاء»!
+  </p>
+
+  <h2 class="section-title">رتب يومك</h2>
+
+  <p>
+    تأملت في صنيع أستاذي فأدركت فرقاً جوهرياً بين فريقين من الناس:
+  </p>
+
+  <ul class="book-list">
+    <li><strong>الفريق الأول:</strong> يرتب جدول يومه ومواعيده وأعماله أولاً، ثم يحاول أن «يحشر» الصلاة في أوقات الفراغ المتبقية بين المواعيد؛ فإن ازدحم يومه ضاعت صلاته أو أخرها عن وقتها!</li>
+    <li><strong>الفريق الثاني (أهل الصلاة):</strong> يجعل <strong>الصلوات الخمس هي الأعمدة الثابتة (البوصلة والمحور)</strong> ليومه، ثم يرتب كل أعماله ومواعيده وزياراته حول هذه الصلوات الخمس (قبل الظهر، بعد الظهر، بعد العصر، بين المغرب والعشاء، بعد العشاء)!</li>
+  </ul>
+
+  <div class="quran-verse">
+    ﴿ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا ﴾
+    <span class="surah-ref">سورة النساء: الآية ١٠٣</span>
+  </div>
+
+  <h2 class="section-title">وصفة للسعادة (العلاج بالعمل والترتيب)</h2>
+
+  <p>
+    يقول الأديب والمفكر الأيرلندي <strong>جورج برنارد شو (George Bernard Shaw)</strong>: <strong>«إن سر التعاسة هو أن يتاح لك وقت فراغ لتفكر فيما إذا كنت سعيداً أم لا!»</strong>. فالفراغ والفوضى هما البيئة الحاضنة للقلق والوساوس والكسل والاكتئاب، ومن هنا ظهر في الطب النفسي الحديث ما يُسمى بـ <strong>«العلاج الوظيفي» (Occupational Therapy)</strong>؛ أي علاج النفس من الاكتئاب والهموم عبر إشغالها ببرنامج يومي منظم ومرتب!
+  </p>
+
+  <p>
+    وفي كتابه الشهير <strong>«وحيد» (Alone)</strong>، يروي المستكشف الأمريكي الأدميرال <strong>ريتشارد بيرد (Richard Byrd)</strong> قصته حين قضى خمسة أشهر كاملة وحيداً تماماً في كوخ جليدي صغير وسط ظلام القطب الجنوبي القارس في درجة حرارة تهبط إلى ٦٠ تحت الصفر! يقول بيرد: إن الشيء الوحيد الذي أنقذ عقله من الجنون والانهيار في تلك العزلة الموحشة هو أنه <strong>وضع لنفسه جدولاً يومياً صارماً ومرتباً</strong>، يقسم فيه ساعات يومه بدقة لكل عمل صغيراً كان أو كبيراً!
+  </p>
+
+  <p class="center-callout">
+    إن الصلوات الخمس الموقوتة هي أعظم منظم إلهي ليومك؛ تقسم نهارك وليلك إلى خمس محطات متوازنة تمنع الفوضى وتطرد الفراغ وتمنح حياتك إيقاعاً منتظماً سعيداً!
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل العاشر (لوحة المراجعة — ص ١٤٩) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. رتب يومك حول صلاتك:</strong>
+      اجعل الصلوات الخمس هي المحاور الثابتة التي تدور حولها مواعيدك وأعمالك، لا العكس.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. وصفة للسعادة:</strong>
+      نظم وقتك واقضِ على الفوضى والفراغ؛ فالانضباط حول مواقيت الصلاة يمنحك توازناً نفسياً ووقاية من القلق والتشتت.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل العاشر: وترتيبها</span>
+    <span>ص ١٤٢ – ١٤٩ | PDF ١٤٧ – ١٥٤</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C11: حماقات ارتكبتها (PDF 155-162 | ط 150-157) ==================== -->
+<section class="page" id="unit-C11" data-unit-id="C11" data-pdf-pages="155-162" data-printed-pages="150-157">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الحادي عشر • ( ١١ )</span>
+    <h1 class="chapter-title">حماقات ارتكبتها</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٥٠ – ١٥٧ • صفحات ملف المصدر: ١٥٥ – ١٦٢</div>
+  </div>
+
+  <p class="lead-para">
+    كان الكاتب والمحاضر الشهير <strong>ديل كارنيجي (Dale Carnegie)</strong> يحتفظ في مكتبه بملف خاص كتب عليه من الخارج: <strong>«حماقات ارتكبتها» (Foolish Things I Have Done)</strong>!
+  </p>
+
+  <p>
+    كان كارنيجي كلما وقع في خطأ أو تقصير لا يكتفي بالندم العابر، بل يجلس مع نفسه ويسجل في هذا الملف: ما هو الخطأ الذي ارتكبه؟ ولماذا وقع فيه؟ وكيف يتجنب الوقوع فيه مستقبلاً؟
+  </p>
+
+  <h2 class="section-title">استخدم أخطاءك (آلية جو جيرارد)</h2>
+
+  <p>
+    وهذا بالضبط ما فعله <strong>جو جيرارد (Joe Girard)</strong> — الرجل الذي دخل موسوعة «غينيس» للأرقام القياسية كأعظم بائع سيارات في العالم، وألّف كتابه الشهير <strong>(How To Sell Anything To Anybody)</strong> — حيث كان إذا دخل عليه عميل ولم يشترِ منه، لا يقول «عميل غير جاد»، بل يدرس بدقة: ما الخطأ الذي فعلته فجعل العميل ينصرف؟ وكيف أعالجه مع العميل القادم؟
+  </p>
+
+  <p>
+    لماذا لا تطبق هذه الآلية الذكية مع صلاتك؟ عندما تفوتك صلاة أو تتكاسل عنها، لا تكتفِ بتأنيب الضمير السلبي ثم تنسى الأمر، بل اسأل نفسك بصدق: <strong>«ما هو السبب العملي المحدد الذي جعل هذه الصلاة تفوتني اليوم؟ وكيف أضع إجراءً وقائياً يمنع تكراره غداً؟»</strong>.
+  </p>
+
+  <h3 class="sub-title">أمثلة عملية لمعالجة أسباب الكسل عن الصلاة:</h3>
+
+  <ul class="book-list">
+    <li><strong>تأجيل الغُسل بسبب برودة الماء أو الكسل:</strong> إذا كنت تؤجل الاغتسال فيتكاسل جسدك وتفوتك الصلاة، فاعلم أنك حين تكسر الحاجز النفسي وتدخل للاغتسال فوراً (ولو بماء فاتر أو بارد) فإنك تطبق <strong>«قاعدة الخمس ثوانٍ» (Five Seconds Rule)</strong>: عدّ تنازلياً (٥ - ٤ - ٣ - ٢ - ١) وتحرك فوراً قبل أن يختلق عقلك الأعذار!</li>
+    <li><strong>ثقل الجسد بعد تناول الطعام:</strong> كثيراً ما نضع الطعام وقت الأذان فنأكل حتى الشبع، فيثقل الجسد ويتكاسل عن القيام للصلاة! الحل العملي البسيط: <strong>«صلِّ أولاً ثم تناول طعامك»</strong>؛ فستصلي بنشاط وخفة، ثم تأكل وأنت مطمئن البال مستريح الضمير!</li>
+    <li><strong>الدخول إلى الفراش وقت أذان العشاء:</strong> لا تستلقِ على سريرك وأنت لم تصلِّ العشاء بعد بحجة «سأرتاح قليلاً ثم أقوم»؛ صلِّ العشاء فور أذانها قبل أن تلمس الفراش!</li>
+  </ul>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل الحادي عشر (لوحة المراجعة — ص ١٥٧) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. ملف «حماقات ارتكبتها» (استخدم أخطاءك):</strong>
+      إذا فاتتك صلاة، حدد السبب الحقيقي الدقيق وراء فواتها (سهر، أكل قبل الصلاة، استلقاء، تسويف في الطهارة) وعالجه فوراً.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. قاعدة الخمس ثوانٍ (5 Seconds Rule):</strong>
+      تحرك نحو الوضوء والطهارة خلال ٥ ثوانٍ من اتخاذ القرار قبل أن يبدأ عقلك في اختلاق المعاذير.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الحادي عشر: حماقات ارتكبتها</span>
+    <span>ص ١٥٠ – ١٥٧ | PDF ١٥٥ – ١٦٢</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C12: لا طاقة لك (PDF 163-181 | ط 158-176) ==================== -->
+<section class="page" id="unit-C12-p1" data-unit-id="C12" data-pdf-pages="163-172" data-printed-pages="158-167">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثاني عشر • ( ١٢ ) — الجزء الأول</span>
+    <h1 class="chapter-title">لا طاقة لك</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٥٨ – ١٦٧ • صفحات ملف المصدر: ١٦٣ – ١٧٢</div>
+  </div>
+
+  <p class="lead-para">
+    «أشعر بالإرهاق ولا طاقة لي للقيام للصلاة الآن..» كم مرة سمعت هذه العبارة من نفسك أو من غيرك؟ المفاجأة العلمية والطبية المذهلة هي أن الصلاة لم تُشرع لتستنزف طاقتك، بل <strong>شُرعت لتكون أعظم مولّد ومجدّد لطاقة جسدك وروحك!</strong>
+  </p>
+
+  <h2 class="section-title">١. الوضوء وتفريغ الشحنات الكهرومغناطيسية</h2>
+
+  <p>
+    في حلقة علمية شهيرة قدمها الإعلامي البريطاني <strong>ريتشارد هاموند (Richard Hammond)</strong>، أوضح كيف يتعرض جسم الإنسان المعاصر طوال اليوم لسيل هائل من الشحنات الكهربائية والكهرومغناطيسية الساكنة الناتجة عن الأجهزة الإلكترونية والشاشات والاحتكاك بالملابس الصناعية، مما يسبب الصداع والتوتر العصبي والخمول المزمن.
+  </p>
+
+  <p>
+    وأثبتت الأبحاث أن أفضل وسيلة لتفريغ هذه الشحنات الكهربائية الضارة من أطراف الجسد ومراكز الأعصاب هي <strong>غسل الأطراف بالماء النقي خمس مرات يومياً (الوضوء)</strong>، فإن لم يوجد الماء فمسحها بـ <strong>التراب الطاهر (التيمم)</strong> لأن الأرض تعمل كـ «مؤرّض كهربائي» (Earthing / Grounding) يمتص الشحنات الزائدة فوراً ويعيد للجهاز العصبي توازنه وهدوءه!
+  </p>
+
+  <h2 class="section-title">٢. المشي إلى المسجد</h2>
+
+  <p>
+    ينصح الأطباء حول العالم بالمشي لمدة <strong>٣٠ دقيقة يومياً</strong> للوقاية من أمراض القلب والسكري والضغط والاكتئاب. والمحافظ على الصلوات الخمس في المسجد يمشي هذه الدقائق الثلاثين يومياً بشكل تلقائي مقسم على خمس فترات، فيجمع بين صحة البدن ورفعة الدرجات ومحو الخطايا مع كل خطوة يخطوها!
+  </p>
+
+  <h2 class="section-title">٣. الركوع والسجود وصحة العمود الفقري والدماغ</h2>
+
+  <p>
+    أُجريت دراسة طبية حديثة على <strong>١٨٨ شخصاً</strong> يعانون من آلام أسفل الظهر ومشكلات الانزلاق الغضروفي، فتبين أن أداء حركات الركوع والسجود بطمأنينة واعتدال كامل في الزوايا يعمل كأفضل تمرين علاجي طبيعي يمرّن عضلات الظهر والفقرات ويحافظ على ليونة المفاصل. كما أن السجود يضخ الدم المؤكسج بسلاسة إلى شرايين الدماغ الدقيقة، ثم عند الرفع من السجود يتخلص الدماغ من الرواسب والسموم، فتتجدد يقظة الذهن وصفاء التفكير!
+  </p>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثاني عشر: لا طاقة لك (١/٢)</span>
+    <span>ص ١٥٨ – ١٦٧ | PDF ١٦٣ – ١٧٢</span>
+  </div>
+</section>
+
+<section class="page" id="unit-C12-p2" data-unit-id="C12" data-pdf-pages="173-181" data-printed-pages="168-176">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثاني عشر • ( ١٢ ) — الجزء الثاني</span>
+    <h1 class="chapter-title">تابع: لا طاقة لك (أوقات الصلاة وصغائر العادات)</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٦٨ – ١٧٦ • صفحات ملف المصدر: ١٧٣ – ١٨١</div>
+  </div>
+
+  <h2 class="section-title">٤. أوقات الصلاة والهرمونات الحيوية</h2>
+
+  <p>
+    لاحظ العلماء ارتباطاً مذهلاً بين مواقيت الصلوات الخمس وبين التغيرات الفسيولوجية والهرمونية في جسم الإنسان على مدار الأربع والعشرين ساعة:
+  </p>
+
+  <ul class="book-list">
+    <li><strong>عند الفجر:</strong> يقل إفراز الميلاتونين (هرمون النوم) ويرتفع الكورتيزول الطبيعي المحفز للنشاط واستنشاق غاز الأوزون النقي.</li>
+    <li><strong>عند الظهر:</strong> يبلغ الجسد ذروة إجهاد النصف الأول من النهار، فتأتي صلاة الظهر كاستراحة فاصلة تهدئ ضربات القلب وتجدد الطاقة.</li>
+    <li><strong>عند العصر:</strong> يرتفع هرمون الأدرينالين والتوتر، فتأتي صلاة العصر لتعيد السكينة والتوازن.</li>
+    <li><strong>عند المغرب والعشاء:</strong> يبدأ الجسد بالاستعداد للهدوء الليلي وإفراز الميلاتونين، فتأتي صلاتا المغرب والعشاء لتختما اليوم بصفاء روحي ونفسي عميق.</li>
+  </ul>
+
+  <p>
+    كما أثبت البروفيسور الألماني <strong>كنوت فايفر (Knut Pfeiffer)</strong> في أبحاثه حول المجالات الحيوية للإنسان أن التوجه نحو مركز الأرض (مكة المكرمة / الكعبة المشرفة) أثناء الصلاة والوقوف في صفوف منتظمة متراصة يحقق أعلى درجات التناغم الحيوي والطمأنينة النفسية للإنسان!
+  </p>
+
+  <h2 class="section-title">٥. صغائر العادات (هزيمة الشيطان بالتفاصيل الصغيرة)</h2>
+
+  <div class="hadith-box">
+    قال النبي ﷺ: <strong>«إِذَا نُودِيَ لِلصَّلَاةِ أَدْبَرَ الشَّيْطَانُ وَلَهُ ضُرَاطٌ حَتَّى لَا يَسْمَعَ التَّأْذِينَ، فَإِذَا قُضِيَ النِّدَاءُ أَقْبَلَ...»</strong>.
+  </div>
+
+  <p>
+    إن التزامك بـ <strong>«صغائر العادات»</strong> المرتبطة بالصلاة — مثل الترديد خلف المؤذن فور سماع الأذان، والدعاء بعده، والسواك عند الوضوء، وبسط سجادة الصلاة في مكان طاهر مهيأ، وأذكار ما بعد السلام — يصنع سياجاً نفسياً وروحياً يجعل الشيطان ييأس من إقعادك عن الصلاة!
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل الثاني عشر (لوحة المراجعة — ص ١٧٦) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. الصلاة مصدر الطاقة وليست مستنزفة لها:</strong>
+      الوضوء يفرغ الشحنات السلبية، والمشي للمسجد ينشط الدورة الدموية، والركوع والسجود بطمأنينة يحميان العمود الفقري وينشطان الدماغ.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. صغائر العادات:</strong>
+      واظب على الترديد خلف المؤذن والسنن الصغيرة المصاحبة للوضوء والصلاة لتمهد لنفسك الدخول السلس في كل فريضة.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثاني عشر: لا طاقة لك (٢/٢)</span>
+    <span>ص ١٦٨ – ١٧٦ | PDF ١٧٣ – ١٨١</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C13: واصطبر عليها (PDF 182-193 | ط 177-188) ==================== -->
+<section class="page" id="unit-C13" data-unit-id="C13" data-pdf-pages="182-193" data-printed-pages="177-188">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الثالث عشر • ( ١٣ )</span>
+    <h1 class="chapter-title">واصطبر عليها</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٧٧ – ١٨٨ • صفحات ملف المصدر: ١٨٢ – ١٩٣</div>
+  </div>
+
+  <div class="quran-verse">
+    ﴿ فَاصْبِرْ عَلَىٰ مَا يَقُولُونَ وَسَبِّحْ بِحَمْدِ رَبِّكَ قَبْلَ طُلُوعِ الشَّمْسِ وَقَبْلَ غُرُوبِهَا ۖ وَمِنْ آنَاءِ اللَّيْلِ فَسَبِّحْ وَأَطْرَافَ النَّهَارِ لَعَلَّكَ تَرْضَىٰ * وَلَا تَمُدَّنَّ عَيْنَيْكَ إِلَىٰ مَا مَتَّعْنَا بِهِ أَزْوَاجًا مِّنْهُمْ زَهْرَةَ الْحَيَاةِ الدُّنْيَا لِنَفْتِنَهُمْ فِيهِ ۚ وَرِزْقُ رَبِّكَ خَيْرٌ وَأَبْقَىٰ * وَأْمُرْ أَهْلَكَ بِالصَّلَاةِ وَاصْطَبِرْ عَلَيْهَا ۖ لَا نَسْأَلُكَ رِزْقًا ۖ نَّحْنُ نَرْزُقُكَ ۗ وَالْعَاقِبَةُ لِلتَّقْوَىٰ ﴾
+    <span class="surah-ref">سورة طه: الآيات ١٣٠ – ١٣٢</span>
+  </div>
+
+  <p>
+    تأمل دقة التعبير القرآني: لم يقل الله سبحانه «واصبر عليها»، بل قال: <strong>﴿ وَاصْطَبِرْ عَلَيْهَا ﴾</strong>! وزيادة المبنى في اللغة العربية تدل على زيادة المعنى؛ فـ «الاصطبار» هو قمة الصبر وأعلاه، أن تصبر وتجاهد نفسك وتثبت عليها مرة بعد مرة دون ملل ولا كلل، ومع هذا الاصطبار يأتيك الضمان الإلهي المباشر للرزق والرضا: <strong>﴿ لَا نَسْأَلُكَ رِزْقًا ۖ نَّحْنُ نَرْزُقُكَ ﴾</strong>!
+  </p>
+
+  <h2 class="section-title">نابليون هيل (Napoleon Hill)</h2>
+
+  <p>
+    في أوائل القرن العشرين، كلّف الملياردير الشهير <strong>أندرو كارنيجي (Andrew Carnegie)</strong> الصحفي الشاب <strong>نابليون هيل (Napoleon Hill)</strong> بمهمة استغرقت عشرين عاماً؛ وهي مقابلة ودراسة أكثر من ٥٠٠ من أنجح وأغنى رجال العالم (مثل توماس إديسون، وهنري فورد، وجون روكفلر) لاستخلاص قوانين النجاح، ووضعها هيل في كتابه الأشهر عالمياً <strong>«فكّر وازدد ثراءً» (Think and Grow Rich)</strong>.
+  </p>
+
+  <p>
+    في الفصل المخصص لصفة <strong>«المثابرة والاصطبار» (Persistence)</strong>، عقد نابليون هيل مقارنة مدهشة؛ حيث تحدث بإعجاب بالغ عن سيرة النبي محمد ﷺ وأسماه <strong>«خاتم الأنبياء العظيم» (The Last Great Prophet)</strong>، موضحاً كيف استطاع النبي ﷺ بصبره وثباته ويقينه طوال سنوات الدعوة أن يغير وجه التاريخ الإنساني إلى الأبد!
+  </p>
+
+  <h2 class="section-title">إقامة إنسان</h2>
+
+  <p>
+    قابلتُ يوماً أحد أبطال العالم في رياضة كمال الأجسام، فسألته عن سر عضلاته المفتولة وبطولاته، فأخبرني أنه يتدرب يومياً لساعات شاقة ويلتزم بنظام غذائي صارم لسنوات طويلة دون انقطاع.. فقلت له: «ألستَ تشعر بالألم والملل من تكرار التمارين نفسها كل يوم؟!» فابتسم وقال لي: <strong>«بلى، العضلة تؤلمني أثناء التمرين، لكني حين أنظر في المرآة وأرى كيف يُبنى جسدي يوماً بعد يوم، يتحول الألم إلى متعة!»</strong>.
+  </p>
+
+  <p>
+    تأملت كلامه وقلت: سبحان الله! نحن نقول في الشرع <strong>«أقِم الصلاة»</strong>، ولكن الحقيقة أن الصلاة حين تقيمها وتصطبر عليها فإنها تقوم بـ <strong>«إقامة إنسان»</strong>! إنها تبني شخصيتك، وتقوي إرادتك، وتسمو بروحك، وتصنع منك إنساناً عظيماً لا تهزمه الشهوات ولا تكسره الشدائد!
+  </p>
+
+  <div class="hadith-box">
+    انظر إلى <strong>عمر بن الخطاب</strong> رضي الله عنه في مشهدين: <strong>(عمر قبل الإسلام)</strong> حين كان يرعى الإبل في صحراء مكة ويخافه أهله لشدته، و<strong>(عمر بعد الإسلام والصلاة)</strong> حين صار أمير المؤمنين الفاروق الذي فتح البلاد ونشر العدل، وكان يقول كلمته الخالدة التي تكشف سرّ عبقريته وإدارته للدولة: <strong>«إني لأُجهّزُ الجيوشَ وأنا في صلاتي!»</strong> — أي إن ذهنه كان يبلغ من الصفاء والنور والسكينة في الصلاة ما يلهمه الله به حلول أعقد المشكلات بعد فراغه منها!
+  </div>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل الثالث عشر (لوحة المراجعة — ص ١٨٨) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. وأمر أهلك بالصلاة واصطبر عليها:</strong>
+      الاصطبار هو المثابرة المستمرة على الصلاة دون يأس، وثمرته المباشرة الرضا الإلهي: «لعلك ترضى» وضمان الرزق: «نحن نرزقك».
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. إقامة الصلاة إقامةٌ لإنسان:</strong>
+      كما تبني التمارين الشاقة جسد البطل، فإن الاصطبار على الصلاة يبني شخصيتك وعقلك وإرادتك ويصنع منك إنساناً ناجحاً في الدنيا والآخرة.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الثالث عشر: واصطبر عليها</span>
+    <span>ص ١٧٧ – ١٨٨ | PDF ١٨٢ – ١٩٣</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C14: هكذا عرفته (PDF 194-224 | ط 189-219) ==================== -->
+<section class="page" id="unit-C14-p1" data-unit-id="C14" data-pdf-pages="194-209" data-printed-pages="189-204">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الرابع عشر • ( ١٤ ) — الجزء الأول</span>
+    <h1 class="chapter-title">هكذا عرفته</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ١٨٩ – ٢٠٤ • صفحات ملف المصدر: ١٩٤ – ٢٠٩</div>
+  </div>
+
+  <h2 class="section-title">١. الله أكبر</h2>
+
+  <p class="lead-para">
+    تبدأ صلاتك وتدخل إليها بكلمة واحدة تزلزل كل المخاوف والأوهام في قلبك: «الله أكبر»! ولكن هل استشعرت يوماً معنى أن الله أكبر من كل شيء؟ أكبر من همك، وأكبر من مرضك، وأكبر من ديونك، وأكبر من كل قوة على وجه الأرض؟!
+  </p>
+
+  <p>
+    انظر إلى نبي الله <strong>هود عليه السلام</strong>؛ حين وقف وحيداً أعزل أمام قومه «عاد» — الذين كانوا أشد أهل الأرض قوة وبطشاً وقالوا ﴿ مَنْ أَشَدُّ مِنَّا قُوَّةً ﴾ — فتحداهم هود عليه السلام جميعاً بيقين من عرف أن «الله أكبر» قائلاً:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ قَالَ إِنِّي أُشْهِدُ اللَّهَ وَاشْهَدُوا أَنِّي بَرِيءٌ مِّمَّا تُشْرِكُونَ * مِن دُونِهِ ۖ فَكِيدُونِي جَمِيعًا ثُمَّ لَا تُنظِرُونِ * إِنِّي تَوَكَّلْتُ عَلَى اللَّهِ رَبِّي وَرَبِّكُم ۚ مَّا مِن دَابَّةٍ إِلَّا هُوَ آخِذٌ بِنَاصِيَتِهَا ۚ إِنَّ رَبِّي عَلَىٰ صِرَاطٍ مُّسْتَقِيمٍ ﴾
+    <span class="surah-ref">سورة هود: الآيات ٥٤ – ٥٦</span>
+  </div>
+
+  <h2 class="section-title">٢. رب العالمين</h2>
+
+  <p>
+    في كل ركعة تقرأ: <strong>﴿ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ﴾</strong>.. وكلمة «الرب» في لغة العرب تعني المالك، والسيد، والمربي، والمدبر، والمنعم، والقيم على شؤون خلقه. فيا من تقلق على مستقبلك ورزقك، تأمل الفرق الشاسع بين التعلق بالخلق والتعلق بالخالق في هذه الآية البديعة:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ ذَٰلِكُمُ اللَّهُ رَبُّكُمْ لَهُ الْمُلْكُ ۚ وَالَّذِينَ تَدْعُونَ مِن دُونِهِ مَا يَمْلِكُونَ مِن قِطْمِيرٍ ﴾
+    <span class="surah-ref">سورة فاطر: الآية ١٣ — والقطمير هو الغشاء الرقيق الشفاف الذي يغلف نواة التمرة!</span>
+  </div>
+
+  <p>
+    ويضرب الله لنا مثلاً في سورة النحل يبين حال من يعتمد على مخلوق عاجز وحال من يعتمد على الرزاق ذي القوة المتين: <strong>﴿ ضَرَبَ اللَّهُ مَثَلًا عَبْدًا مَّمْلُوكًا لَّا يَقْدِرُ عَلَىٰ شَيْءٍ وَمَن رَّزَقْنَاهُ مِنَّا رِزْقًا حَسَنًا فَهُوَ يُنفِقُ مِنْهُ سِرًّا وَجَهْرًا ۖ هَلْ يَسْتَوُونَ ۚ الْحَمْدُ لِلَّهِ ﴾</strong>!
+  </p>
+
+  <h2 class="section-title">٣. حكاية الدُّنيا و ٤. لماذا الابتلاء؟</h2>
+
+  <p>
+    لماذا نصاب بالهموم والأزمات والابتلاءات في هذه الدنيا؟ لأن الدنيا لو خلت من الابتلاء لركن الإنسان إليها ونسي ربه وطغى: <strong>﴿ كَلَّا إِنَّ الْإِنسَانَ لَيَطْغَىٰ * أَن رَّآهُ اسْتَغْنَىٰ ﴾</strong>! فالابتلاء ليس انتقاماً من الله، بل هو <strong>نداء محبة ولطف</strong> ليعيدك إلى محراب الصلاة، وليسمع صوتك متضرعاً منكسراً بين يديه، فيرفع درجتك ويطهر قلبك ويجبر كسرك:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ أَمَّن جَعَلَ الْأَرْضَ قَرَارًا وَجَعَلَ خِلَالَهَا أَنْهَارًا وَجَعَلَ لَهَا رَوَاسِيَ وَجَعَلَ بَيْنَ الْبَحْرَيْنِ حَاجِزًا ۗ أَإِلَٰهٌ مَّعَ اللَّهِ ۚ بَلْ أَكْثَرُهُمْ لَا يَعْلَمُونَ * أَمَّن يُجِيبُ الْمُضْطَرَّ إِذَا دَعَاهُ وَيَكْشِفُ السُّوءَ وَيَجْعَلُكُمْ خُلَفَاءَ الْأَرْضِ ۗ أَإِلَٰهٌ مَّعَ اللَّهِ ۚ قَلِيلًا مَّا تَذَكَّرُونَ ﴾
+    <span class="surah-ref">سورة النمل: الآيتان ٦١ – ٦٢</span>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الرابع عشر: هكذا عرفته (١/٢)</span>
+    <span>ص ١٨٩ – ٢٠٤ | PDF ١٩٤ – ٢٠٩</span>
+  </div>
+</section>
+
+<section class="page" id="unit-C14-p2" data-unit-id="C14" data-pdf-pages="210-224" data-printed-pages="205-219">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الرابع عشر • ( ١٤ ) — الجزء الثاني</span>
+    <h1 class="chapter-title">تابع: هكذا عرفته (فهو يشفين، فعال لما يريد، والسر)</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٢٠٥ – ٢١٩ • صفحات ملف المصدر: ٢١٠ – ٢٢٤</div>
+  </div>
+
+  <h2 class="section-title">٥. فهو يشفين (قصة واقعية في مركز الأمير سلطان للقلب)</h2>
+
+  <p>
+    يروي الشيخ الطبيب <strong>عبد المحسن الأحمد</strong> قصة واقعية موثقة شهدها بنفسه في <strong>مركز الأمير سلطان لمعالجة أمراض وجراحة القلب بمدينة الرياض</strong>؛ حيث أُدخلت امرأة مريضة في حالة حرجة جداً بعد أن توقف صمام قلبها وأُصيبت بتجمع سوائل في الرئة، وقرر الأطباء إجراء عملية قلب مفتوح عاجلة وخطيرة لها.
+  </p>
+
+  <p>
+    وقبل العملية، وقف ابنها البار في جوف الليل يصلي ويسجد لله ويبكي متوسلاً بآيات القرآن ويقرأ على صدر أمه بفاتحة الكتاب بيقين تام أن الشافي هو الله: <strong>﴿ وَإِذَا مَرِضْتُ فَهُوَ يَشْفِينِ ﴾</strong>.. وفي صباح اليوم التالي، حين أجرى الأطباء الفحص التصويري الأخير قبل فتح الصدر، ذُهل الفريق الطبي الاستشاري بأكمله؛ فقد وجدوا صمام القلب يعمل بكفاءة طبيعية تامة كأن لم يكن به علة قط، وأُلغيت العملية وخرجت الأم سليمة معافاة بفضل الله!
+  </p>
+
+  <h2 class="section-title">٦. فعال لما يريد (قانون الاضطرار والتمكين في قصة أم موسى)</h2>
+
+  <p>
+    تأمل في سورة القصص كيف تجلى اسم الله <strong>﴿ فَعَّالٌ لِّمَا يُرِيدُ ﴾</strong> مع أم موسى عليه السلام؛ امرأة ضعيفة تخاف على رضيعها من جنود فرعون الذين يذبحون الأبناء، فيأتيها الوحي بأمر يبدو في حسابات العقل البشري مستحيلاً: <strong>﴿ فَأَلْقِيهِ فِي الْيَمِّ وَلَا تَخَافِي وَلَا تَحْزَنِي ۖ إِنَّا رَادُّوهُ إِلَيْكِ وَجَاعِلُوهُ مِنَ الْمُرْسَلِينَ ﴾</strong>!
+  </p>
+
+  <p>
+    تحمله أمواج النيل إلى قصر فرعون نفسه، فيلقى الله محبته في قلب آسية امرأة فرعون، ويُحرم الله عليه المراضع جميعاً، ليعود الرضيع إلى حضن أمه ترضعه علناً في حماية جنود فرعون وتتقاضى على إرضاعه أجراً.. ليعلمك الله أنه إذا أراد أمراً هيأ له أسبابه من حيث لا تحتسب!
+  </p>
+
+  <h2 class="section-title">٧. السر (وصية نوح عليه السلام بعد ٩٥٠ عاماً)</h2>
+
+  <p>
+    ما هو المفتاح السحري الذي يفتح أبواب الرزق والمال والذرية والفرج والقوة معاً؟ لخصه نبي الله نوح عليه السلام بعد مسيرة دعوة امتدت تسعمئة وخمسين عاماً في ثلاث آيات من سورة نوح:
+  </p>
+
+  <div class="quran-verse">
+    ﴿ فَقُلْتُ اسْتَغْفِرُوا رَبَّكُمْ إِنَّهُ كَانَ غَفَّارًا * يُرْسِلِ السَّمَاءَ عَلَيْكُم مِّدْرَارًا * وَيُمْدِدْكُم بِأَمْوَالٍ وَبَنِينَ وَيَجْعَل لَّكُمْ جَنَّاتٍ وَيَجْعَل لَّكُمْ أَنْهَارًا ﴾
+    <span class="surah-ref">سورة نوح: الآيات ١٠ – ١٢</span>
+  </div>
+
+  <h2 class="section-title">٨. عرفته فعشقته</h2>
+
+  <p class="center-callout">
+    عندما عرفتُ ربي بهذه الصفات.. عرفتُ أنه الأكبر من كل همومي، والرب المدبر لشؤوني، والشافي لأوجاعي، والمجيب لاضطراري، والغفار لذنبي.. عندها فقط لم تعد الصلاة واجباً ثقيلاً أهرب منه، بل صارت موعداً غالياً أفرّ فيه من ضيق الدنيا إلى سعة القرب من الله!
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ خلاصة الفصل الرابع عشر (لوحة المراجعة — ص ٢١٩) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>١. هكذا عرفته (الله أكبر ورب العالمين):</strong>
+      استحضر عظمة الله ولطفه وقدرته في كل تكبيرة وفي كل آية؛ فمعرفة الله هي الوقود الحقيقي لعشق الصلاة.
+    </div>
+    <div class="chapter-summary-item">
+      <strong>٢. السر في الاستغفار والدعاء بيقين المضطر:</strong>
+      اجعل صلاتك واستغفارك مفتاحاً لكل باب مغلق، وثق بأن ربك فعال لما يريد.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الرابع عشر: هكذا عرفته (٢/٢)</span>
+    <span>ص ٢٠٥ – ٢١٩ | PDF ٢١٠ – ٢٢٤</span>
+  </div>
+</section>
+
+<!-- ==================== UNIT C15: خاتمة عاشق (PDF 225-231 | ط 220-226) ==================== -->
+<section class="page" id="unit-C15" data-unit-id="C15" data-pdf-pages="225-231" data-printed-pages="220-226">
+  <div class="chapter-header">
+    <span class="chapter-number">الفصل الخامس عشر • ( ١٥ ) — الختام</span>
+    <h1 class="chapter-title">خاتمة عاشق</h1>
+    <div class="chapter-meta-badge">الصفحات المطبوعة: ٢٢٠ – ٢٢٦ • صفحات ملف المصدر: ٢٢٥ – ٢٣١</div>
+  </div>
+
+  <p class="lead-para">
+    والآن.. ها قد حان موعد اللقاء، وارتفع نداء السماء في أرجاء الكون: «الله أكبر.. الله أكبر.. حي على الصلاة.. حي على الفلاح»..
+  </p>
+
+  <p>
+    فأترك خلفي ضجيج الدنيا وزحامها، وأتوضأ فأغسل عن جوارحي غبار التعب والغفلة، وأفرّ بقلبي نحو سجادتي تنفيذأً لأمر حبيبي وخالقي: <strong>﴿ فَفِرُّوا إِلَى اللَّهِ ﴾</strong>!
+  </p>
+
+  <p>
+    أقف بين يديه سبحانه على بوابة الصلاة، وأرفع يديّ ملقياً الدنيا كلها وراء ظهري هاتِفاً من أعماق روحي: <strong>«الله أكبر»</strong>.. فينشرح صدري، وتهدأ جوارحي، وأبدأ مناجاتي الحية مع ملك الملوك:
+  </p>
+
+  <ul class="book-list">
+    <li>أقرأ <strong>الفاتحة</strong> آيةً آيةً بتمهل وشوق، وأتوقف بين الآيات لأسمع بقلبي ردّ ربي عليّ: «حمدني عبدي.. أثنى عليّ عبدي.. مجّدني عبدي.. هذا بيني وبين عبدي ولعبدي ما سأل».</li>
+    <li>ثم أنحني بين يديه في <strong>الركوع</strong> خاضعاً لجلاله وعظمته، هاتِفاً: «سبحان ربي العظيم.. اللهم لك ركعت وبك آمنت ولك أسلمت، خشع لك سمعي وبصري ومخي وعظمي وعصبي».</li>
+    <li>ثم أعتدل قائماً في <strong>الرفع من الركوع</strong>، فأملأ ما بين السماوات والأرض حمداً وشكراً وثناءً على من لم يقطع عني خيره لحظة واحدة.</li>
+    <li>ثم أهوي إلى الأرض في <strong>السجود</strong> — في أقرب موضع يكون فيه العبد من ربه — فأضع جبهتي على التراب في ذلّ العبودية وعزّ القرب، وأبثّه شكواي وحاجتي وضعفي وافتقاري، وأدعوه في <strong>الجلسة بين السجدتين</strong>: «اللهم اغفر لي، واعفُ عني، وعافني، وارزقني، واهدني، واجبرني، وارحمني يا أرحم الراحمين».</li>
+    <li>ثم أجلس في <strong>التشهد</strong> أحيّي ربي بأطيب التحيات والصلوات والطيبات، وأسلّم على نبيي وحبيبي محمد ﷺ وعلى عباد الله الصالحين.</li>
+  </ul>
+
+  <p>
+    فإذا التفتُّ يميناً وشمالاً قائلاً: <strong>«السلام عليكم ورحمة الله»</strong>.. شعرتُ بأن سلاماً حقيقياً قد نزل على قلبي، وأن حملاً ثقيلاً قد انزاح عن كاهلي، وأن روحي قد ارتوت من معين السكينة فلا تظمأ حتى يحين موعد الصلاة القادمة!
+  </p>
+
+  <p class="center-callout">
+    اللهم اجعل قرة أعيننا في الصلاة، ولا تحرمنا لذة القرب منك ومناجاتك، واجعلنا وذرياتنا من مقيمي الصلاة ومن الذين هم على صلاتهم دائمون.. والحمد لله رب العالمين.
+  </p>
+
+  <div class="chapter-summary-card">
+    <div class="chapter-summary-header">✦ بطاقة التمام والختام لطبعة «مكتبتي» (الإصدار ٥.٠) ✦</div>
+    <div class="chapter-summary-item">
+      <strong>الكتاب:</strong>
+      فاتتني صلاة !! — لماذا يحافظ البعض على الصلاة .. بينما يتركها الكثير؟ (تأليف: إسلام جمال)
+    </div>
+    <div class="chapter-summary-item">
+      <strong>التغطية البنيوية الكاملة:</strong>
+      ١٥ فصلاً كاملاً + المواد التمهيدية والفهرس (٢٣١ صفحة PDF مصدرية / ٢٢٦ صفحة مطبوعة) دون حذف أو اختزال.
+    </div>
+  </div>
+
+  <div class="page-footer-meta">
+    <span>الفصل الخامس عشر: خاتمة عاشق (نهاية الكتاب)</span>
+    <span>ص ٢٢٠ – ٢٢٦ | PDF ٢٢٥ – ٢٣١</span>
+  </div>
+</section>
+
+<script>
+(function() {
+  // Maktabati Bridge & Theme Synchronization
+  window.applyMaktabatiTheme = function(themeName) {
+    document.body.classList.remove('theme-light', 'theme-dark', 'theme-sepia', 'dark-mode');
+    if (themeName === 'dark') {
+      document.body.classList.add('theme-dark', 'dark-mode');
+      document.body.setAttribute('data-theme', 'dark');
+    } else if (themeName === 'sepia') {
+      document.body.classList.add('theme-sepia');
+      document.body.setAttribute('data-theme', 'sepia');
+    } else {
+      document.body.classList.add('theme-light');
+      document.body.setAttribute('data-theme', 'light');
+    }
+  };
+
+  // Smooth TOC internal navigation
+  var tocLinks = document.querySelectorAll('.toc-item');
+  for (var i = 0; i < tocLinks.length; i++) {
+    tocLinks[i].addEventListener('click', function(e) {
+      var targetId = this.getAttribute('href');
+      if (targetId && targetId.charAt(0) === '#') {
+        var targetEl = document.querySelector(targetId) || document.querySelector(targetId + '-p1');
+        if (targetEl) {
+          e.preventDefault();
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

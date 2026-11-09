@@ -52,7 +52,8 @@ object HtmlBookParser {
     private val CSS_LINK_PATTERN = Pattern.compile("<link\\s+[^>]*rel=[\"']stylesheet[\"'][^>]*>", Pattern.CASE_INSENSITIVE)
     private val STYLE_TAG_PATTERN = Pattern.compile("<style[^>]*>", Pattern.CASE_INSENSITIVE)
     private val SCRIPT_PATTERN = Pattern.compile("<script\\s*[^>]*>", Pattern.CASE_INSENSITIVE)
-    private val HEADING_PATTERN = Pattern.compile("<(h[1-3])(?:\\s+[^>]*id=[\"']([^\"']+)[\"'][^>]*)?>(.*?)</\\1>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
+    private val HEADING_PATTERN = Pattern.compile("<(h[1-3])(\\s+[^>]*)?>(.*?)</\\1>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
+    private val HEADING_ID_REGEX = Regex("\\bid\\s*=\\s*[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE)
     private val ARABIC_UNICODE_PATTERN = Pattern.compile("[\\u0600-\\u06FF]")
 
     // BOOK_DATA JavaScript Object / JSON Patterns
@@ -531,7 +532,8 @@ object HtmlBookParser {
             var lastHeadingNorm = ""
             while (headingMatcher.find()) {
                 val tag = headingMatcher.group(1)?.lowercase() ?: "h1"
-                val id = headingMatcher.group(2)
+                val attrs = headingMatcher.group(2) ?: ""
+                val id = HEADING_ID_REGEX.find(attrs)?.groupValues?.get(1)
                 val headingText = headingMatcher.group(3)?.replace(STRIP_TAGS_REGEX, "")?.trim() ?: ""
                 if (headingText.isNotBlank()) {
                     val norm = normalizeForComparison(headingText)

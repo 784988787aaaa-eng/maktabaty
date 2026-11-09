@@ -17,7 +17,6 @@ val ScheherazadeNewFontFamily = FontFamily(Font(R.font.scheherazade_new, FontWei
 val LateefFontFamily = FontFamily(Font(R.font.lateef, FontWeight.Normal))
 val NotoNaskhArabicFontFamily = FontFamily(Font(R.font.noto_naskh_arabic, FontWeight.Normal))
 val ArefRuqaaFontFamily = FontFamily(Font(R.font.aref_ruqaa, FontWeight.Normal))
-val ReemKufiFontFamily = FontFamily(Font(R.font.reem_kufi, FontWeight.Normal))
 val IbmPlexSansArabicFontFamily = FontFamily(Font(R.font.ibm_plex_sans_arabic, FontWeight.Normal))
 val NotoSansArabicFontFamily = FontFamily(Font(R.font.noto_sans_arabic, FontWeight.Normal))
 val NotoKufiArabicFontFamily = FontFamily(Font(R.font.noto_kufi_arabic, FontWeight.Normal))
@@ -58,7 +57,6 @@ fun fontFamilyForName(familyName: String): FontFamily {
         "lateef" -> LateefFontFamily
         "noto naskh arabic" -> NotoNaskhArabicFontFamily
         "aref ruqaa" -> ArefRuqaaFontFamily
-        "reem kufi" -> ReemKufiFontFamily
         "ibm plex sans arabic" -> IbmPlexSansArabicFontFamily
         "noto sans arabic" -> NotoSansArabicFontFamily
         "noto kufi arabic" -> NotoKufiArabicFontFamily
@@ -157,7 +155,7 @@ val Typography = Typography(
         letterSpacing = 0.sp
     ),
     displayMedium = TextStyle(
-        fontFamily = ReemKufiFontFamily,
+        fontFamily = NotoKufiArabicFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,

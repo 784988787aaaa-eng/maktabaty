@@ -10,12 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
@@ -195,6 +190,31 @@ class ExampleUnitTest {
             assertEquals("علي بن جابر الفيفي", parsed.author)
             assertEquals(25, parsed.pageCount)
             assertTrue("Expected TOC entries, got ${parsed.tableOfContents.size}", parsed.tableOfContents.size >= 12)
+        }
+
+        val fatatniSalahFile = java.io.File("../فاتتني_صلاة.html").let {
+            if (it.exists()) it else java.io.File("فاتتني_صلاة.html")
+        }
+        if (fatatniSalahFile.exists()) {
+            val content = fatatniSalahFile.readText(Charsets.UTF_8)
+            assertTrue(SmartHtmlPhaseMerger.isCompleteReadyHtmlBook(content))
+            val parsed = com.maktabati.app.data.importer.HtmlBookParser.parseContent(
+                content = content,
+                fallbackTitle = "فاتتني صلاة",
+                quickMode = false
+            )
+            assertTrue(parsed.title.contains("فاتتني صلاة"))
+            assertEquals("إسلام جمال", parsed.author)
+            assertEquals(23, parsed.pageCount)
+            assertTrue("Expected TOC entries, got ${parsed.tableOfContents.size}", parsed.tableOfContents.size >= 15)
+        }
+        val stateJsonFile = java.io.File("../fatatni_salah_project_state.json").let {
+            if (it.exists()) it else java.io.File("fatatni_salah_project_state.json")
+        }
+        if (stateJsonFile.exists()) {
+            val stateText = stateJsonFile.readText(Charsets.UTF_8)
+            assertTrue(stateText.contains("\"global_status\": \"completed\""))
+            assertTrue(stateText.contains("\"source_total_pages\": 231"))
         }
     }
 }

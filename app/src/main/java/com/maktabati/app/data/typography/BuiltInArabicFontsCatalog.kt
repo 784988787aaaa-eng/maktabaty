@@ -275,24 +275,6 @@ object BuiltInArabicFontsCatalog {
 
         // ================= 4. العناوين والكوفي (Headings & Kufi) =================
         RegisteredArabicFont(
-            familyName = "Reem Kufi",
-            arabicDisplayName = "ريم كوفي الهندسي (Reem Kufi)",
-            cssFamilyName = "Reem Kufi",
-            folderName = "reem-kufi",
-            weights = listOf(
-                FontWeightAsset(400, "Regular", "fonts/reem-kufi/reem-kufi-400.woff2"),
-                FontWeightAsset(500, "Medium", "fonts/reem-kufi/reem-kufi-500.woff2"),
-                FontWeightAsset(600, "SemiBold", "fonts/reem-kufi/reem-kufi-600.woff2"),
-                FontWeightAsset(700, "Bold", "fonts/reem-kufi/reem-kufi-700.woff2")
-            ),
-            resFontId = R.font.reem_kufi,
-            ttfFileName = "reem_kufi.ttf",
-            category = FontCategory.HEADINGS_DISPLAY,
-            licenseAssetPath = "fonts/reem-kufi/OFL.txt",
-            editorialUsage = "عناوين الفصول والأبواب والغلاف الملكي",
-            fallbackStack = "\"Reem Kufi\", \"Noto Kufi Arabic\", sans-serif"
-        ),
-        RegisteredArabicFont(
             familyName = "El Messiri",
             arabicDisplayName = "المسيري الأندلسي الرشيق (El Messiri)",
             cssFamilyName = "El Messiri",
@@ -302,7 +284,7 @@ object BuiltInArabicFontsCatalog {
             ttfFileName = "el_messiri.ttf",
             category = FontCategory.HEADINGS_DISPLAY,
             editorialUsage = "عناوين الكتب الراقية وفواتح الأبواب والبطاقات",
-            fallbackStack = "\"El Messiri\", \"Reem Kufi\", sans-serif"
+            fallbackStack = "\"El Messiri\", \"Noto Kufi Arabic\", sans-serif"
         ),
         RegisteredArabicFont(
             familyName = "Noto Kufi Arabic",
@@ -320,7 +302,7 @@ object BuiltInArabicFontsCatalog {
             category = FontCategory.HEADINGS_DISPLAY,
             licenseAssetPath = "fonts/noto-kufi-arabic/OFL.txt",
             editorialUsage = "العناوين الحديثة والتصنيفات والشارات",
-            fallbackStack = "\"Noto Kufi Arabic\", \"Reem Kufi\", sans-serif"
+            fallbackStack = "\"Noto Kufi Arabic\", \"Cairo\", sans-serif"
         ),
         RegisteredArabicFont(
             familyName = "Changa",
@@ -356,7 +338,7 @@ object BuiltInArabicFontsCatalog {
             ttfFileName = "lalezar.ttf",
             category = FontCategory.HEADINGS_DISPLAY,
             editorialUsage = "الشارات البارزة وعناوين المحطات الرئيسية",
-            fallbackStack = "\"Lalezar\", \"Reem Kufi\", sans-serif"
+            fallbackStack = "\"Lalezar\", \"Noto Kufi Arabic\", sans-serif"
         )
     )
 
@@ -368,7 +350,7 @@ object BuiltInArabicFontsCatalog {
             profile = BookTypographyProfile(
                 body = "Noto Naskh Arabic",
                 headings = "Aref Ruqaa",
-                chapterTitles = "Reem Kufi",
+                chapterTitles = "Noto Kufi Arabic",
                 quotes = "Amiri",
                 quran = "Amiri Quran",
                 interfaceFont = "Noto Sans Arabic",
@@ -382,7 +364,7 @@ object BuiltInArabicFontsCatalog {
             profile = BookTypographyProfile(
                 body = "Amiri",
                 headings = "Aref Ruqaa",
-                chapterTitles = "Reem Kufi",
+                chapterTitles = "Noto Kufi Arabic",
                 quotes = "Scheherazade New",
                 quran = "Amiri Quran",
                 interfaceFont = "Noto Sans Arabic",
@@ -410,7 +392,7 @@ object BuiltInArabicFontsCatalog {
             profile = BookTypographyProfile(
                 body = "IBM Plex Sans Arabic",
                 headings = "Noto Kufi Arabic",
-                chapterTitles = "Reem Kufi",
+                chapterTitles = "Noto Kufi Arabic",
                 quotes = "Noto Naskh Arabic",
                 quran = "Scheherazade New",
                 interfaceFont = "IBM Plex Sans Arabic",
@@ -424,7 +406,7 @@ object BuiltInArabicFontsCatalog {
             profile = BookTypographyProfile(
                 body = "Markazi Text",
                 headings = "El Messiri",
-                chapterTitles = "Reem Kufi",
+                chapterTitles = "Noto Kufi Arabic",
                 quotes = "Aref Ruqaa",
                 quran = "Amiri Quran",
                 interfaceFont = "Noto Sans Arabic",

@@ -544,14 +544,12 @@ class ExampleRobolectricTest {
         assertTrue(injected.contains("https://maktabati.app/assets/fonts/amiri/amiri-400.woff2"))
         assertTrue(injected.contains("https://maktabati.app/assets/fonts/noto-naskh-arabic/noto-naskh-arabic-400.woff2"))
         assertTrue(injected.contains("https://maktabati.app/assets/fonts/aref-ruqaa/aref-ruqaa-700.woff2"))
-        assertTrue(injected.contains("https://maktabati.app/assets/fonts/reem-kufi/reem-kufi-700.woff2"))
         assertTrue(injected.contains("https://maktabati.app/assets/fonts/ibm-plex-sans-arabic/ibm-plex-sans-arabic-400.woff2"))
         assertTrue(injected.contains("https://maktabati.app/assets/fonts/noto-sans-arabic/noto-sans-arabic-400.woff2"))
         assertTrue(injected.contains("https://maktabati.app/assets/fonts/noto-kufi-arabic/noto-kufi-arabic-700.woff2"))
         assertTrue(injected.contains("font-family: \"Amiri\""))
         assertTrue(injected.contains("font-family: \"Noto Naskh Arabic\""))
         assertTrue(injected.contains("font-family: \"Aref Ruqaa\""))
-        assertTrue(injected.contains("font-family: \"Reem Kufi\""))
         assertTrue(injected.contains("font-family: \"IBM Plex Sans Arabic\""))
         assertTrue(injected.contains("font-family: \"Noto Sans Arabic\""))
         assertTrue(injected.contains("font-family: \"Noto Kufi Arabic\""))
@@ -747,7 +745,7 @@ class ExampleRobolectricTest {
     @Test
     fun testMaktabatiTypographyRegistryAndOfflineWoff2Assets() {
         val families = MaktabatiFontRegistry.builtInFonts
-        assertEquals(25, families.size)
+        assertEquals(24, families.size)
 
         val expectedNames = listOf(
             "Amiri",
@@ -769,7 +767,6 @@ class ExampleRobolectricTest {
             "Mirza",
             "Katibeh",
             "Vibes",
-            "Reem Kufi",
             "El Messiri",
             "Noto Kufi Arabic",
             "Changa",
@@ -799,12 +796,12 @@ class ExampleRobolectricTest {
         }
 
         val profile = MaktabatiFontRegistry.parseManifestTypographyJson(
-            """{"typography":{"body":"Noto Naskh Arabic","headings":"Aref Ruqaa","chapterTitles":"Reem Kufi","quotes":"Amiri","quran":"Amiri Quran","interface":"Noto Sans Arabic","numbers":"Noto Sans Arabic"}}"""
+            """{"typography":{"body":"Noto Naskh Arabic","headings":"Aref Ruqaa","chapterTitles":"Noto Kufi Arabic","quotes":"Amiri","quran":"Amiri Quran","interface":"Noto Sans Arabic","numbers":"Noto Sans Arabic"}}"""
         )
         assertNotNull(profile)
         assertEquals("Noto Naskh Arabic", profile!!.body)
         assertEquals("Aref Ruqaa", profile.headings)
-        assertEquals("Reem Kufi", profile.chapterTitles)
+        assertEquals("Noto Kufi Arabic", profile.chapterTitles)
         assertEquals("Amiri", profile.quotes)
         assertEquals("Amiri Quran", profile.quran)
         assertEquals("Noto Sans Arabic", profile.interfaceFont)
@@ -889,7 +886,7 @@ class ExampleRobolectricTest {
             profile = BookTypographyProfile(
                 body = "Amiri",
                 headings = "Aref Ruqaa",
-                chapterTitles = "Reem Kufi",
+                chapterTitles = "Noto Kufi Arabic",
                 quotes = "Amiri",
                 interfaceFont = "IBM Plex Sans Arabic",
                 numbers = "Noto Sans Arabic"
@@ -903,7 +900,7 @@ class ExampleRobolectricTest {
         assertEquals("classical_diwan", loadedPrefs.presetId)
         assertEquals("Amiri", loadedPrefs.profile.body)
         assertEquals("Aref Ruqaa", loadedPrefs.profile.headings)
-        assertEquals("Reem Kufi", loadedPrefs.profile.chapterTitles)
+        assertEquals("Noto Kufi Arabic", loadedPrefs.profile.chapterTitles)
         assertEquals("IBM Plex Sans Arabic", loadedPrefs.profile.interfaceFont)
         assertEquals("نص خاص يكتبه القارئ للمعاينة", loadedPrefs.customPreviewText)
 
@@ -1443,6 +1440,133 @@ class ExampleRobolectricTest {
         }.exceptionOrNull()
         assertNotNull("PDF must be rejected with clear guidance", pdfThrown)
         assertTrue(pdfThrown!!.message!!.contains("PDF غير مدعومة"))
+    }
+
+    @Test
+    fun testBatchBookSelectionMoveToShelfAndBatchDeleteCleansFiles(): Unit = runBlocking {
+        // 1. Verify SandboxJsRuntimeBuilder protects .term-btn, .term-popover, and #termPopover
+        val runtimeJs = com.maktabati.app.data.sandbox.SandboxJsRuntimeBuilder.buildStorageIsolationAndRuntimeScript("batch_test_book", 12)
+        assertTrue(runtimeJs.contains(".term-btn"))
+        assertTrue(runtimeJs.contains(".term-popover"))
+        assertTrue(runtimeJs.contains("#termPopover"))
+
+        // 2. Import 3 real HTML books onto disk and Room DB via BookRepository
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val viewModel = com.maktabati.app.ui.viewmodel.LibraryViewModel(app)
+        val repo = viewModel.repository
+        val dao = AppDatabase.getInstance(app).bookDao()
+
+        val book1 = repo.importRawHtmlBook(
+            rawHtml = "<!DOCTYPE html><html lang='ar' dir='rtl'><head><title>كتاب التزكية الأول</title></head><body><div class='page'>صفحة ١</div></body></html>",
+            fallbackName = "كتاب التزكية الأول"
+        ).getOrThrow()
+        val book2 = repo.importRawHtmlBook(
+            rawHtml = "<!DOCTYPE html><html lang='ar' dir='rtl'><head><title>كتاب السيرة الثاني</title></head><body><div class='page'>صفحة ١</div></body></html>",
+            fallbackName = "كتاب السيرة الثاني"
+        ).getOrThrow()
+        val book3 = repo.importRawHtmlBook(
+            rawHtml = "<!DOCTYPE html><html lang='ar' dir='rtl'><head><title>كتاب الأدب الثالث</title></head><body><div class='page'>صفحة ١</div></body></html>",
+            fallbackName = "كتاب الأدب الثالث"
+        ).getOrThrow()
+
+        val dir1 = repo.getBookDirectory(book1)
+        val dir2 = repo.getBookDirectory(book2)
+        val dir3 = repo.getBookDirectory(book3)
+        assertTrue("Book 1 directory must exist on disk", dir1.exists())
+        assertTrue("Book 2 directory must exist on disk", dir2.exists())
+        assertTrue("Book 3 directory must exist on disk", dir3.exists())
+
+        // 3. Test toggleBookSelection and selectAllVisibleBooks in LibraryViewModel
+        viewModel.clearSelection()
+        assertEquals(emptySet<String>(), viewModel.selectedBookIds.value)
+
+        viewModel.toggleBookSelection(book1.id)
+        viewModel.toggleBookSelection(book2.id)
+        assertEquals(setOf(book1.id, book2.id), viewModel.selectedBookIds.value)
+
+        // Toggle off book2
+        viewModel.toggleBookSelection(book2.id)
+        assertEquals(setOf(book1.id), viewModel.selectedBookIds.value)
+
+        // Select all visible books
+        viewModel.selectAllVisibleBooks()
+        assertTrue(
+            "selectAllVisibleBooks must select all 3 imported books",
+            viewModel.selectedBookIds.value.containsAll(listOf(book1.id, book2.id, book3.id))
+        )
+
+        // Calling selectAllVisibleBooks again when all are selected must deselect all visible books
+        viewModel.selectAllVisibleBooks()
+        assertFalse(viewModel.selectedBookIds.value.contains(book1.id))
+        assertFalse(viewModel.selectedBookIds.value.contains(book2.id))
+        assertFalse(viewModel.selectedBookIds.value.contains(book3.id))
+
+        // 4. Test batch move to a new shelf via updateBooksShelfBatch
+        val targetShelf = repo.createShelf("رف المختارات الجماعية", "#065F46", "auto_stories")
+        repo.updateBooksShelfBatch(setOf(book1.id, book2.id), targetShelf.id)
+
+        val updatedBook1 = dao.getBookByIdOnce(book1.id)
+        val updatedBook2 = dao.getBookByIdOnce(book2.id)
+        val untouchedBook3 = dao.getBookByIdOnce(book3.id)
+        assertEquals(targetShelf.id, updatedBook1?.shelfId)
+        assertEquals(targetShelf.id, updatedBook2?.shelfId)
+        assertEquals(null, untouchedBook3?.shelfId)
+
+        // 5. Test prepareSharedBooksBatch
+        val sharedFiles = repo.prepareSharedBooksBatch(listOf(book1, book2))
+        assertEquals(2, sharedFiles.size)
+        assertTrue("Prepared shared file 1 must exist", sharedFiles[0].exists() && sharedFiles[0].length() > 20L)
+        assertTrue("Prepared shared file 2 must exist", sharedFiles[1].exists() && sharedFiles[1].length() > 20L)
+
+        // 6. Test deleteBooksBatch removes records from BookDao AND cleans folders from filesDir/books/
+        repo.deleteBooksBatch(setOf(book1.id, book2.id))
+        assertEquals("Book 1 must be deleted from Room DB", null, dao.getBookByIdOnce(book1.id))
+        assertEquals("Book 2 must be deleted from Room DB", null, dao.getBookByIdOnce(book2.id))
+        assertNotNull("Book 3 must remain in Room DB", dao.getBookByIdOnce(book3.id))
+
+        assertFalse("Book 1 folder must be deleted from filesDir/books/", dir1.exists())
+        assertFalse("Book 2 folder must be deleted from filesDir/books/", dir2.exists())
+        assertTrue("Book 3 folder must still exist in filesDir/books/", dir3.exists())
+
+        // Clean up remaining test artifacts
+        repo.deleteBooksBatch(setOf(book3.id))
+        assertFalse("Book 3 folder must be deleted after cleanup", dir3.exists())
+        repo.deleteShelf(targetShelf)
+    }
+
+    @Test
+    fun testLuxuryHtmlTemplateRendererV61InteractiveCardsPopoverAndFlipAnimation() {
+        val samplePages = listOf(
+            com.maktabati.app.data.converter.model.ConvertedPageItem(
+                tag = "الغلاف",
+                title = "كتاب البصيرة",
+                type = "cover",
+                html = "<div class='cover-page'><h1>كتاب البصيرة</h1></div>"
+            ),
+            com.maktabati.app.data.converter.model.ConvertedPageItem(
+                tag = "الفصل الأول",
+                title = "تأملات في السكينة",
+                type = "reading",
+                html = "<div class='reflection-card'><p>وقفة تدبرية مع <button class='term-btn' data-term='السكينة' data-def='طمأنينة القلب'>السكينة</button></p></div><div class='contrast-grid'><div class='contrast-box'><p>قبل</p></div><div class='contrast-box'><p>بعد</p></div></div>"
+            )
+        )
+        val renderedHtml = com.maktabati.app.data.converter.renderer.LuxuryHtmlTemplateRenderer.renderCompleteLuxuryHtml(
+            bookTitle = "كتاب البصيرة",
+            bookSubtitle = "دراسة وجدانية",
+            bookAuthor = "مؤلف",
+            theme = BookVisualTheme.ISLAMIC_EMERALD,
+            isRtl = true,
+            language = "ar",
+            pages = samplePages
+        )
+
+        assertTrue("Rendered HTML must include .term-popover style and element", renderedHtml.contains(".term-popover") && renderedHtml.contains("id=\"termPopover\""))
+        assertTrue("Rendered HTML must include .term-btn style and click handler", renderedHtml.contains(".term-btn"))
+        assertTrue("Rendered HTML must include .reflection-card", renderedHtml.contains(".reflection-card"))
+        assertTrue("Rendered HTML must include .did-you-know-card", renderedHtml.contains(".did-you-know-card"))
+        assertTrue("Rendered HTML must include .epigraph-box", renderedHtml.contains(".epigraph-box"))
+        assertTrue("Rendered HTML must include .contrast-grid with minmax(min(100%, 13.5em), 1fr)", renderedHtml.contains(".contrast-grid") && renderedHtml.contains("minmax(min(100%, 13.5em), 1fr)"))
+        assertTrue("Rendered HTML must include flip-next and flip-prev sheet animations", renderedHtml.contains("flip-next") && renderedHtml.contains("flip-prev"))
     }
 }
 

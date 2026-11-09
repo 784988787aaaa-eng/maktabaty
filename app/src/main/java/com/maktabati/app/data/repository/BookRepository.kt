@@ -488,6 +488,13 @@ class BookRepository(
         bookDao.updateBookShelf(bookId, shelfId)
     }
 
+    suspend fun updateBooksShelfBatch(bookIds: Set<String>, shelfId: String?) = withContext(Dispatchers.IO) {
+        if (bookIds.isEmpty()) return@withContext
+        bookIds.toList().chunked(500).forEach { chunk ->
+            bookDao.updateBooksShelfBatch(chunk, shelfId)
+        }
+    }
+
     suspend fun toggleFavorite(bookId: String, isFavorite: Boolean) = withContext(Dispatchers.IO) {
         bookDao.updateBookFavorite(bookId, isFavorite)
     }
@@ -530,6 +537,24 @@ class BookRepository(
             if (bookDir.exists()) {
                 bookDir.deleteRecursively()
             }
+        }
+    }
+
+    suspend fun deleteBooksBatch(bookIds: Set<String>) = withContext(Dispatchers.IO) {
+        if (bookIds.isEmpty()) return@withContext
+        val booksRoot = File(context.filesDir, "books")
+        val idChunks = bookIds.toList().chunked(500)
+        for (chunk in idChunks) {
+            val matchingBooks = bookDao.getBooksByIdsOnce(chunk)
+            for (book in matchingBooks) {
+                if (book.folderPath.isNotBlank()) {
+                    val bookDir = File(booksRoot, book.folderPath)
+                    if (bookDir.exists()) {
+                        bookDir.deleteRecursively()
+                    }
+                }
+            }
+            bookDao.deleteBooksByIdsBatch(chunk)
         }
     }
 
@@ -602,6 +627,10 @@ class BookRepository(
             }
             return targetFile
         }
+    }
+
+    fun prepareSharedBooksBatch(books: List<Book>): List<File> {
+        return books.map { book -> prepareSharedBookFile(book) }
     }
 
     private fun zipDirectoryContents(sourceDir: File, targetZipFile: File) {

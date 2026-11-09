@@ -51,7 +51,7 @@ data class BookTypographyProfile(
     companion object {
         const val DEFAULT_BODY_FONT = "Noto Naskh Arabic"
         const val DEFAULT_HEADINGS_FONT = "Aref Ruqaa"
-        const val DEFAULT_CHAPTER_TITLES_FONT = "Reem Kufi"
+        const val DEFAULT_CHAPTER_TITLES_FONT = "Noto Kufi Arabic"
         const val DEFAULT_QUOTES_FONT = "Amiri"
         const val DEFAULT_QURAN_FONT = "Amiri Quran"
         const val DEFAULT_INTERFACE_FONT = "Noto Sans Arabic"

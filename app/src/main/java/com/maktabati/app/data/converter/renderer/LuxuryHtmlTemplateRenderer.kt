@@ -199,7 +199,7 @@ object LuxuryHtmlTemplateRenderer {
 
   --font-body: "${theme.fontBody}", "Noto Naskh Arabic", "Amiri", serif;
   --font-headings: "${theme.fontHeadings}", "Aref Ruqaa", "Amiri", serif;
-  --font-chapter-titles: "${theme.fontChapterTitles}", "Reem Kufi", "Noto Kufi Arabic", sans-serif;
+  --font-chapter-titles: "${theme.fontChapterTitles}", "Noto Kufi Arabic", "Cairo", sans-serif;
   --font-quotes: "${theme.fontQuotes}", "Amiri", "Noto Naskh Arabic", serif;
   --font-quran: "${theme.fontQuran}", "Amiri Quran", "Amiri", serif;
   --font-interface: "Noto Sans Arabic", "Cairo", "IBM Plex Sans Arabic", sans-serif;
@@ -385,6 +385,38 @@ body {
   padding: clamp(18px, 4vw, 34px);
   box-shadow: var(--shadow-card);
   position: relative;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+@keyframes flipNextSheet {
+  0% {
+    opacity: 0.42;
+    transform: perspective(1100px) rotateY(-6deg) translateX(-14px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1100px) rotateY(0deg) translateX(0);
+  }
+}
+
+@keyframes flipPrevSheet {
+  0% {
+    opacity: 0.42;
+    transform: perspective(1100px) rotateY(6deg) translateX(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1100px) rotateY(0deg) translateX(0);
+  }
+}
+
+.page-canvas.flip-next {
+  animation: flipNextSheet 230ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.page-canvas.flip-prev {
+  animation: flipPrevSheet 230ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .page {
@@ -653,6 +685,141 @@ body {
   border-radius: 14px;
   background: var(--bg-soft-rose);
   border: 1.5px solid var(--line);
+}
+
+.reflection-card, .did-you-know-card {
+  margin: 16px 0;
+  padding: 15px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--bg-soft-rose), var(--bg-secondary));
+  border: 1px solid var(--border-ornate);
+  border-top: 3.5px solid var(--accent-rose);
+}
+
+.reflection-card p, .did-you-know-card p {
+  margin: 0;
+  line-height: 1.98;
+  color: var(--text-primary);
+}
+
+.epigraph-box {
+  margin: 16px auto;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--bg-pearl-gold);
+  border-top: 2px solid var(--accent-gold);
+  border-bottom: 2px solid var(--accent-gold);
+  font-family: var(--font-quotes);
+  text-align: center;
+}
+
+.epigraph-box p {
+  margin: 0;
+  font-size: 1.06em;
+  line-height: 2.05;
+  color: var(--accent-rose-dark);
+  text-align: center;
+}
+
+.contrast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5em), 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.contrast-box {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--accent-gold);
+}
+
+.contrast-box p {
+  margin: 0;
+  line-height: 1.92;
+}
+
+.term-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: 1px dashed var(--accent-gold);
+  background: var(--bg-pearl-gold);
+  color: var(--accent-rose-dark);
+  font-family: inherit;
+  font-size: 0.94em;
+  font-weight: 700;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.term-popover {
+  position: fixed;
+  left: 50%;
+  bottom: 76px;
+  transform: translateX(-50%) translateY(12px);
+  width: min(92vw, 480px);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1.5px solid var(--accent-gold);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 18px 42px rgba(20, 15, 18, 0.22);
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.term-popover.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.term-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.term-popover-title {
+  font-family: var(--font-headings);
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--accent-rose-dark);
+  margin: 0;
+}
+
+.term-popover-close {
+  border: 1px solid var(--line);
+  background: var(--bg-primary);
+  color: var(--accent-rose-dark);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.term-popover-body {
+  font-family: var(--font-body);
+  font-size: 0.92em;
+  line-height: 1.85;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .field-input, .field-textarea {
@@ -924,6 +1091,14 @@ ${if (injectedHeadSnippet.isNotBlank()) "$injectedHeadSnippet\n" else ""}</head>
     </div>
   </div>
 
+  <div id="termPopover" class="term-popover" role="dialog" aria-hidden="true">
+    <div class="term-popover-head">
+      <h3 id="termPopoverTitle" class="term-popover-title"></h3>
+      <button id="termPopoverClose" class="term-popover-close" type="button" aria-label="إغلاق">✕</button>
+    </div>
+    <p id="termPopoverBody" class="term-popover-body"></p>
+  </div>
+
   <script>
     const STORAGE_PREFIX = "maktabati_conv_${storageSlug}_";
     const BOOK_DATA = {
@@ -967,14 +1142,72 @@ ${if (injectedHeadSnippet.isNotBlank()) "$injectedHeadSnippet\n" else ""}</head>
     const tocClose = document.getElementById("tocClose");
     const tocPanelList = document.getElementById("tocPanelList");
 
+    const pageCanvas = document.querySelector(".page-canvas");
+    const termPopover = document.getElementById("termPopover");
+    const termPopoverTitle = document.getElementById("termPopoverTitle");
+    const termPopoverBody = document.getElementById("termPopoverBody");
+    const termPopoverClose = document.getElementById("termPopoverClose");
+    let flipAnimTimer = null;
+
+    function closeTermPopover() {
+      if (!termPopover) return;
+      termPopover.classList.remove("open");
+      termPopover.setAttribute("aria-hidden", "true");
+    }
+
+    if (termPopoverClose) {
+      termPopoverClose.addEventListener("click", function() {
+        closeTermPopover();
+      });
+    }
+
+    document.addEventListener("click", function(e) {
+      const btn = e.target && e.target.closest ? e.target.closest(".term-btn") : null;
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const term = btn.getAttribute("data-term") || (btn.textContent || "").trim();
+        const def = btn.getAttribute("data-def") || btn.getAttribute("title") || "";
+        if (termPopover && def) {
+          termPopoverTitle.textContent = term;
+          termPopoverBody.textContent = def;
+          termPopover.classList.add("open");
+          termPopover.setAttribute("aria-hidden", "false");
+        }
+        return;
+      }
+      if (termPopover && termPopover.classList.contains("open")) {
+        if (!e.target.closest("#termPopover")) {
+          closeTermPopover();
+        }
+      }
+    });
+
+    function triggerCanvasFlipAnimation(delta) {
+      if (!pageCanvas || delta === 0) return;
+      pageCanvas.classList.remove("flip-next", "flip-prev");
+      void pageCanvas.offsetWidth;
+      pageCanvas.classList.add(delta > 0 ? "flip-next" : "flip-prev");
+      if (flipAnimTimer) clearTimeout(flipAnimTimer);
+      flipAnimTimer = setTimeout(function() {
+        pageCanvas.classList.remove("flip-next", "flip-prev");
+      }, 240);
+    }
+
     function renderPage(index, highlightQuery) {
       if (index < 0) index = 0;
       if (index >= BOOK_DATA.totalPages) index = BOOK_DATA.totalPages - 1;
+      const prevIdx = currentPageIndex;
       currentPageIndex = index;
       window.currentPageIndex = index;
       window.currentPage = index;
       window.__maktabatiLastSavedPage = index;
       window.__maktabatiFallbackPage = index;
+
+      closeTermPopover();
+      if (index !== prevIdx) {
+        triggerCanvasFlipAnimation(index - prevIdx);
+      }
 
       const page = BOOK_DATA.pages[index];
       activePageArticle.innerHTML = page.html;

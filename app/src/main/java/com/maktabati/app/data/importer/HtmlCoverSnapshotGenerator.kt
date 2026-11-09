@@ -280,7 +280,7 @@ object HtmlCoverSnapshotGenerator {
             }
 
             val badgeTypeface = if (context != null && metadata.isRtl) {
-                runCatching { ResourcesCompat.getFont(context, R.font.reem_kufi) }.getOrNull()
+                runCatching { ResourcesCompat.getFont(context, R.font.noto_kufi_arabic) }.getOrNull()
                     ?.let { Typeface.create(it, Typeface.BOLD) }
                     ?: serifBoldFallback
             } else {

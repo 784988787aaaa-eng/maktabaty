@@ -299,9 +299,23 @@ fun ReaderScreen(
             bookmarks = bookmarks,
             onSelectBookmark = { bm ->
                 showBookmarksSheet = false
-                webViewRef?.scrollTo(0, bm.scrollY)
-                scrollYHolder[0] = bm.scrollY
-                currentProgress = bm.progress
+                if (livePageCount > 1) {
+                    val extractedPage = Regex("(\\d+)").find(bm.title)?.groupValues?.getOrNull(1)?.toIntOrNull()
+                    val targetPage = (extractedPage ?: kotlin.math.round(bm.progress * livePageCount).toInt())
+                        .coerceIn(1, livePageCount)
+                    currentPage = targetPage
+                    currentProgress = bm.progress
+                    scrollYHolder[0] = bm.scrollY
+                    webViewRef?.evaluateJavascript(
+                        "if (typeof window.__maktabatiGoToDomPage === 'function') window.__maktabatiGoToDomPage(${targetPage - 1}); else if (typeof window.goToPage === 'function') window.goToPage(${targetPage - 1});",
+                        null
+                    )
+                    webViewRef?.postDelayed({ webViewRef?.scrollTo(0, bm.scrollY) }, 60)
+                } else {
+                    webViewRef?.scrollTo(0, bm.scrollY)
+                    scrollYHolder[0] = bm.scrollY
+                    currentProgress = bm.progress
+                }
             },
             onDeleteBookmark = onDeleteBookmark,
             onAddBookmarkClick = { showAddBookmarkDialog = true },

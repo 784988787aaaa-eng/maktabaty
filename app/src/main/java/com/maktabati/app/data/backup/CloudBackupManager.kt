@@ -571,7 +571,7 @@ class CloudBackupManager(
             put("typo_body", preferences.getString("typo_body", "Noto Naskh Arabic") ?: "Noto Naskh Arabic")
             put("typo_quran", preferences.getString("typo_quran", "Amiri Quran") ?: "Amiri Quran")
             put("typo_headings", preferences.getString("typo_headings", "Noto Kufi Arabic") ?: "Noto Kufi Arabic")
-            put("typo_chapter_titles", preferences.getString("typo_chapter_titles", "Reem Kufi") ?: "Reem Kufi")
+            put("typo_chapter_titles", preferences.getString("typo_chapter_titles", "Noto Kufi Arabic") ?: "Noto Kufi Arabic")
             put("typo_quotes", preferences.getString("typo_quotes", "Aref Ruqaa") ?: "Aref Ruqaa")
             put("typo_interface", preferences.getString("typo_interface", "Noto Sans Arabic") ?: "Noto Sans Arabic")
             put("typo_numbers", preferences.getString("typo_numbers", "Readex Pro") ?: "Readex Pro")
@@ -691,8 +691,8 @@ class CloudBackupManager(
                 if (headingsFont != null) putString("typo_headings", headingsFont)
 
                 val chapterFont = when {
-                    prefsObj.has("typo_chapter_titles") -> prefsObj.optString("typo_chapter_titles", "Reem Kufi")
-                    prefsObj.has("typo_role_chapter") -> prefsObj.optString("typo_role_chapter", "Reem Kufi")
+                    prefsObj.has("typo_chapter_titles") -> prefsObj.optString("typo_chapter_titles", "Noto Kufi Arabic")
+                    prefsObj.has("typo_role_chapter") -> prefsObj.optString("typo_role_chapter", "Noto Kufi Arabic")
                     else -> null
                 }
                 if (chapterFont != null) putString("typo_chapter_titles", chapterFont)

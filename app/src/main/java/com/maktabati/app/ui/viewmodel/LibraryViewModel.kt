@@ -92,10 +92,13 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     val cloudSyncState: StateFlow<CloudSyncState> = cloudSyncDelegate.cloudSyncState
 
     val shelves: StateFlow<List<Shelf>> = repository.allShelves
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val rawBooks: StateFlow<List<Book>> = repository.allBooks
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val _selectedBookIds = MutableStateFlow<Set<String>>(emptySet())
+    val selectedBookIds: StateFlow<Set<String>> = _selectedBookIds.asStateFlow()
 
     val selectedShelfId = MutableStateFlow<String?>(null)
     val searchQuery = MutableStateFlow("")
@@ -128,13 +131,13 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     val isOpeningExternalFile = MutableStateFlow(false)
 
-    val filteredBooks: StateFlow<List<Book>> = combine(
-        rawBooks,
-        selectedShelfId,
-        searchQuery,
-        filterType
-    ) { books, shelfId, query, filter ->
-        books.filter { book ->
+    private fun filterBooksList(
+        books: List<Book>,
+        shelfId: String?,
+        query: String,
+        filter: FilterType
+    ): List<Book> {
+        return books.filter { book ->
             val matchesShelf = when {
                 shelfId == null -> true
                 shelfId == "favorites" -> book.isFavorite
@@ -160,8 +163,17 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             matchesShelf && matchesQuery && matchesFilter
         }
     }
+
+    val filteredBooks: StateFlow<List<Book>> = combine(
+        rawBooks,
+        selectedShelfId,
+        searchQuery,
+        filterType
+    ) { books, shelfId, query, filter ->
+        filterBooksList(books, shelfId, query, filter)
+    }
         .flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val activeBook = MutableStateFlow<Book?>(null)
     val activeBookmarks = MutableStateFlow<List<Bookmark>>(emptyList())
@@ -730,7 +742,164 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             if (activeBook.value?.id == bookId) {
                 activeBook.value = null
             }
+            if (bookId in _selectedBookIds.value) {
+                _selectedBookIds.value = _selectedBookIds.value - bookId
+            }
             repository.deleteBook(bookId)
+            if (connectedGoogleEmail.value != null) {
+                triggerAutoCloudBackup()
+            }
+        }
+    }
+
+    fun toggleBookSelection(bookId: String) {
+        if (bookId.isBlank()) return
+        val current = _selectedBookIds.value
+        _selectedBookIds.value = if (bookId in current) {
+            current - bookId
+        } else {
+            current + bookId
+        }
+    }
+
+    fun selectAllVisibleBooks() {
+        val currentFiltered = filteredBooks.value.ifEmpty {
+            val sourceBooks = rawBooks.value.ifEmpty {
+                kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+                    db.bookDao().getAllBooksOnce()
+                }
+            }
+            filterBooksList(
+                books = sourceBooks,
+                shelfId = selectedShelfId.value,
+                query = searchQuery.value,
+                filter = filterType.value
+            )
+        }
+        val visibleIds = currentFiltered.map { it.id }.toSet()
+        if (visibleIds.isEmpty()) return
+        val currentSelected = _selectedBookIds.value
+        _selectedBookIds.value = if (currentSelected.containsAll(visibleIds)) {
+            currentSelected - visibleIds
+        } else {
+            currentSelected + visibleIds
+        }
+    }
+
+    fun clearSelection() {
+        _selectedBookIds.value = emptySet()
+    }
+
+    fun deleteSelectedBooks(onComplete: (() -> Unit)? = null) {
+        val ids = _selectedBookIds.value
+        if (ids.isEmpty()) {
+            onComplete?.invoke()
+            return
+        }
+        viewModelScope.launch {
+            if (activeBook.value?.id in ids) {
+                activeBook.value = null
+            }
+            repository.deleteBooksBatch(ids)
+            clearSelection()
+            if (connectedGoogleEmail.value != null) {
+                triggerAutoCloudBackup()
+            }
+            onComplete?.invoke()
+        }
+    }
+
+    fun moveSelectedBooksToShelf(shelfId: String?, onComplete: (() -> Unit)? = null) {
+        val ids = _selectedBookIds.value
+        if (ids.isEmpty()) {
+            onComplete?.invoke()
+            return
+        }
+        viewModelScope.launch {
+            repository.updateBooksShelfBatch(ids, shelfId)
+            clearSelection()
+            if (connectedGoogleEmail.value != null) {
+                triggerAutoCloudBackup()
+            }
+            onComplete?.invoke()
+        }
+    }
+
+    fun createShelfAndMoveSelectedBooks(
+        name: String,
+        colorHex: String,
+        iconName: String,
+        onComplete: (() -> Unit)? = null
+    ) {
+        val ids = _selectedBookIds.value
+        viewModelScope.launch {
+            val createdShelf = repository.createShelf(name, colorHex, iconName)
+            if (ids.isNotEmpty()) {
+                repository.updateBooksShelfBatch(ids, createdShelf.id)
+            }
+            selectedShelfId.value = createdShelf.id
+            clearSelection()
+            if (connectedGoogleEmail.value != null) {
+                triggerAutoCloudBackup()
+            }
+            onComplete?.invoke()
+        }
+    }
+
+    fun shareSelectedBooks(context: Context) {
+        val ids = _selectedBookIds.value
+        if (ids.isEmpty()) return
+        viewModelScope.launch {
+            val allSourceBooks = rawBooks.value.ifEmpty {
+                withContext(Dispatchers.IO) { db.bookDao().getAllBooksOnce() }
+            }
+            val selectedBooks = allSourceBooks.filter { it.id in ids }
+            if (selectedBooks.isEmpty()) {
+                clearSelection()
+                return@launch
+            }
+            if (selectedBooks.size == 1) {
+                val singleBook = selectedBooks.first()
+                clearSelection()
+                shareBook(context, singleBook)
+                return@launch
+            }
+            runCatching {
+                val preparedFiles = withContext(Dispatchers.IO) {
+                    repository.prepareSharedBooksBatch(selectedBooks)
+                }
+                val uris = ArrayList<Uri>()
+                for (file in preparedFiles) {
+                    if (file.exists()) {
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file
+                        )
+                        uris.add(uri)
+                    }
+                }
+                if (uris.isNotEmpty()) {
+                    val sendIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                        type = "*/*"
+                        putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                        putExtra(Intent.EXTRA_SUBJECT, "كتب مختارة من منصة مكتبتي (${uris.size})")
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            selectedBooks.joinToString(separator = "\n") { "• ${it.title}" }
+                        )
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val chooser = Intent.createChooser(
+                        sendIntent,
+                        "مشاركة (${uris.size}) كتب"
+                    ).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(chooser)
+                }
+            }
+            clearSelection()
         }
     }
 

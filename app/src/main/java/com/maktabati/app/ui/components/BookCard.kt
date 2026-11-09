@@ -3,10 +3,12 @@ package com.maktabati.app.ui.components
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.util.LruCache
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +22,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -308,6 +313,7 @@ fun parseSafeColor(hex: String, fallback: Color): Color {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookGridItem(
     book: Book,
@@ -317,6 +323,9 @@ fun BookGridItem(
     onDetailsClick: () -> Unit,
     onShareClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
     scaleFactor: Float = 1f,
     modifier: Modifier = Modifier
 ) {
@@ -372,6 +381,13 @@ fun BookGridItem(
     val langLabel = if (book.language == "en" || !book.isRtl) "EN" else "عربي"
     val pagesLabel = if (book.isRtl && !isEnUi) "${book.pageCount} صفحة" else "${book.pageCount} Pages"
 
+    val cardShape = RoundedCornerShape(
+        topStart = (10f * s).dp,
+        topEnd = (14f * s).dp,
+        bottomStart = (6f * s).dp,
+        bottomEnd = (10f * s).dp
+    )
+
     Column(
         modifier = modifier
             .testTag("book_card_${book.id}")
@@ -381,22 +397,36 @@ fun BookGridItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = (7f * s).dp,
-                    shape = RoundedCornerShape(
-                        topStart = (10f * s).dp,
-                        topEnd = (14f * s).dp,
-                        bottomStart = (6f * s).dp,
-                        bottomEnd = (10f * s).dp
-                    )
+                    elevation = if (isSelected) (10f * s).dp else (7f * s).dp,
+                    shape = cardShape
                 )
-                .clickable { onClick() },
-            shape = RoundedCornerShape(
-                topStart = (10f * s).dp,
-                topEnd = (14f * s).dp,
-                bottomStart = (6f * s).dp,
-                bottomEnd = (10f * s).dp
-            ),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                .then(
+                    if (isSelected) {
+                        Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, cardShape)
+                    } else {
+                        Modifier
+                    }
+                )
+                .combinedClickable(
+                    onClick = {
+                        if (isSelectionMode) {
+                            onToggleSelect()
+                        } else {
+                            onClick()
+                        }
+                    },
+                    onLongClick = {
+                        onToggleSelect()
+                    }
+                ),
+            shape = cardShape,
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSelected) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+                } else {
+                    MaterialTheme.colorScheme.surface
+                }
+            )
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 CompositionLocalProvider(LocalLayoutDirection provides bookDirection) {
@@ -449,7 +479,7 @@ fun BookGridItem(
                             )
                         }
 
-                        Box(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
@@ -457,8 +487,47 @@ fun BookGridItem(
                                     end = (8f * s).dp,
                                     top = (8f * s).dp
                                 ),
-                            contentAlignment = Alignment.TopEnd
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            if (isSelectionMode || isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size((24f * s).dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isSelected) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                Color.Black.copy(alpha = 0.42f)
+                                            }
+                                        )
+                                        .border(
+                                            width = 1.8.dp,
+                                            color = if (isSelected) {
+                                                MaterialTheme.colorScheme.onPrimary
+                                            } else {
+                                                Color.White.copy(alpha = 0.9f)
+                                            },
+                                            shape = CircleShape
+                                        )
+                                        .clickable { onToggleSelect() }
+                                        .testTag("select_badge_${book.id}"),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = if (isEnUi) "Selected" else "محدد",
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size((15f * s).dp)
+                                        )
+                                    }
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.size((24f * s).dp))
+                            }
+
                             IconButton(
                                 onClick = onFavoriteToggle,
                                 modifier = Modifier
@@ -555,6 +624,20 @@ fun BookGridItem(
                             onDismissRequest = { menuExpanded = false }
                         ) {
                             DropdownMenuItem(
+                                text = { Text(if (isEnUi) "Select Books" else "تحديد متعدد") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onToggleSelect()
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text(if (isEnUi) "Customize Book & Shelf" else "تخصيص الكتاب والرف") },
                                 leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
                                 onClick = {
@@ -647,6 +730,7 @@ fun BookGridItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookListItem(
     book: Book,
@@ -656,6 +740,9 @@ fun BookListItem(
     onDetailsClick: () -> Unit,
     onShareClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -688,16 +775,41 @@ fun BookListItem(
     }
     val langLabel = if (book.language == "en" || !book.isRtl) "EN" else "عربي"
     val pagesLabel = if (book.isRtl && !isEnUi) "${book.pageCount} صفحة" else "${book.pageCount} Pages"
+    val listCardShape = RoundedCornerShape(14.dp)
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .testTag("book_card_${book.id}")
-            .clip(RoundedCornerShape(14.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clip(listCardShape)
+            .then(
+                if (isSelected) {
+                    Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, listCardShape)
+                } else {
+                    Modifier
+                }
+            )
+            .combinedClickable(
+                onClick = {
+                    if (isSelectionMode) {
+                        onToggleSelect()
+                    } else {
+                        onClick()
+                    }
+                },
+                onLongClick = {
+                    onToggleSelect()
+                }
+            ),
+        shape = listCardShape,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 5.dp else 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -705,6 +817,42 @@ fun BookListItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (isSelectionMode || isSelected) {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 10.dp)
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            }
+                        )
+                        .border(
+                            width = 1.8.dp,
+                            color = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outline
+                            },
+                            shape = CircleShape
+                        )
+                        .clickable { onToggleSelect() }
+                        .testTag("select_badge_${book.id}"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = if (isEnUi) "Selected" else "محدد",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+            }
             Box(
                 modifier = Modifier
                     .size(width = 62.dp, height = 91.dp)
@@ -813,6 +961,20 @@ fun BookListItem(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false }
                 ) {
+                    DropdownMenuItem(
+                        text = { Text(if (isEnUi) "Select Books" else "تحديد متعدد") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onToggleSelect()
+                        }
+                    )
                     DropdownMenuItem(
                         text = { Text(if (isEnUi) "Customize Book & Shelf" else "تخصيص الكتاب والرف") },
                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },

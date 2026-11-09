@@ -467,7 +467,6 @@ object MaktabatiFontRegistry {
                 "mirza.ttf" -> R.font.mirza
                 "katibeh.ttf" -> R.font.katibeh
                 "vibes.ttf" -> R.font.vibes
-                "reem_kufi.ttf", "reemkufi.ttf" -> R.font.reem_kufi
                 "el_messiri.ttf", "elmessiri.ttf" -> R.font.el_messiri
                 "changa.ttf" -> R.font.changa
                 "rakkas.ttf" -> R.font.rakkas

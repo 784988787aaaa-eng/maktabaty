@@ -1,0 +1,478 @@
+{
+  "project_id": "maktabati-fatatni-salah-v5",
+  "source_name": "فاتتني صلاة - اسلام جمال.pdf",
+  "source_path": "/public/assets/aistudio/____________-____________dea8b030.pdf",
+  "output_html_path": "/فاتتني_صلاة.html",
+  "source_total_pages": 231,
+  "printed_total_pages": 226,
+  "html_interactive_pages_count": 23,
+  "pdf_to_printed_offset": "+5 (PDF page = Printed page + 5 for pages 6..231; PDF pages 1..5 are Front Cover, Back Cover Blurb, Inner Title, Copyright, and Table of Contents)",
+  "pages_examined": [
+    "1-231 (All 231 PDF pages inspected visually via rendered page screenshots; text layer is garbled/non-standard encoding in OCR, so visual page reading from screenshots is used 100%)"
+  ],
+  "pages_extracted": [
+    "1-30 (Batch 1: B00, C01, C02, C03)",
+    "31-80 (Batch 2: C04, C05, C06)",
+    "81-136 (Batch 3: C07, C08)",
+    "137-193 (Batch 4: C09, C10, C11, C12, C13)",
+    "194-231 (Batch 5: C14, C15)"
+  ],
+  "pages_verified": [
+    "1-231 (100% verified against rendered PDF page screenshots and tested via HtmlBookParser & SmartHtmlPhaseMerger)"
+  ],
+  "pages_with_issues": [
+    {
+      "pages": "1-231",
+      "issue": "طبقة النص المخفية في ملف PDF مشفرة بترميز خطوط غير قياسي (تظهر كرموز مشوهة في استخراج OCR الآلي)، بينما صور الصفحات الـ 231 واضحة تماماً بنسبة 100%؛ لذا تم اعتماد القراءة البصرية المباشرة من لقطات الصفحات (Visual Screenshot Transcription) لجميع الصفحات دون استثناء."
+    }
+  ],
+  "toc_vs_body_discrepancies": [
+    {
+      "unit_id": "C08",
+      "toc_title": "( ٨ ) كن صباحاً",
+      "body_title": "( ٨ ) كُن صباحاً",
+      "printed_page": 102,
+      "pdf_page": 107,
+      "resolution": "اعتماد ضبط المتن (كُن صباحاً)"
+    },
+    {
+      "unit_id": "C11",
+      "toc_title": "( ١١ ) حماقات إرتكبتها",
+      "body_title": "( ١١ ) حماقات إرتكبتها",
+      "printed_page": 150,
+      "pdf_page": 155,
+      "resolution": "تصحيح همزة الوصل تحريرياً إلى (حماقات ارتكبتها) مع توثيق رسم المصدر"
+    },
+    {
+      "unit_id": "C13",
+      "toc_title": "( ١٣ ) وأصطبر عليها",
+      "body_title": "( ١٣ ) وأصطبر عليها",
+      "printed_page": 177,
+      "pdf_page": 182,
+      "resolution": "توثيق رسم المتن وتصحيح همزة الوصل القرآنية إلى (واصطبر عليها)"
+    }
+  ],
+  "structure_version": 1,
+  "current_unit_id": "C15",
+  "current_batch": 5,
+  "last_completed_checkpoint": "إتمام الدفعات الخمس بالكامل (B00 + C01..C15) من صفحة PDF 1 إلى 231 والتحقق من التوافق مع محركات مكتبتي",
+  "next_action": "مكتمل بالكامل (Completed)",
+  "units": [
+    {
+      "id": "B00",
+      "title": "الغلاف والمواد التمهيدية والفهرس",
+      "type": "front_matter",
+      "pdf_page_range": [1, 5],
+      "printed_page_range": [null, null],
+      "subheadings": [
+        "الغلاف الخارجي: فاتتني صلاة !! لماذا يحافظ البعض على الصلاة .. بينما يتركها الكثير؟",
+        "كلمة الغلاف الخلفي: في الصغر اعتدنا أن يأمرنا من يكبرنا بالصلاة..",
+        "صفحة العنوان الداخلي",
+        "بيانات النشر وحقوق الطبع (مؤسسة زحمة كتاب للثقافة والنشر - 2018)",
+        "الفهرس (15 فصلاً)"
+      ],
+      "special_elements": ["غلاف مصور", "بطاقة بيانات النشر", "جدول الفهرس"],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [1],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": ["تم إخراج الغلاف التفاعلي والفهرس الهيكلي الكامل في صفحتين مستقلتين (unit-B00-cover, unit-B00-toc)"]
+    },
+    {
+      "id": "C01",
+      "title": "( ١ ) فاتتني صلاة !!!",
+      "type": "chapter",
+      "pdf_page_range": [6, 11],
+      "printed_page_range": [1, 6],
+      "subheadings": [],
+      "special_elements": ["قصة الشيخ العجوز ذي الثمانين عاماً", "قصة الرجل الأنيق المرح مؤذن الفجر", "قصة العامل البسيط الخاشع"],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [1],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C02",
+      "title": "( ٢ ) يوماً ما !!",
+      "type": "chapter",
+      "pdf_page_range": [12, 19],
+      "printed_page_range": [7, 14],
+      "subheadings": ["الذبابة والنافذة المغلقة"],
+      "special_elements": ["عالم يوماً ما ولغة الأعذار", "إدمان اللافعل", "مثال الذبابة المحبوسة خلف النافذة المغلقة"],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [1],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C03",
+      "title": "( ٣ ) قبل أن تُصلي",
+      "type": "chapter",
+      "pdf_page_range": [20, 30],
+      "printed_page_range": [15, 25],
+      "subheadings": [
+        "لماذا فُرضت الصلاة بعد اثني عشر عاماً؟",
+        "الخطوة العملية الأولى: اسمع من يحدثك عن الله",
+        "برامج وتلاوات وقصائد تُحيي القلب"
+      ],
+      "special_elements": [
+        "مفهوم الاستثناء أو العزل في علم النفس",
+        "حكمة فرض الصلاة ليلة الإسراء والمعراج بعد 12 عاماً",
+        "آية سورة الزمر (قل يا عبادي الذين أسرفوا على أنفسهم)",
+        "آية سورة الذاريات (وذكر فإن الذكرى تنفع المؤمنين)",
+        "قائمة الدعاة المفضلين (14 داعية وعالماً) وقائمة قراء القرآن (9 قراء) والقصائد والكتيبات"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [1],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C04",
+      "title": "( ٤ ) أنت أفكارك",
+      "type": "chapter",
+      "pdf_page_range": [31, 48],
+      "printed_page_range": [26, 43],
+      "subheadings": [
+        "الألم والسعادة",
+        "ميل الأربع دقائق",
+        "صورة الصلاة",
+        "عبارات",
+        "استخدم عقلك",
+        "قرر اليوم أن تخرج من عالم يوماً ما (ملخص عملي)"
+      ],
+      "special_elements": [
+        "قصة محمد علي كلاي (أنا الأعظم)",
+        "قصة روجر بانيستر (Roger Bannister) وكسر ميل الأربع دقائق عام 1954",
+        "حديث: أرحنا بها يا بلال",
+        "آيات سورة المعارج: إن الإنسان خلق هلوعاً.. إلا المصلين",
+        "تقنية التوكيدات الإيجابية (Self-Talk / Affirmations)",
+        "لوحتا الملخص العملي في ص 42-43"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [2],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C05",
+      "title": "( ٥ ) الصفة المعجزة",
+      "type": "chapter",
+      "pdf_page_range": [49, 61],
+      "printed_page_range": [44, 56],
+      "subheadings": [
+        "ضبط النفس Self Discipline",
+        "لا تشاور عقلك Non-Negotiable Mind",
+        "النقطة المرجعية Reference Point",
+        "هذا الوقت سيمضي"
+      ],
+      "special_elements": [
+        "قصة المزارع الصالح مع الفأس عند الأذان",
+        "قصة الشيخ الذي قال: والله لو كانت تمطر حجراً ما تركت صلاة المسجد",
+        "قصة نقش خاتم الملك: هذا الوقت سيمضي"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [2],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C06",
+      "title": "( ٦ ) ألك حاجة ؟!",
+      "type": "chapter",
+      "pdf_page_range": [62, 80],
+      "printed_page_range": [57, 75],
+      "subheadings": [
+        "المعنى الحقيقي للأخذ بالأسباب",
+        "هو الحكيم",
+        "وزّع همومك على صلواتك الخمس"
+      ],
+      "special_elements": [
+        "قصص يونس وإبراهيم وموسى ويوسف ونوح عليهم السلام مع الأخذ بالأسباب",
+        "مقولة إبراهيم عليه السلام: أما منك فلا / نعم الرب ربك يا إبراهيم",
+        "الحديث القدسي: أنا أغنى الشركاء عن الشرك",
+        "حديث ضحك الرب من قنوط عبده وقرب غيره",
+        "الأبيات الشعرية الختامية: فلو شاهدت عيناك من حسننا..."
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [2],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C07",
+      "title": "( ٧ ) دواء العادة",
+      "type": "chapter",
+      "pdf_page_range": [81, 106],
+      "printed_page_range": [76, 101],
+      "subheadings": [
+        "مُحفز العادة",
+        "المكافأة",
+        "العادة والصلاة",
+        "الخشوع سبيل السكينة",
+        "مسببات الخشوع",
+        "المناجاة"
+      ],
+      "special_elements": [
+        "قصة كلود هوبكنز (Hopkins) ومعجون أسنان بيبسودينت (Pepsodent)",
+        "دراسة جامعة نيو ميكسيكو على 226 شخصاً",
+        "كلمات الشيخ محمد راتب النابلسي البليغة عن السكينة",
+        "قصة الفاروق عمر بن الخطاب مع الرجل المتماوت في مشيته",
+        "الحديث القدسي: قسمت الصلاة بيني وبين عبدي نصفين",
+        "4 بطاقات (هل تعلم..؟!) لأدعية الاستفتاح والركوع والرفع منه والسجود",
+        "مقولة ابن القيم الجوزية في ختام الفصل"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [3],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C08",
+      "title": "( ٨ ) كُن صباحاً",
+      "type": "chapter",
+      "pdf_page_range": [107, 136],
+      "printed_page_range": [102, 131],
+      "subheadings": [
+        "الصباح المعجزة",
+        "الصلاة المُعجزة",
+        "هل لك أهداف؟!",
+        "مع الصباح",
+        "أدومها وإن قل!!",
+        "معركة الفراش",
+        "والضحى"
+      ],
+      "special_elements": [
+        "قصة هال إيلرود (Hal Elrod) وكتاب الصباح المعجزة (The Miracle Morning)",
+        "مقولة ماثيو كيللي (Matthew Kelly) وكيفن براسي (Kevin Bracy)",
+        "الساعة السحرية (Magic Hour) ودعاء: اللهم بارك لأمتي في بكورها",
+        "قاعدة 20 / 20 / 20 الصباحية",
+        "مثال وكالة ناسا ومكوك الفضاء في معركة الفراش",
+        "استراتيجية مضاعفات الساعة والنصف (دورة النوم العميق 90 دقيقة) والقيلولة",
+        "سورة الضحى ودراسة جامعة تورنتو الكندية على 735 متطوعاً",
+        "تفسير د. حسام موافي لجلطات الساعة الثامنة صباحاً وصلاة الفجر"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [3],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C09",
+      "title": "( ٩ ) بيتٌ هناك",
+      "type": "chapter",
+      "pdf_page_range": [137, 146],
+      "printed_page_range": [132, 141],
+      "subheadings": [
+        "السُّنن الرواتب هي:",
+        "حتى أُحبه",
+        "حب الله .."
+      ],
+      "special_elements": [
+        "حديث اثنتي عشرة ركعة (السنن الرواتب) وتفصيلها",
+        "الحديث القدسي: وما تقرب إلي عبدي بشيء أحب إلي مما افترضته عليه",
+        "حديث: إذا أحب الله عبداً نادى جبريل",
+        "قصة العجوز التي احترق زرعها مقابل صاحب الجنتين"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [4],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C10",
+      "title": "( ١٠ ) وترتيبها",
+      "type": "chapter",
+      "pdf_page_range": [147, 154],
+      "printed_page_range": [142, 149],
+      "subheadings": [
+        "رتب يومك",
+        "وصفة للسعادة"
+      ],
+      "special_elements": [
+        "قصة أستاذ المؤلف ومواعيده المرتبطة بصلاة العصر والعشاء",
+        "مقولة جورج برنارد شو (George Bernard Shaw)",
+        "العلاج الوظيفي (Occupational Therapy)",
+        "قصة ريتشارد بيرد (Richard Byrd) في كتابه (Alone - وحيد)"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [4],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C11",
+      "title": "( ١١ ) حماقات ارتكبتها",
+      "type": "chapter",
+      "pdf_page_range": [155, 162],
+      "printed_page_range": [150, 157],
+      "subheadings": [
+        "استخدم أخطاءك"
+      ],
+      "special_elements": [
+        "ملف ديل كارنيجي (Dale Carnegie)",
+        "آلية جو جيرارد (Joe Girard) وكتابه How To Sell Anything To Anybody",
+        "قاعدة الخمس ثوانٍ (Five Seconds Rule)",
+        "الاغتسال بماء بارد وتوقيت تناول الطعام قبل/بعد الصلاة"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [4],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C12",
+      "title": "( ١٢ ) لا طاقة لك",
+      "type": "chapter",
+      "pdf_page_range": [163, 181],
+      "printed_page_range": [158, 176],
+      "subheadings": [
+        "الوضوء",
+        "المشي إلى المسجد",
+        "الركوع والسجود",
+        "أوقات الصلاة",
+        "صغائر العادات"
+      ],
+      "special_elements": [
+        "تجربة ريتشارد هاموند (Richard Hammond) والشحنات الكهربائية والوضوء والتيمم",
+        "فوائد المشي 30 دقيقة يومياً إلى المسجد",
+        "دراسة الـ 188 شخصاً حول حركات الصلاة والانزلاق الغضروفي",
+        "أبحاث البروفيسور الألماني كنوت فايفر (Knut Pfeiffer)",
+        "حديث: إذا نودي للصلاة أدبر الشيطان وله ضراط"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [4],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C13",
+      "title": "( ١٣ ) واصطبر عليها",
+      "type": "chapter",
+      "pdf_page_range": [182, 193],
+      "printed_page_range": [177, 188],
+      "subheadings": [
+        "نابليون هيل",
+        "إقامة إنسان"
+      ],
+      "special_elements": [
+        "آيات سورة طه (فاصبر على ما يقولون... وأمر أهلك بالصلاة واصطبر عليها)",
+        "نابليون هيل (Napoleon Hill) وأندرو كارنيجي (Andrew Carnegie) وكتاب Think & Grow Rich وفقرة خاتم الأنبياء العظيم (The Last Great Prophet)",
+        "حوار المؤلف مع بطل العالم في كمال الأجسام",
+        "مشهدي الفاروق عمر بن الخطاب (عمر قبل وعمر بعد) ومقولته: إني لأجهز الجيوش في صلاتي"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [4],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C14",
+      "title": "( ١٤ ) هكذا عرفته",
+      "type": "chapter",
+      "pdf_page_range": [194, 224],
+      "printed_page_range": [189, 219],
+      "subheadings": [
+        "الله أكبر",
+        "رب العالمين",
+        "حكاية الدُّنيا",
+        "لماذا الابتلاء؟",
+        "فهو يشفين",
+        "فعال لما يريد",
+        "السر",
+        "عرفته فعشقته"
+      ],
+      "special_elements": [
+        "تحدي هود عليه السلام لقومه",
+        "اللمسة البيانية في (ما يملكون من قطمير) ومثل العبد المملوك في سورة النحل",
+        "آيات سورة النمل (أمن جعل الأرض قراراً / أمن يجيب المضطر إذا دعاه)",
+        "القصة الموثقة للشيخ الطبيب عبد المحسن الأحمد في مركز الأمير سلطان للقلب بالرياض",
+        "قصة أم موسى عليه السلام وقانون الاضطرار والتمكين",
+        "سر نوح عليه السلام بعد 950 سنة في آيات سورة نوح (فقلت استغفروا ربكم)"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [5],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    },
+    {
+      "id": "C15",
+      "title": "( ١٥ ) خاتمة عاشق",
+      "type": "chapter",
+      "pdf_page_range": [225, 231],
+      "printed_page_range": [220, 226],
+      "subheadings": [],
+      "special_elements": [
+        "معراج الروح في محراب الصلاة من الفرار إلى بوابة الصلاة والفاتحة والركوع والقيام والسجود والتشهد والسلام"
+      ],
+      "confidence": "high",
+      "verification_state": "confirmed",
+      "status": "completed",
+      "batches_total": 1,
+      "batches_completed": [5],
+      "html_status": "completed",
+      "qa_status": "passed",
+      "notes": []
+    }
+  ],
+  "global_status": "completed"
+}
