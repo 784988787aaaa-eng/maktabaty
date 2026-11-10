@@ -20,41 +20,51 @@ import com.maktabati.app.ui.localization.LocalAppStrings
 import com.maktabati.app.ui.localization.stringsForLanguage
 
 private val DarkColorScheme = darkColorScheme(
-    primary = CoralRose,
-    onPrimary = Color.White,
-    primaryContainer = RoyalIndigo,
-    onPrimaryContainer = Color(0xFFFFD58A),
-    secondary = WarmGold,
-    onSecondary = RoyalIndigo,
+    primary = CelestialJade,
+    onPrimary = Color(0xFF03261C),
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+    secondary = IlluminatedGold,
+    onSecondary = Color(0xFF241A06),
+    secondaryContainer = DarkSecondaryContainer,
+    onSecondaryContainer = DarkOnSecondaryContainer,
+    tertiary = LuminousJade,
+    onTertiary = Color.White,
     background = DarkBackground,
     onBackground = DarkText,
     surface = DarkSurface,
     onSurface = DarkText,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = DarkTextMuted,
-    outline = DarkBorder
+    outline = DarkBorder,
+    outlineVariant = DarkBorder.copy(alpha = 0.65f)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = AmberPrimary,
+    primary = RoyalEmerald,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFF0E7FA),
-    onPrimaryContainer = RoyalIndigo,
-    secondary = CoralRose,
+    primaryContainer = WarmPrimaryContainer,
+    onPrimaryContainer = WarmOnPrimaryContainer,
+    secondary = AntiqueGold,
     onSecondary = Color.White,
+    secondaryContainer = SoftGoldMist,
+    onSecondaryContainer = Color(0xFF4A3309),
+    tertiary = LuminousJade,
+    onTertiary = Color.White,
     background = WarmBackground,
     onBackground = WarmText,
     surface = WarmSurface,
     onSurface = WarmText,
     surfaceVariant = WarmSurfaceVariant,
     onSurfaceVariant = WarmTextMuted,
-    outline = WarmBorder
+    outline = WarmBorder,
+    outlineVariant = WarmBorder.copy(alpha = 0.75f)
 )
 
 @Composable
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Keep consistent literary palette
+    dynamicColor: Boolean = false,
     typographyProfile: BookTypographyProfile? = null,
     appLanguage: AppLanguage = AppLanguage.AR,
     content: @Composable () -> Unit

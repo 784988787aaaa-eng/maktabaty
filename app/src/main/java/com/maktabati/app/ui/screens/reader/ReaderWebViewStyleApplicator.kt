@@ -1,5 +1,6 @@
 package com.maktabati.app.ui.screens.reader
 
+import android.graphics.Color as AndroidColor
 import android.webkit.WebView
 import com.maktabati.app.data.typography.MaktabatiFontRegistry
 import com.maktabati.app.data.typography.UserTypographyPreferences
@@ -9,6 +10,8 @@ internal object ReaderWebViewStyleApplicator {
 
     const val VIRTUAL_BOOK_HOST = "maktabati.app"
     const val VIRTUAL_BOOK_BASE = "https://maktabati.app/books/"
+    private val HTML_OPEN_TAG_REGEX = Regex("<html\\b([^>]*)>", RegexOption.IGNORE_CASE)
+    private val DATA_THEME_ATTR_REGEX = Regex("\\bdata-theme\\s*=\\s*[\"'][^\"']*[\"']", RegexOption.IGNORE_CASE)
 
     fun resolveMimeType(fileName: String): String {
         val lower = fileName.lowercase()
@@ -47,7 +50,249 @@ internal object ReaderWebViewStyleApplicator {
             mime == "image/svg+xml"
     }
 
+    fun resolveThemeBackgroundColorInt(theme: ReaderThemeMode): Int {
+        return when (theme) {
+            ReaderThemeMode.NIGHT -> AndroidColor.parseColor("#0B1114")
+            ReaderThemeMode.SEPIA -> AndroidColor.parseColor("#F1E6D0")
+            ReaderThemeMode.LIGHT -> AndroidColor.parseColor("#FFFFFF")
+            ReaderThemeMode.ORIGINAL -> AndroidColor.parseColor("#F8F4E8")
+        }
+    }
+
+    fun resolveThemeModeKey(theme: ReaderThemeMode): String {
+        return when (theme) {
+            ReaderThemeMode.NIGHT -> "night"
+            ReaderThemeMode.SEPIA -> "sepia"
+            ReaderThemeMode.LIGHT -> "light"
+            ReaderThemeMode.ORIGINAL -> "original"
+        }
+    }
+
+    fun buildThemeOverrideCss(theme: ReaderThemeMode): String {
+        if (theme == ReaderThemeMode.ORIGINAL) return ""
+        val bgSecondary = when (theme) {
+            ReaderThemeMode.SEPIA -> "#F3E3C3"
+            ReaderThemeMode.NIGHT -> "#171B24"
+            ReaderThemeMode.LIGHT -> "#F8FAFC"
+            else -> theme.bgHex
+        }
+        val cardSurface = when (theme) {
+            ReaderThemeMode.SEPIA -> "rgba(185, 138, 68, 0.11)"
+            ReaderThemeMode.NIGHT -> "#1D222E"
+            ReaderThemeMode.LIGHT -> "rgba(15, 23, 42, 0.035)"
+            else -> "transparent"
+        }
+        val cardBorder = when (theme) {
+            ReaderThemeMode.SEPIA -> "rgba(180, 128, 58, 0.36)"
+            ReaderThemeMode.NIGHT -> "rgba(243, 198, 99, 0.32)"
+            ReaderThemeMode.LIGHT -> "rgba(148, 163, 184, 0.38)"
+            else -> "rgba(180, 128, 58, 0.30)"
+        }
+        val nightSpecificCss = if (theme == ReaderThemeMode.NIGHT) {
+            """
+            :root, html[data-theme="night"] {
+                --bg-primary: ${theme.bgHex} !important;
+                --bg-secondary: $bgSecondary !important;
+                --paper-bg: $bgSecondary !important;
+                --bg-card: $cardSurface !important;
+                --bg-soft-rose: #18232C !important;
+                --bg-soft-sage: #211F1B !important;
+                --bg-pearl-gold: #241F14 !important;
+                --accent-rose: #34D399 !important;
+                --accent-rose-dark: #6EE7B7 !important;
+                --accent-rose-light: rgba(52, 211, 153, 0.42) !important;
+                --accent-sage: #F59E0B !important;
+                --accent-sage-dark: #FDE68A !important;
+                --accent-gold: #F3C663 !important;
+                --accent-gold-soft: rgba(243, 198, 99, 0.34) !important;
+                --text-primary: ${theme.textHex} !important;
+                --ink-main: ${theme.textHex} !important;
+                --text-secondary: #A9B4C2 !important;
+                --paper-edge: $cardBorder !important;
+                --border-ornate: rgba(243, 198, 99, 0.44) !important;
+                --line: rgba(243, 198, 99, 0.20) !important;
+                --cover-center-glow: #202838 !important;
+                color-scheme: dark !important;
+            }
+            .cover-page {
+                background: radial-gradient(ellipse at 50% 36%, #202838 0%, #151A24 58%, #0E1219 100%) !important;
+                border-color: rgba(243, 198, 99, 0.48) !important;
+                box-shadow: inset 0 0 0 6px #151A24, inset 0 0 0 7.5px rgba(243, 198, 99, 0.28) !important;
+            }
+            .cover-title-frame {
+                background: linear-gradient(180deg, rgba(26, 33, 48, 0.95), rgba(37, 32, 21, 0.92)) !important;
+                border-top-color: #F3C663 !important;
+                border-bottom-color: #F3C663 !important;
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+            }
+            .cover-page h1 {
+                color: #F8FAFC !important;
+            }
+            .cover-page .subtitle {
+                color: #CBD5E1 !important;
+            }
+            .cover-page .author, .heart-badge, .letter-envelope-header, .author-signature {
+                background: #1E2534 !important;
+                color: #F3C663 !important;
+                border-color: rgba(243, 198, 99, 0.42) !important;
+            }
+            .letter-envelope-title {
+                color: #F3C663 !important;
+            }
+            .cover-art-svg [fill="#FFFFFF"], .cover-art-svg [fill="#ffffff"],
+            .cover-art-svg [fill="#FFF"], .cover-art-svg [fill="#fff"],
+            .cover-art-svg [fill="#FAF6EE"], .cover-art-svg [fill="#FFFDF7"],
+            .cover-art-svg [fill="#F8F4E8"], .page svg [fill="#FFFFFF"], .page svg [fill="#ffffff"] {
+                fill: #1A2130 !important;
+            }
+            .cover-art-svg [fill="#044332"], .cover-art-svg [fill="#065F46"], .cover-art-svg [fill="#732E41"] {
+                fill: #F3C663 !important;
+            }
+            .cover-art-svg [stroke="#044332"], .cover-art-svg [stroke="#065F46"], .cover-art-svg [stroke="#732E41"] {
+                stroke: #6EE7B7 !important;
+            }
+            .running-header {
+                background: #131822 !important;
+                color: #E2E8F0 !important;
+                border-bottom-color: #F3C663 !important;
+            }
+            .running-header-mark {
+                color: #F3C663 !important;
+            }
+            .nav-btn, .primary-btn, .did-you-know-badge, .step-num, .brand-gem {
+                background: linear-gradient(135deg, #065F46, #044332) !important;
+                color: #F8FAFC !important;
+                border-color: rgba(243, 198, 99, 0.45) !important;
+            }
+            .icon-btn {
+                background: #1E2432 !important;
+                color: #F3C663 !important;
+                border-color: rgba(243, 198, 99, 0.30) !important;
+            }
+            .term-btn {
+                background: rgba(243, 198, 99, 0.14) !important;
+                color: #F3C663 !important;
+                border-bottom-color: #F3C663 !important;
+            }
+            .term-btn:active, .term-btn.active-term {
+                background: #F3C663 !important;
+                color: #0F1218 !important;
+            }
+            .book-table-wrap th {
+                background: #231F15 !important;
+                color: #F3C663 !important;
+            }
+            """.trimIndent()
+        } else {
+            ""
+        }
+
+        return """
+            :root {
+                --bg-primary: ${theme.bgHex} !important;
+                --bg-secondary: $bgSecondary !important;
+                --paper-bg: ${theme.bgHex} !important;
+                --bg-card: $bgSecondary !important;
+                --bg-soft-rose: $cardSurface !important;
+                --bg-soft-sage: $cardSurface !important;
+                --bg-pearl-gold: $cardSurface !important;
+                --text-primary: ${theme.textHex} !important;
+                --ink-main: ${theme.textHex} !important;
+                --text-secondary: ${theme.textHex}CC !important;
+                --paper-edge: $cardBorder !important;
+                --line: $cardBorder !important;
+            }
+            html, body, .app, .book-stage, .page-canvas, .page, .book-page {
+                background: ${theme.bgHex} !important;
+                background-color: ${theme.bgHex} !important;
+                color: ${theme.textHex} !important;
+            }
+            .top-bar, .bottom-nav-dock, .panel, .term-popover, .toc-item, .search-result, #searchInput {
+                background: $bgSecondary !important;
+                background-color: $bgSecondary !important;
+                color: ${theme.textHex} !important;
+                border-color: $cardBorder !important;
+            }
+            .brand, .panel-head h2, .panel-head h3, .term-popover-title, .page h1, .page h2, .page h3, .cover-page h1 {
+                color: ${theme.textHex} !important;
+            }
+            .reading p, .page-body p, .page-content p, li, td, th {
+                color: ${theme.textHex} !important;
+            }
+            .quran-box, .ayah-box, .hadith-box, .wisdom-pearl, .heart-keepsake-card,
+            .reflection-card, .did-you-know-card, .epigraph-box, .contrast-box, .poetry-stanza,
+            .quote-card, .quote-box, .interactive-box, .step-card, .cover-page, .cover-title-frame, .book-table-wrap {
+                background: $cardSurface !important;
+                background-color: $cardSurface !important;
+                border-color: $cardBorder !important;
+                color: ${theme.textHex} !important;
+            }
+            .quran-box p, .ayah-box p, .hadith-box p, .wisdom-pearl p,
+            .heart-keepsake-card p, .reflection-card p, .did-you-know-card p,
+            .epigraph-box p, .contrast-box p, .poetry-stanza div, .quote-card p, .quote-box p, .term-popover-body {
+                color: ${theme.textHex} !important;
+            }
+            $nightSpecificCss
+        """.trimIndent()
+    }
+
+    /**
+     * Synchronously embeds the active theme (`data-theme="night"` + `<style id="maktabati-theme-override">`),
+     * user typography override (`<style id="maktabati-user-typography-override">`), and initial zoom/page state
+     * directly into the HTML stream before the WebView parses `<head>`, eliminating any white flash or font reflow on open.
+     */
+    fun prepareHtmlStreamWithActiveState(
+        rawHtml: String,
+        theme: ReaderThemeMode,
+        typoPrefs: UserTypographyPreferences,
+        zoomPct: Int
+    ): String {
+        val modeKey = resolveThemeModeKey(theme)
+        val clampedZoom = zoomPct.coerceIn(60, 250)
+        val scale = clampedZoom / 100.0
+        val readerFontPx = String.format(java.util.Locale.US, "%.1fpx", 21.0 * scale)
+
+        // 1. Stamp data-theme onto <html> tag and upgrade font-display: swap -> block so local fonts render on Frame 1
+        val normalizedHtml = rawHtml.replace("font-display: swap", "font-display: block")
+            .replace("font-display:swap", "font-display:block")
+        var result = HTML_OPEN_TAG_REGEX.find(normalizedHtml)?.let { match ->
+            val attrs = match.groupValues[1]
+            val cleanedAttrs = DATA_THEME_ATTR_REGEX.replace(attrs, "")
+            normalizedHtml.replaceRange(match.range, "<html$cleanedAttrs data-theme=\"$modeKey\">")
+        } ?: normalizedHtml
+
+        // 2. Build pre-render <style> and <script> blocks for <head>
+        val sb = StringBuilder()
+        if (clampedZoom != 100) {
+            sb.appendLine(
+                """<style id="maktabati-initial-zoom">:root { --reader-font: $readerFontPx !important; --reader-font-size: ${clampedZoom}% !important; --font-scale: $scale !important; }</style>"""
+            )
+        }
+        if (theme != ReaderThemeMode.ORIGINAL) {
+            val themeCss = buildThemeOverrideCss(theme)
+            sb.appendLine("""<style id="maktabati-theme-override">$themeCss</style>""")
+        }
+        if (typoPrefs.useCustomTypography) {
+            val fontFaces = MaktabatiFontRegistry.buildOfflineFontFacesCss("https://maktabati.app/assets")
+            val typoCss = fontFaces + "\n" + MaktabatiFontRegistry.buildTypographyProfileCss(
+                profile = typoPrefs.profile,
+                important = true
+            )
+            sb.appendLine("""<style id="maktabati-user-typography-override">$typoCss</style>""")
+        }
+        sb.appendLine(
+            """<script id="maktabati-preboot-state">(function(){try{document.documentElement.setAttribute('data-theme','$modeKey');localStorage.setItem('maktabati_theme_mode','${modeKey.uppercase()}');localStorage.setItem('maktabati_fluid_zoom_pct','$clampedZoom');}catch(e){}})();</script>"""
+        )
+
+        val headCloseIdx = result.indexOf("</head>", ignoreCase = true)
+        if (headCloseIdx >= 0) {
+            result = result.substring(0, headCloseIdx) + "\n" + sb.toString() + "\n" + result.substring(headCloseIdx)
+        }
+        return result
+    }
+
     fun applyThemeToWebView(wv: WebView, theme: ReaderThemeMode) {
+        wv.setBackgroundColor(resolveThemeBackgroundColorInt(theme))
         if (theme == ReaderThemeMode.ORIGINAL) {
             val js = """
                 (function() {
@@ -61,127 +306,8 @@ internal object ReaderWebViewStyleApplicator {
             """.trimIndent()
             wv.evaluateJavascript(js, null)
         } else {
-            val modeKey = when (theme) {
-                ReaderThemeMode.NIGHT -> "night"
-                ReaderThemeMode.SEPIA -> "sepia"
-                ReaderThemeMode.LIGHT -> "light"
-                else -> "original"
-            }
-            val bgSecondary = when (theme) {
-                ReaderThemeMode.SEPIA -> "#F3E3C3"
-                ReaderThemeMode.NIGHT -> "#171B24"
-                ReaderThemeMode.LIGHT -> "#F8FAFC"
-                else -> theme.bgHex
-            }
-            val cardSurface = when (theme) {
-                ReaderThemeMode.SEPIA -> "rgba(185, 138, 68, 0.11)"
-                ReaderThemeMode.NIGHT -> "#1D222E"
-                ReaderThemeMode.LIGHT -> "rgba(15, 23, 42, 0.035)"
-                else -> "transparent"
-            }
-            val cardBorder = when (theme) {
-                ReaderThemeMode.SEPIA -> "rgba(180, 128, 58, 0.36)"
-                ReaderThemeMode.NIGHT -> "rgba(243, 198, 99, 0.32)"
-                ReaderThemeMode.LIGHT -> "rgba(148, 163, 184, 0.38)"
-                else -> "rgba(180, 128, 58, 0.30)"
-            }
-            val nightSpecificCss = if (theme == ReaderThemeMode.NIGHT) {
-                """
-                :root, html[data-theme="night"] {
-                    --bg-primary: ${theme.bgHex} !important;
-                    --bg-secondary: $bgSecondary !important;
-                    --paper-bg: $bgSecondary !important;
-                    --bg-card: $cardSurface !important;
-                    --bg-soft-rose: #18232C !important;
-                    --bg-soft-sage: #211F1B !important;
-                    --bg-pearl-gold: #241F14 !important;
-                    --accent-rose: #34D399 !important;
-                    --accent-rose-dark: #6EE7B7 !important;
-                    --accent-rose-light: rgba(52, 211, 153, 0.42) !important;
-                    --accent-sage: #F59E0B !important;
-                    --accent-sage-dark: #FDE68A !important;
-                    --accent-gold: #F3C663 !important;
-                    --accent-gold-soft: rgba(243, 198, 99, 0.34) !important;
-                    --text-primary: ${theme.textHex} !important;
-                    --ink-main: ${theme.textHex} !important;
-                    --text-secondary: #A9B4C2 !important;
-                    --paper-edge: $cardBorder !important;
-                    --border-ornate: rgba(243, 198, 99, 0.44) !important;
-                    --line: rgba(243, 198, 99, 0.20) !important;
-                    --cover-center-glow: #202838 !important;
-                }
-                .cover-page {
-                    background: radial-gradient(ellipse at 50% 36%, #202838 0%, #151A24 58%, #0E1219 100%) !important;
-                    border-color: rgba(243, 198, 99, 0.48) !important;
-                    box-shadow: inset 0 0 0 6px #151A24, inset 0 0 0 7.5px rgba(243, 198, 99, 0.28) !important;
-                }
-                .cover-title-frame {
-                    background: linear-gradient(180deg, rgba(26, 33, 48, 0.95), rgba(37, 32, 21, 0.92)) !important;
-                    border-top-color: #F3C663 !important;
-                    border-bottom-color: #F3C663 !important;
-                    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
-                }
-                .cover-page h1 {
-                    color: #F8FAFC !important;
-                }
-                .cover-page .subtitle {
-                    color: #CBD5E1 !important;
-                }
-                .cover-page .author, .heart-badge, .letter-envelope-header, .author-signature {
-                    background: #1E2534 !important;
-                    color: #F3C663 !important;
-                    border-color: rgba(243, 198, 99, 0.42) !important;
-                }
-                .letter-envelope-title {
-                    color: #F3C663 !important;
-                }
-                .cover-art-svg [fill="#FFFFFF"], .cover-art-svg [fill="#ffffff"],
-                .cover-art-svg [fill="#FFF"], .cover-art-svg [fill="#fff"],
-                .cover-art-svg [fill="#FAF6EE"], .cover-art-svg [fill="#FFFDF7"],
-                .cover-art-svg [fill="#F8F4E8"], .page svg [fill="#FFFFFF"], .page svg [fill="#ffffff"] {
-                    fill: #1A2130 !important;
-                }
-                .cover-art-svg [fill="#044332"], .cover-art-svg [fill="#065F46"], .cover-art-svg [fill="#732E41"] {
-                    fill: #F3C663 !important;
-                }
-                .cover-art-svg [stroke="#044332"], .cover-art-svg [stroke="#065F46"], .cover-art-svg [stroke="#732E41"] {
-                    stroke: #6EE7B7 !important;
-                }
-                .running-header {
-                    background: #131822 !important;
-                    color: #E2E8F0 !important;
-                    border-bottom-color: #F3C663 !important;
-                }
-                .running-header-mark {
-                    color: #F3C663 !important;
-                }
-                .nav-btn, .primary-btn, .did-you-know-badge, .step-num, .brand-gem {
-                    background: linear-gradient(135deg, #065F46, #044332) !important;
-                    color: #F8FAFC !important;
-                    border-color: rgba(243, 198, 99, 0.45) !important;
-                }
-                .icon-btn {
-                    background: #1E2432 !important;
-                    color: #F3C663 !important;
-                    border-color: rgba(243, 198, 99, 0.30) !important;
-                }
-                .term-btn {
-                    background: rgba(243, 198, 99, 0.14) !important;
-                    color: #F3C663 !important;
-                    border-bottom-color: #F3C663 !important;
-                }
-                .term-btn:active, .term-btn.active-term {
-                    background: #F3C663 !important;
-                    color: #0F1218 !important;
-                }
-                .book-table-wrap th {
-                    background: #231F15 !important;
-                    color: #F3C663 !important;
-                }
-                """.trimIndent()
-            } else {
-                ""
-            }
+            val modeKey = resolveThemeModeKey(theme)
+            val themeCss = buildThemeOverrideCss(theme)
             val js = """
                 (function() {
                     document.documentElement.setAttribute('data-theme', '$modeKey');
@@ -194,53 +320,7 @@ internal object ReaderWebViewStyleApplicator {
                         el.id = 'maktabati-theme-override';
                         document.head.appendChild(el);
                     }
-                    el.innerHTML = `
-                        :root {
-                            --bg-primary: ${theme.bgHex} !important;
-                            --bg-secondary: $bgSecondary !important;
-                            --paper-bg: ${theme.bgHex} !important;
-                            --bg-card: $bgSecondary !important;
-                            --bg-soft-rose: $cardSurface !important;
-                            --bg-soft-sage: $cardSurface !important;
-                            --bg-pearl-gold: $cardSurface !important;
-                            --text-primary: ${theme.textHex} !important;
-                            --ink-main: ${theme.textHex} !important;
-                            --text-secondary: ${theme.textHex}CC !important;
-                            --paper-edge: $cardBorder !important;
-                            --line: $cardBorder !important;
-                        }
-                        html, body, .app, .book-stage, .page-canvas, .page, .book-page {
-                            background: ${theme.bgHex} !important;
-                            background-color: ${theme.bgHex} !important;
-                            color: ${theme.textHex} !important;
-                        }
-                        .top-bar, .bottom-nav-dock, .panel, .term-popover, .toc-item, .search-result, #searchInput {
-                            background: $bgSecondary !important;
-                            background-color: $bgSecondary !important;
-                            color: ${theme.textHex} !important;
-                            border-color: $cardBorder !important;
-                        }
-                        .brand, .panel-head h2, .panel-head h3, .term-popover-title, .page h1, .page h2, .page h3, .cover-page h1 {
-                            color: ${theme.textHex} !important;
-                        }
-                        .reading p, .page-body p, .page-content p, li, td, th {
-                            color: ${theme.textHex} !important;
-                        }
-                        .quran-box, .ayah-box, .hadith-box, .wisdom-pearl, .heart-keepsake-card,
-                        .reflection-card, .did-you-know-card, .epigraph-box, .contrast-box, .poetry-stanza,
-                        .quote-card, .quote-box, .interactive-box, .step-card, .cover-page, .cover-title-frame, .book-table-wrap {
-                            background: $cardSurface !important;
-                            background-color: $cardSurface !important;
-                            border-color: $cardBorder !important;
-                            color: ${theme.textHex} !important;
-                        }
-                        .quran-box p, .ayah-box p, .hadith-box p, .wisdom-pearl p,
-                        .heart-keepsake-card p, .reflection-card p, .did-you-know-card p,
-                        .epigraph-box p, .contrast-box p, .poetry-stanza div, .quote-card p, .quote-box p, .term-popover-body {
-                            color: ${theme.textHex} !important;
-                        }
-                        $nightSpecificCss
-                    `;
+                    el.innerHTML = `$themeCss`;
                 })();
             """.trimIndent()
             wv.evaluateJavascript(js, null)

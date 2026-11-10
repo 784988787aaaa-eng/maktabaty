@@ -138,10 +138,19 @@ fun ReaderScreen(
         }
     }
 
+    val readerBackgroundColor = remember(readerTheme) {
+        when (readerTheme) {
+            ReaderThemeMode.NIGHT -> androidx.compose.ui.graphics.Color(0xFF0B1114)
+            ReaderThemeMode.SEPIA -> androidx.compose.ui.graphics.Color(0xFFF1E6D0)
+            ReaderThemeMode.LIGHT -> androidx.compose.ui.graphics.Color(0xFFFFFFFF)
+            ReaderThemeMode.ORIGINAL -> androidx.compose.ui.graphics.Color(0xFFF8F4E8)
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(readerBackgroundColor)
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {

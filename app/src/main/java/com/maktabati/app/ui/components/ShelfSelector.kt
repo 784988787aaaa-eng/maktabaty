@@ -1,6 +1,7 @@
 package com.maktabati.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,11 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.maktabati.app.data.model.Shelf
 import com.maktabati.app.ui.localization.AppLanguage
 import com.maktabati.app.ui.localization.LocalAppStrings
@@ -67,13 +70,6 @@ private data class StatusOption(
     val testTag: String
 )
 
-/**
- * Sleek 3-Button Dropdown Control Bar in a single fixed 40.dp row (no horizontal scrolling):
- * 1. Status Dropdown Button (الكل / All ▼)
- * 2. VerticalDivider (22.dp)
- * 3. Shelves Dropdown Button (جميع الرفوف / All Shelves ▼) with custom shelf icons, colors, checkmark & delete button
- * 4. Add Shelf Button (+ رف جديد / + New Shelf)
- */
 @Composable
 fun UnifiedShelfAndFilterRow(
     shelves: List<Shelf>,
@@ -94,6 +90,7 @@ fun UnifiedShelfAndFilterRow(
 
     var statusMenuExpanded by remember { mutableStateOf(false) }
     var shelvesMenuExpanded by remember { mutableStateOf(false) }
+    val goldAccent = Color(0xFFC89B3C)
 
     val statusOptions = remember(isEn) {
         if (isEn) {
@@ -119,26 +116,26 @@ fun UnifiedShelfAndFilterRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .height(40.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 14.dp, vertical = 3.dp)
+            .height(34.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.weight(0.95f)) {
+        Box(modifier = Modifier.weight(0.92f)) {
             Surface(
                 onClick = { statusMenuExpanded = true },
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(9.dp),
                 color = if (isFilterHighlighted) {
                     MaterialTheme.colorScheme.primaryContainer
                 } else {
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.60f)
                 },
                 border = BorderStroke(
-                    width = 1.dp,
+                    width = 0.8.dp,
                     color = if (isFilterHighlighted) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.outlineVariant
+                        goldAccent.copy(alpha = 0.35f)
                     }
                 ),
                 modifier = Modifier
@@ -149,7 +146,7 @@ fun UnifiedShelfAndFilterRow(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -163,14 +160,15 @@ fun UnifiedShelfAndFilterRow(
                             tint = if (isFilterHighlighted) {
                                 MaterialTheme.colorScheme.primary
                             } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                goldAccent
                             },
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = activeStatusLabel,
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isFilterHighlighted) {
                                 MaterialTheme.colorScheme.onPrimaryContainer
@@ -189,14 +187,19 @@ fun UnifiedShelfAndFilterRow(
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
             DropdownMenu(
                 expanded = statusMenuExpanded,
-                onDismissRequest = { statusMenuExpanded = false }
+                onDismissRequest = { statusMenuExpanded = false },
+                shape = RoundedCornerShape(13.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .width(175.dp)
+                    .border(0.8.dp, goldAccent.copy(alpha = 0.38f), RoundedCornerShape(13.dp))
             ) {
                 statusOptions.forEach { option ->
                     val isSelected = filterType == option.type
@@ -204,6 +207,7 @@ fun UnifiedShelfAndFilterRow(
                         text = {
                             Text(
                                 text = option.label,
+                                fontSize = 12.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) {
                                     MaterialTheme.colorScheme.primary
@@ -218,10 +222,11 @@ fun UnifiedShelfAndFilterRow(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = if (isEn) "Selected" else "محدد",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(15.dp)
                                 )
                             }
                         } else null,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                         onClick = {
                             statusMenuExpanded = false
                             if (option.type == FilterType.ALL) {
@@ -229,16 +234,18 @@ fun UnifiedShelfAndFilterRow(
                             }
                             onSelectFilter(option.type)
                         },
-                        modifier = Modifier.testTag(option.testTag)
+                        modifier = Modifier
+                            .height(34.dp)
+                            .testTag(option.testTag)
                     )
                 }
             }
         }
 
         VerticalDivider(
-            modifier = Modifier.height(22.dp),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
+            modifier = Modifier.height(18.dp),
+            thickness = 0.8.dp,
+            color = goldAccent.copy(alpha = 0.32f)
         )
 
         Box(modifier = Modifier.weight(1.15f)) {
@@ -251,18 +258,18 @@ fun UnifiedShelfAndFilterRow(
 
             Surface(
                 onClick = { shelvesMenuExpanded = true },
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(9.dp),
                 color = if (isShelfSelected) {
                     activeShelfColor.copy(alpha = 0.14f)
                 } else {
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.60f)
                 },
                 border = BorderStroke(
-                    width = 1.dp,
+                    width = 0.8.dp,
                     color = if (isShelfSelected) {
                         activeShelfColor
                     } else {
-                        MaterialTheme.colorScheme.outlineVariant
+                        goldAccent.copy(alpha = 0.35f)
                     }
                 ),
                 modifier = Modifier
@@ -273,7 +280,7 @@ fun UnifiedShelfAndFilterRow(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -291,14 +298,15 @@ fun UnifiedShelfAndFilterRow(
                             tint = if (isShelfSelected) {
                                 activeShelfColor
                             } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                goldAccent
                             },
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = selectedShelf?.name ?: if (isEn) "All Shelves" else "جميع الرفوف",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isShelfSelected) {
                                 activeShelfColor
@@ -317,20 +325,26 @@ fun UnifiedShelfAndFilterRow(
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
             DropdownMenu(
                 expanded = shelvesMenuExpanded,
-                onDismissRequest = { shelvesMenuExpanded = false }
+                onDismissRequest = { shelvesMenuExpanded = false },
+                shape = RoundedCornerShape(13.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .width(195.dp)
+                    .border(0.8.dp, goldAccent.copy(alpha = 0.38f), RoundedCornerShape(13.dp))
             ) {
                 val allShelvesSelected = selectedShelfId == null
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = if (isEn) "All Shelves" else "جميع الرفوف",
+                            fontSize = 12.sp,
                             fontWeight = if (allShelvesSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (allShelvesSelected) {
                                 MaterialTheme.colorScheme.primary
@@ -346,9 +360,9 @@ fun UnifiedShelfAndFilterRow(
                             tint = if (allShelvesSelected) {
                                 MaterialTheme.colorScheme.primary
                             } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                goldAccent
                             },
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     },
                     trailingIcon = if (allShelvesSelected) {
@@ -357,19 +371,26 @@ fun UnifiedShelfAndFilterRow(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = if (isEn) "Selected" else "محدد",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                         }
                     } else null,
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                     onClick = {
                         shelvesMenuExpanded = false
                         onSelectShelf(null)
                     },
-                    modifier = Modifier.testTag("shelf_option_all")
+                    modifier = Modifier
+                        .height(34.dp)
+                        .testTag("shelf_option_all")
                 )
 
                 if (userShelves.isNotEmpty()) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        thickness = 0.6.dp,
+                        color = goldAccent.copy(alpha = 0.25f)
+                    )
                 }
 
                 userShelves.forEach { shelf ->
@@ -380,10 +401,11 @@ fun UnifiedShelfAndFilterRow(
                         text = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Text(
                                     text = shelf.name,
+                                    fontSize = 12.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) shelfColor else MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
@@ -394,7 +416,7 @@ fun UnifiedShelfAndFilterRow(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = if (isEn) "Selected" else "محدد",
                                         tint = shelfColor,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -404,7 +426,7 @@ fun UnifiedShelfAndFilterRow(
                                 imageVector = getShelfIcon(shelf.iconName),
                                 contentDescription = null,
                                 tint = shelfColor,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         },
                         trailingIcon = {
@@ -413,22 +435,25 @@ fun UnifiedShelfAndFilterRow(
                                     onDeleteShelf(shelf)
                                 },
                                 modifier = Modifier
-                                    .size(28.dp)
+                                    .size(26.dp)
                                     .testTag("delete_shelf_${shelf.id}")
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = if (isEn) "Delete shelf ${shelf.name}" else "حذف الرف ${shelf.name}",
                                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                         onClick = {
                             shelvesMenuExpanded = false
                             onSelectShelf(shelf.id)
                         },
-                        modifier = Modifier.testTag("shelf_chip_${shelf.id}")
+                        modifier = Modifier
+                            .height(34.dp)
+                            .testTag("shelf_chip_${shelf.id}")
                     )
                 }
             }
@@ -436,19 +461,20 @@ fun UnifiedShelfAndFilterRow(
 
         OutlinedButton(
             onClick = onAddShelfClick,
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+            shape = RoundedCornerShape(9.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 0.dp),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary
             ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)),
+            border = BorderStroke(0.8.dp, goldAccent.copy(alpha = 0.55f)),
             modifier = Modifier
                 .fillMaxHeight()
                 .testTag("add_shelf_button")
         ) {
             Text(
-                text = if (isEn) "+ New Shelf" else "+ رف جديد",
-                style = MaterialTheme.typography.labelMedium,
+                text = if (isEn) "+ Shelf" else "+ رف جديد",
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 11.5.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
             )

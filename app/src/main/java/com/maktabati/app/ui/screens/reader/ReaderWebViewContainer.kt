@@ -105,6 +105,8 @@ fun ReaderWebViewContainer(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
+                        // Set native WebView canvas color immediately before any HTML loads to prevent white flash
+                        setBackgroundColor(ReaderWebViewStyleApplicator.resolveThemeBackgroundColorInt(readerTheme))
                         setLayerType(View.LAYER_TYPE_HARDWARE, null)
                         onResume()
                         resumeTimers()
@@ -174,28 +176,47 @@ fun ReaderWebViewContainer(
                                     try {
                                         if (targetFile.isFile && targetFile.canonicalPath.startsWith(booksRoot.canonicalPath)) {
                                             val mime = ReaderWebViewStyleApplicator.resolveMimeType(targetFile.name)
-                                            if (mime == "text/html" && !isHtmlAlreadyInjected(targetFile)) {
-                                                val raw = targetFile.readText(Charsets.UTF_8)
-                                                if (!raw.contains("__maktabatiV9Initialized")) {
-                                                    val upgraded = SandboxHtmlInjector.injectIntoHtml(
-                                                        rawHtml = raw,
-                                                        bookId = book.id,
-                                                        pageCount = livePageCount,
-                                                        bookDir = bookDir
-                                                    )
-                                                    targetFile.writeText(upgraded, Charsets.UTF_8)
-                                                    return WebResourceResponse(
-                                                        "text/html",
-                                                        "UTF-8",
-                                                        200,
-                                                        "OK",
-                                                        mapOf(
-                                                            "Access-Control-Allow-Origin" to "*",
-                                                            "Cache-Control" to "no-cache"
-                                                        ),
-                                                        upgraded.byteInputStream(Charsets.UTF_8)
-                                                    )
+                                            if (mime == "text/html") {
+                                                val activeTheme = lastAppliedTheme[0] ?: readerTheme
+                                                val activeTypo = lastAppliedTypography[0] ?: userTypographyPreferences
+                                                val activeZoom = lastAppliedZoom[0].takeIf { it > 0 } ?: textZoomPercent
+
+                                                val baseInjectedHtml = if (!isHtmlAlreadyInjected(targetFile)) {
+                                                    val raw = targetFile.readText(Charsets.UTF_8)
+                                                    if (!raw.contains("__maktabatiV9Initialized")) {
+                                                        val upgraded = SandboxHtmlInjector.injectIntoHtml(
+                                                            rawHtml = raw,
+                                                            bookId = book.id,
+                                                            pageCount = livePageCount,
+                                                            bookDir = bookDir
+                                                        )
+                                                        targetFile.writeText(upgraded, Charsets.UTF_8)
+                                                        upgraded
+                                                    } else {
+                                                        raw
+                                                    }
+                                                } else {
+                                                    targetFile.readText(Charsets.UTF_8)
                                                 }
+
+                                                val preStyledHtml = ReaderWebViewStyleApplicator.prepareHtmlStreamWithActiveState(
+                                                    rawHtml = baseInjectedHtml,
+                                                    theme = activeTheme,
+                                                    typoPrefs = activeTypo,
+                                                    zoomPct = activeZoom
+                                                )
+
+                                                return WebResourceResponse(
+                                                    "text/html",
+                                                    "UTF-8",
+                                                    200,
+                                                    "OK",
+                                                    mapOf(
+                                                        "Access-Control-Allow-Origin" to "*",
+                                                        "Cache-Control" to "no-store"
+                                                    ),
+                                                    preStyledHtml.byteInputStream(Charsets.UTF_8)
+                                                )
                                             }
                                             return WebResourceResponse(
                                                 mime,
@@ -282,6 +303,7 @@ fun ReaderWebViewContainer(
                     }
                     if (lastAppliedTheme[0] != readerTheme) {
                         lastAppliedTheme[0] = readerTheme
+                        wv.setBackgroundColor(ReaderWebViewStyleApplicator.resolveThemeBackgroundColorInt(readerTheme))
                         ReaderWebViewStyleApplicator.applyThemeToWebView(wv, readerTheme)
                     }
                     if (lastAppliedTypography[0] != userTypographyPreferences) {

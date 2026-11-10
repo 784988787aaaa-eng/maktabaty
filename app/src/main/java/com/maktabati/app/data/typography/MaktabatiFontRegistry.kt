@@ -153,14 +153,14 @@ object MaktabatiFontRegistry {
                       src: url("$rootDomain/user-fonts/${font.ttfFileName}") format("$fmt");
                       font-weight: 400;
                       font-style: normal;
-                      font-display: swap;
+                      font-display: block;
                     }
                     @font-face {
                       font-family: "${font.cssFamilyName}";
                       src: url("$rootDomain/user-fonts/${font.ttfFileName}") format("$fmt");
                       font-weight: 700;
                       font-style: normal;
-                      font-display: swap;
+                      font-display: block;
                     }
                     """.trimIndent()
                 )
@@ -173,7 +173,7 @@ object MaktabatiFontRegistry {
                           src: url("$cleanPrefix/${weightSpec.woff2AssetPath}") format("woff2");
                           font-weight: ${weightSpec.weight};
                           font-style: normal;
-                          font-display: swap;
+                          font-display: block;
                         }
                         """.trimIndent()
                     )
@@ -186,14 +186,14 @@ object MaktabatiFontRegistry {
                       src: url("$rootDomain/fonts/${font.ttfFileName}") format("truetype");
                       font-weight: 400;
                       font-style: normal;
-                      font-display: swap;
+                      font-display: block;
                     }
                     @font-face {
                       font-family: "${font.cssFamilyName}";
                       src: url("$rootDomain/fonts/${font.ttfFileName}") format("truetype");
                       font-weight: 700;
                       font-style: normal;
-                      font-display: swap;
+                      font-display: block;
                     }
                     """.trimIndent()
                 )
