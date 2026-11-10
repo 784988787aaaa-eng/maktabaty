@@ -120,10 +120,15 @@ fun BatchSelectionActionBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 IconButton(
                     onClick = onClearSelection,
-                    modifier = Modifier.testTag("batch_clear_selection_button")
+                    modifier = Modifier
+                        .size(40.dp)
+                        .testTag("batch_clear_selection_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
@@ -131,39 +136,47 @@ fun BatchSelectionActionBar(
                         tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(2.dp))
                 Text(
                     text = strings.batchSelectedCount(selectedCount),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 TextButton(
                     onClick = onSelectAllToggle,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                     modifier = Modifier.testTag("batch_select_all_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.SelectAll,
                         contentDescription = if (allVisibleSelected) strings.batchDeselectAll else strings.batchSelectAll,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(17.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (allVisibleSelected) strings.batchDeselectAll else strings.batchSelectAll,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
 
                 IconButton(
                     onClick = onMoveToShelfClick,
-                    modifier = Modifier.testTag("batch_move_shelf_button")
+                    modifier = Modifier
+                        .size(42.dp)
+                        .testTag("batch_move_shelf_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Folder,
@@ -174,7 +187,9 @@ fun BatchSelectionActionBar(
 
                 IconButton(
                     onClick = onShareClick,
-                    modifier = Modifier.testTag("batch_share_button")
+                    modifier = Modifier
+                        .size(42.dp)
+                        .testTag("batch_share_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
@@ -183,15 +198,22 @@ fun BatchSelectionActionBar(
                     )
                 }
 
-                IconButton(
-                    onClick = onDeleteClick,
-                    modifier = Modifier.testTag("batch_delete_button")
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = strings.batchDelete,
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .testTag("batch_delete_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = strings.batchDelete,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
@@ -252,6 +274,7 @@ fun LibraryScreen(
     var moveSelectedBooksAfterCreatingShelf by remember { mutableStateOf(false) }
     var showBatchMoveDialog by remember { mutableStateOf(false) }
     var showBatchDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var pendingBatchDeleteIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var selectedBookForDetails by remember { mutableStateOf<Book?>(null) }
     var bookPendingDelete by remember { mutableStateOf<Book?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -372,7 +395,10 @@ fun LibraryScreen(
                     onSelectAllToggle = { viewModel.selectAllVisibleBooks() },
                     onMoveToShelfClick = { showBatchMoveDialog = true },
                     onShareClick = { viewModel.shareSelectedBooks(context) },
-                    onDeleteClick = { showBatchDeleteConfirmDialog = true }
+                    onDeleteClick = {
+                        pendingBatchDeleteIds = selectedBookIds
+                        showBatchDeleteConfirmDialog = true
+                    }
                 )
             }
 
@@ -464,7 +490,14 @@ fun LibraryScreen(
                                 onFavoriteToggle = { viewModel.toggleFavorite(book) },
                                 onDetailsClick = { selectedBookForDetails = book },
                                 onShareClick = { viewModel.shareBook(context, book) },
-                                onDeleteClick = { bookPendingDelete = book },
+                                onDeleteClick = {
+                                    if (isSelectionMode && selectedBookIds.size > 1) {
+                                        pendingBatchDeleteIds = selectedBookIds + book.id
+                                        showBatchDeleteConfirmDialog = true
+                                    } else {
+                                        bookPendingDelete = book
+                                    }
+                                },
                                 isSelectionMode = isSelectionMode,
                                 isSelected = isBookSelected,
                                 onToggleSelect = { viewModel.toggleBookSelection(book.id) },
@@ -491,7 +524,14 @@ fun LibraryScreen(
                                 onFavoriteToggle = { viewModel.toggleFavorite(book) },
                                 onDetailsClick = { selectedBookForDetails = book },
                                 onShareClick = { viewModel.shareBook(context, book) },
-                                onDeleteClick = { bookPendingDelete = book },
+                                onDeleteClick = {
+                                    if (isSelectionMode && selectedBookIds.size > 1) {
+                                        pendingBatchDeleteIds = selectedBookIds + book.id
+                                        showBatchDeleteConfirmDialog = true
+                                    } else {
+                                        bookPendingDelete = book
+                                    }
+                                },
                                 isSelectionMode = isSelectionMode,
                                 isSelected = isBookSelected,
                                 onToggleSelect = { viewModel.toggleBookSelection(book.id) }
@@ -539,13 +579,19 @@ fun LibraryScreen(
     }
 
     if (showBatchDeleteConfirmDialog) {
+        val effectiveIdsToDelete = if (selectedBookIds.isNotEmpty()) selectedBookIds else pendingBatchDeleteIds
         BatchDeleteConfirmDialog(
-            selectedCount = selectedBookIds.size,
+            selectedCount = effectiveIdsToDelete.size.coerceAtLeast(1),
             onConfirmBatchDelete = {
+                val idsSnapshot = effectiveIdsToDelete
                 showBatchDeleteConfirmDialog = false
-                viewModel.deleteSelectedBooks()
+                pendingBatchDeleteIds = emptySet()
+                viewModel.deleteSelectedBooks(idsSnapshot)
             },
-            onDismiss = { showBatchDeleteConfirmDialog = false }
+            onDismiss = {
+                showBatchDeleteConfirmDialog = false
+                pendingBatchDeleteIds = emptySet()
+            }
         )
     }
 

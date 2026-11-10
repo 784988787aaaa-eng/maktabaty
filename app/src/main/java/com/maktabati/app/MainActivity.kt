@@ -88,12 +88,14 @@ fun AppNavRoot(viewModel: LibraryViewModel) {
     val activeBookmarks by viewModel.activeBookmarks.collectAsStateWithLifecycle()
     val isOpeningExternalFile by viewModel.isOpeningExternalFile.collectAsStateWithLifecycle()
     val userTypographyPrefs by viewModel.userTypographyPreferences.collectAsStateWithLifecycle()
+    val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
 
     val currentBook = activeBook
     if (currentBook != null) {
         ReaderScreen(
             book = currentBook,
             bookmarks = activeBookmarks,
+            isDarkTheme = isDarkTheme,
             userTypographyPreferences = userTypographyPrefs,
             onUpdateTypographyPreferences = { viewModel.updateUserTypographyPreferences(it) },
             onBack = { viewModel.closeReader() },

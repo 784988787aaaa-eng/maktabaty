@@ -41,6 +41,7 @@ import kotlinx.coroutines.delay
 fun ReaderScreen(
     book: Book,
     bookmarks: List<Bookmark>,
+    isDarkTheme: Boolean? = null,
     userTypographyPreferences: UserTypographyPreferences = UserTypographyPreferences(),
     onUpdateTypographyPreferences: (UserTypographyPreferences) -> Unit = {},
     onBack: () -> Unit,
@@ -54,6 +55,7 @@ fun ReaderScreen(
     val prefs = remember(context) {
         context.getSharedPreferences("maktabati_preferences", android.content.Context.MODE_PRIVATE)
     }
+    val effectiveAppDark = isDarkTheme ?: prefs.getBoolean("isDarkTheme", false)
     var showExtendedControls by remember(book.id) { mutableStateOf(false) }
     var pillCollapsed by remember(book.id) { mutableStateOf(true) }
     var currentProgress by remember(book.id) { mutableFloatStateOf(book.readingProgress) }
@@ -67,10 +69,22 @@ fun ReaderScreen(
     var zoomInteractionTick by remember(book.id) { mutableIntStateOf(0) }
 
     var readerTheme by remember(book.id) {
-        mutableStateOf(
-            runCatching { ReaderThemeMode.valueOf(prefs.getString("readerTheme", "ORIGINAL")!!) }
+        val syncedMode = if (effectiveAppDark) {
+            ReaderThemeMode.NIGHT
+        } else {
+            val saved = runCatching { ReaderThemeMode.valueOf(prefs.getString("readerTheme", "ORIGINAL")!!) }
                 .getOrDefault(ReaderThemeMode.ORIGINAL)
-        )
+            if (saved == ReaderThemeMode.NIGHT) ReaderThemeMode.ORIGINAL else saved
+        }
+        mutableStateOf(syncedMode)
+    }
+
+    LaunchedEffect(effectiveAppDark) {
+        val targetMode = if (effectiveAppDark) ReaderThemeMode.NIGHT else ReaderThemeMode.ORIGINAL
+        if (readerTheme != targetMode) {
+            readerTheme = targetMode
+            prefs.edit().putString("readerTheme", targetMode.name).apply()
+        }
     }
 
     var showTocSheet by remember { mutableStateOf(false) }

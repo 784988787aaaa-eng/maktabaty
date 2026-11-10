@@ -345,8 +345,15 @@ fun BookGridItem(
     val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFF5B3A29))
     val bgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
 
-    val isLightCover = bgColor.luminance() > 0.48f
-    val coverGradientColors = if (isLightCover) {
+    val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.28f
+    val isLightCover = !isAppDark && bgColor.luminance() > 0.48f
+    val coverGradientColors = if (isAppDark) {
+        listOf(
+            Color(0xFF10141E),
+            lerp(Color(0xFF161C2B), roseColor, 0.28f),
+            lerp(Color(0xFF1B2335), goldColor, 0.22f)
+        )
+    } else if (isLightCover) {
         listOf(
             bgColor,
             lerp(bgColor, roseColor, 0.08f),
@@ -360,22 +367,34 @@ fun BookGridItem(
         )
     }
 
-    val coverTitleColor = if (isLightCover) {
+    val coverTitleColor = if (isAppDark) {
+        Color(0xFFF8FAFC)
+    } else if (isLightCover) {
         if (roseColor.luminance() < 0.58f) roseColor else Color(0xFF2D1A22)
     } else {
         Color.White
     }
-    val coverSubtitleColor = if (isLightCover) {
+    val coverSubtitleColor = if (isAppDark) {
+        Color(0xFFCBD5E1)
+    } else if (isLightCover) {
         Color(0xFF2D1A22).copy(alpha = 0.78f)
     } else {
         Color.White.copy(alpha = 0.82f)
     }
-    val coverFrameColor = if (isLightCover) {
+    val coverFrameColor = if (isAppDark) {
+        Color(0xFFF3C663).copy(alpha = 0.58f)
+    } else if (isLightCover) {
         roseColor.copy(alpha = 0.38f)
     } else {
         goldColor.copy(alpha = 0.45f)
     }
-    val coverEmblemColor = if (isLightCover) roseColor else goldColor
+    val coverEmblemColor = if (isAppDark) {
+        Color(0xFFF3C663)
+    } else if (isLightCover) {
+        roseColor
+    } else {
+        goldColor
+    }
 
     val bookDirection = if (book.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     val langLabel = if (book.language == "en" || !book.isRtl) "EN" else "عربي"
@@ -438,7 +457,7 @@ fun BookGridItem(
                                 Brush.linearGradient(colors = coverGradientColors)
                             )
                     ) {
-                        if (coverBitmap != null) {
+                        if (coverBitmap != null && !isAppDark) {
                             Image(
                                 bitmap = coverBitmap,
                                 contentDescription = book.title,
@@ -454,7 +473,8 @@ fun BookGridItem(
                                 coverFrameColor = coverFrameColor,
                                 coverEmblemColor = coverEmblemColor,
                                 coverTitleColor = coverTitleColor,
-                                coverSubtitleColor = coverSubtitleColor
+                                coverSubtitleColor = coverSubtitleColor,
+                                modifier = Modifier.testTag("book_cover_snapshot_${book.id}")
                             )
                         }
 
@@ -759,8 +779,15 @@ fun BookListItem(
     val goldColor = parseSafeColor(book.accentGoldHex, Color(0xFFF59E0B))
     val roseColor = parseSafeColor(book.accentRoseHex, Color(0xFF5B3A29))
     val bgColor = parseSafeColor(book.bgPrimaryHex, Color(book.coverGradientStart))
-    val isLightCover = bgColor.luminance() > 0.48f
-    val coverGradientColors = if (isLightCover) {
+    val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.28f
+    val isLightCover = !isAppDark && bgColor.luminance() > 0.48f
+    val coverGradientColors = if (isAppDark) {
+        listOf(
+            Color(0xFF10141E),
+            lerp(Color(0xFF161C2B), roseColor, 0.28f),
+            lerp(Color(0xFF1B2335), goldColor, 0.22f)
+        )
+    } else if (isLightCover) {
         listOf(
             bgColor,
             lerp(bgColor, roseColor, 0.08f),
@@ -865,7 +892,7 @@ fun BookListItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (coverBitmap != null) {
+                if (coverBitmap != null && !isAppDark) {
                     Image(
                         bitmap = coverBitmap,
                         contentDescription = book.title,
@@ -878,7 +905,7 @@ fun BookListItem(
                     Icon(
                         imageVector = getBookIcon(book.coverIcon),
                         contentDescription = null,
-                        tint = if (isLightCover) roseColor else goldColor,
+                        tint = if (isAppDark) Color(0xFFF3C663) else if (isLightCover) roseColor else goldColor,
                         modifier = Modifier.size(26.dp)
                     )
                 }

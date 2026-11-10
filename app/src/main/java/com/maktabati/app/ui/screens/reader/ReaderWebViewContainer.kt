@@ -222,9 +222,7 @@ fun ReaderWebViewContainer(
                                             wv.scrollTo(0, book.scrollY)
                                         }, 30)
                                     }
-                                    if (readerTheme != ReaderThemeMode.ORIGINAL) {
-                                        ReaderWebViewStyleApplicator.applyThemeToWebView(wv, readerTheme)
-                                    }
+                                    ReaderWebViewStyleApplicator.applyThemeToWebView(wv, readerTheme)
                                     ReaderWebViewStyleApplicator.applyTypographyPreferencesToWebView(wv, userTypographyPreferences)
                                     if (textZoomPercent != 100) {
                                         ReaderWebViewStyleApplicator.applyFluidZoomToWebView(wv, textZoomPercent)

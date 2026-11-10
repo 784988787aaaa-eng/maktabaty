@@ -1567,7 +1567,8 @@ class ExampleRobolectricTest {
         assertTrue("Rendered HTML must include .epigraph-box", renderedHtml.contains(".epigraph-box"))
         assertTrue("Rendered HTML must include .contrast-grid with minmax(min(100%, 13.5em), 1fr)", renderedHtml.contains(".contrast-grid") && renderedHtml.contains("minmax(min(100%, 13.5em), 1fr)"))
         assertTrue("Rendered HTML must include flip-next and flip-prev sheet animations", renderedHtml.contains("flip-next") && renderedHtml.contains("flip-prev"))
+        assertTrue("Rendered HTML must include html[data-theme=\"night\"] and night cover styling", renderedHtml.contains("html[data-theme=\"night\"]") && renderedHtml.contains("html[data-theme=\"night\"] .cover-page"))
+        assertTrue("Rendered HTML must include __maktabatiSetThemeMode JS bridge", renderedHtml.contains("__maktabatiSetThemeMode"))
+        assertFalse("Rendered HTML must never reference Reem Kufi", renderedHtml.contains("Reem Kufi", ignoreCase = true))
     }
 }
-
-

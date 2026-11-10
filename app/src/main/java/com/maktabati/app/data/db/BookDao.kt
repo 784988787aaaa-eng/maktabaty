@@ -115,6 +115,12 @@ interface BookDao {
     @Delete
     suspend fun deleteBookmark(bookmark: Bookmark)
 
+    @Query("DELETE FROM bookmarks WHERE bookId = :bookId")
+    suspend fun deleteBookmarksForBook(bookId: String)
+
+    @Query("DELETE FROM bookmarks WHERE bookId IN (:bookIds)")
+    suspend fun deleteBookmarksByBookIdsBatch(bookIds: List<String>)
+
     // One-shot Snapshot Queries for Cloud Backup & Restore
     @Query("SELECT * FROM books ORDER BY lastReadTimestamp DESC")
     suspend fun getAllBooksOnce(): List<Book>

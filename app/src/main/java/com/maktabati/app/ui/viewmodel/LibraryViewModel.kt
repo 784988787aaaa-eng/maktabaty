@@ -198,7 +198,11 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     fun toggleDarkTheme() {
         val next = !isDarkTheme.value
         isDarkTheme.value = next
-        preferences.edit().putBoolean("isDarkTheme", next).apply()
+        val syncedReaderTheme = if (next) "NIGHT" else "ORIGINAL"
+        preferences.edit()
+            .putBoolean("isDarkTheme", next)
+            .putString("readerTheme", syncedReaderTheme)
+            .apply()
     }
 
     fun toggleAppLanguage() {
@@ -790,18 +794,20 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         _selectedBookIds.value = emptySet()
     }
 
-    fun deleteSelectedBooks(onComplete: (() -> Unit)? = null) {
-        val ids = _selectedBookIds.value
+    fun deleteSelectedBooks(targetIds: Set<String> = emptySet(), onComplete: (() -> Unit)? = null) {
+        val ids = (if (targetIds.isNotEmpty()) targetIds else _selectedBookIds.value)
+            .filter { it.isNotBlank() }
+            .toSet()
         if (ids.isEmpty()) {
             onComplete?.invoke()
             return
         }
+        _selectedBookIds.value = _selectedBookIds.value - ids
         viewModelScope.launch {
             if (activeBook.value?.id in ids) {
                 activeBook.value = null
             }
             repository.deleteBooksBatch(ids)
-            clearSelection()
             if (connectedGoogleEmail.value != null) {
                 triggerAutoCloudBackup()
             }

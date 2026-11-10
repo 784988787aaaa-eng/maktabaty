@@ -530,29 +530,39 @@ class BookRepository(
     }
 
     suspend fun deleteBook(bookId: String) = withContext(Dispatchers.IO) {
+        if (bookId.isBlank()) return@withContext
         val book = bookDao.getBookByIdOnce(bookId)
-        if (book != null) {
-            bookDao.deleteBook(book)
+        if (book != null && book.folderPath.isNotBlank()) {
             val bookDir = File(File(context.filesDir, "books"), book.folderPath)
             if (bookDir.exists()) {
-                bookDir.deleteRecursively()
+                runCatching { bookDir.deleteRecursively() }
             }
         }
+        bookDao.deleteBookmarksForBook(bookId)
+        if (book != null) {
+            bookDao.deleteBook(book)
+        }
+        bookDao.deleteBookById(bookId)
     }
 
     suspend fun deleteBooksBatch(bookIds: Set<String>) = withContext(Dispatchers.IO) {
-        if (bookIds.isEmpty()) return@withContext
+        val cleanIds = bookIds.filter { it.isNotBlank() }.toSet()
+        if (cleanIds.isEmpty()) return@withContext
         val booksRoot = File(context.filesDir, "books")
-        val idChunks = bookIds.toList().chunked(500)
+        val idChunks = cleanIds.toList().chunked(500)
         for (chunk in idChunks) {
             val matchingBooks = bookDao.getBooksByIdsOnce(chunk)
             for (book in matchingBooks) {
                 if (book.folderPath.isNotBlank()) {
                     val bookDir = File(booksRoot, book.folderPath)
                     if (bookDir.exists()) {
-                        bookDir.deleteRecursively()
+                        runCatching { bookDir.deleteRecursively() }
                     }
                 }
+            }
+            bookDao.deleteBookmarksByBookIdsBatch(chunk)
+            for (book in matchingBooks) {
+                bookDao.deleteBook(book)
             }
             bookDao.deleteBooksByIdsBatch(chunk)
         }

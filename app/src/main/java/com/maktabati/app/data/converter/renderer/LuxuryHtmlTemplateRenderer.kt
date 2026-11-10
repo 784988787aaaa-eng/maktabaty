@@ -206,7 +206,92 @@ object LuxuryHtmlTemplateRenderer {
   --font-numbers: "Noto Sans Arabic", "Cairo", sans-serif;
   --reader-family: var(--font-body);
 
+  --cover-center-glow: #FFFFFF;
   color-scheme: light;
+}
+
+html[data-theme="night"] {
+  --bg-primary: #0F1218;
+  --bg-secondary: #171B24;
+  --paper-bg: #171B24;
+  --bg-card: #1D222E;
+  --bg-soft-rose: #18232C;
+  --bg-soft-sage: #211F1B;
+  --bg-pearl-gold: #241F14;
+  --accent-rose: #34D399;
+  --accent-rose-dark: #6EE7B7;
+  --accent-rose-light: rgba(52, 211, 153, 0.42);
+  --accent-sage: #F59E0B;
+  --accent-sage-dark: #FDE68A;
+  --accent-gold: #F3C663;
+  --accent-gold-soft: rgba(243, 198, 99, 0.34);
+  --text-primary: #ECEAE4;
+  --ink-main: #ECEAE4;
+  --text-secondary: #A9B4C2;
+  --line: rgba(243, 198, 99, 0.20);
+  --border-ornate: rgba(243, 198, 99, 0.44);
+  --paper-edge: #2A3142;
+  --shadow-card: 0 18px 48px rgba(0,0,0,0.55);
+  --cover-center-glow: #202838;
+  color-scheme: dark;
+}
+
+html[data-theme="sepia"] {
+  --bg-primary: #F4E8D1;
+  --bg-secondary: #FAF1DF;
+  --paper-bg: #FAF1DF;
+  --bg-card: #F3E3C3;
+  --bg-soft-rose: #EFE0C2;
+  --bg-soft-sage: #EDE0C6;
+  --bg-pearl-gold: #F5E6C4;
+  --text-primary: #3C2F2F;
+  --ink-main: #3C2F2F;
+  --text-secondary: #5C4938;
+  --paper-edge: #D6C19E;
+  --cover-center-glow: #FAF3E3;
+}
+
+html[data-theme="night"] .cover-page {
+  background: radial-gradient(ellipse at 50% 36%, #202838 0%, #151A24 58%, #0E1219 100%) !important;
+  border-color: rgba(243, 198, 99, 0.48) !important;
+  box-shadow: inset 0 0 0 6px #151A24, inset 0 0 0 7.5px rgba(243, 198, 99, 0.28) !important;
+}
+html[data-theme="night"] .cover-title-frame {
+  background: linear-gradient(180deg, rgba(26, 33, 48, 0.95), rgba(37, 32, 21, 0.92)) !important;
+  border-top-color: #F3C663 !important;
+  border-bottom-color: #F3C663 !important;
+}
+html[data-theme="night"] .cover-page h1 { color: #F8FAFC !important; }
+html[data-theme="night"] .cover-page .subtitle { color: #CBD5E1 !important; }
+html[data-theme="night"] .cover-page .author,
+html[data-theme="night"] .heart-badge,
+html[data-theme="night"] .letter-envelope-header,
+html[data-theme="night"] .author-signature {
+  background: #1E2534 !important;
+  color: #F3C663 !important;
+  border-color: rgba(243, 198, 99, 0.42) !important;
+}
+html[data-theme="night"] .cover-art-svg [fill="#FFFFFF"],
+html[data-theme="night"] .cover-art-svg [fill="#ffffff"],
+html[data-theme="night"] .cover-art-svg [fill="#FAF6EE"],
+html[data-theme="night"] .cover-art-svg [fill="#FFFDF7"],
+html[data-theme="night"] .cover-art-svg [fill="#F8F4E8"] {
+  fill: #1A2130 !important;
+}
+html[data-theme="night"] .running-header {
+  background: #131822 !important;
+  color: #E2E8F0 !important;
+  border-bottom-color: #F3C663 !important;
+}
+html[data-theme="night"] .running-header-mark { color: #F3C663 !important; }
+html[data-theme="night"] .nav-btn,
+html[data-theme="night"] .primary-btn,
+html[data-theme="night"] .did-you-know-badge,
+html[data-theme="night"] .step-num,
+html[data-theme="night"] .brand-gem {
+  background: linear-gradient(135deg, #065F46, #044332) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(243, 198, 99, 0.45) !important;
 }
 
 ${if (injectedHeadSnippet.contains("@font-face")) "" else MaktabatiFontRegistry.buildOfflineFontFacesCss("https://maktabati.app/assets")}
@@ -1551,6 +1636,12 @@ ${if (injectedHeadSnippet.isNotBlank()) "$injectedHeadSnippet\n" else ""}</head>
         const lp = localStorage.getItem(STORAGE_PREFIX + "last_page");
         if (lp !== null) startPage = parseInt(lp, 10) || 0;
       } catch (e) {}
+
+      window.__maktabatiSetThemeMode = function(mode) {
+        const cleanMode = (mode || "original").toLowerCase();
+        document.documentElement.setAttribute("data-theme", cleanMode);
+        try { localStorage.setItem(STORAGE_PREFIX + "theme_mode", cleanMode); } catch (e) {}
+      };
 
       renderPage(startPage);
     });
