@@ -2,6 +2,7 @@ package com.maktabati.app.ui.screens.library.dialogs
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,12 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.maktabati.app.R
 import com.maktabati.app.ui.localization.AppLanguage
 import com.maktabati.app.ui.localization.LocalAppStrings
 
@@ -50,13 +54,25 @@ fun AboutMaktabatiDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                text = if (isEn) "About Maktabati Platform" else "عن منصة مكتبتي",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_icon),
+                    contentDescription = strings.appTitle,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(64.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = if (isEn) "About Maktabati Platform" else "عن منصة مكتبتي",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
         text = {
             Column(

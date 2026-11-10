@@ -1,6 +1,7 @@
 package com.maktabati.app.ui.screens.library.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +28,6 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -58,11 +58,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.maktabati.app.R
 import com.maktabati.app.ui.localization.AppLanguage
 import com.maktabati.app.ui.localization.LocalAppStrings
 import com.maktabati.app.ui.viewmodel.ViewMode
@@ -114,11 +117,11 @@ fun LibraryTopAppBar(
                 )
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LibraryBooks,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
+                    Image(
+                        painter = painterResource(id = R.drawable.app_icon),
+                        contentDescription = strings.appTitle,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(30.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
